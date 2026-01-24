@@ -4,6 +4,7 @@ import { signInWithEmail, signUpWithEmail, signInWithGoogle, signOut as supabase
 import { saveUserData } from "./supabase-user-data";
 import { isSuperAdmin, getUserPlan, setUserPlan, getUserPlanFromSupabase } from "./access-control";
 import { startTrial, isTrialExpired } from "./ai-credits-system";
+import { notifyUserRegistration } from "./notifications";
 
 interface User {
   id: string;
@@ -89,6 +90,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 console.log('✅ ADMIN detectado! Acesso total concedido:', session.user.email);
               } else {
                 console.log('✅ Usuário do Google salvo na tabela user_data');
+                
+                // 🔔 Notifica admins sobre novo cadastro Google
+                try {
+                  await supabase.from('admin_notifications').insert({
+                    type: 'user_registration',
+                    title: '👤 Novo Usuário (Google)',
+                    message: `${userData.nome || userData.username} (${session.user.email}) cadastrou via Google`,
+                    user_id: session.user.id,
+                    user_name: userData.nome || userData.username,
+                    user_email: session.user.email,
+                    read: false
+                  });
+                  console.log('✅ Notificação de novo usuário Google salva');
+                } catch (notifError) {
+                  console.log('⚠️ Tabela admin_notifications pode não existir');
+                  notifyUserRegistration(userData.nome || userData.username, session.user.email || '', session.user.id);
+                }
               }
               
               // 🔥 AUTO-COMPLETAR ONBOARDING para usuários Google (evita tela branca)
@@ -301,6 +319,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           plan: 'free',
           is_admin: false
         });
+
+        // 🔔 Salva notificação no Supabase para admins
+        try {
+          await supabase.from('admin_notifications').insert({
+            type: 'user_registration',
+            title: '👤 Novo Usuário Registrado',
+            message: `${data.nome} (${data.email}) criou uma conta`,
+            user_id: result.user.id,
+            user_name: data.nome,
+            user_email: data.email,
+            read: false
+          });
+          console.log('✅ Notificação de novo usuário salva no Supabase');
+        } catch (notifError) {
+          console.log('⚠️ Erro ao salvar notificação (tabela pode não existir):', notifError);
+          // Fallback: salva no localStorage
+          notifyUserRegistration(data.nome, data.email, result.user.id);
+        }
 
         // Usuário criado com sucesso
         // Supabase envia email de confirmação automaticamente

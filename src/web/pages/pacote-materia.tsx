@@ -6,6 +6,7 @@ import { useAuth } from "../lib/auth-context-supabase";
 import { recordQuizResult, analyzeError, type ErrorAnalysis } from "../lib/user-stats";
 import { getRecommendedTechnique, toggleFavoriteTechnique, isFavoriteTechnique, type StudyTechnique } from "../lib/study-techniques";
 import { getQuestionNote, saveQuestionNote, deleteQuestionNote, questionHasNote, formatNoteTimestamp } from "../lib/notes";
+import { isUserPlus, isSuperAdmin } from "../lib/access-control";
 
 // Task 111, 113, 114, 115, 135, 136, 137, 138: Package subject quiz page with tracking, notes, and study techniques
 
@@ -30,6 +31,11 @@ function PacoteMateriaPage() {
   const [, setLocation] = useLocation();
   const pacoteId = params?.id || "";
   const disciplina = params?.disciplina ? decodeURIComponent(params.disciplina) : "";
+  
+  // Verificar se usuário é Plus ou Admin para anotações
+  const userId = user?.email || user?.username || '';
+  const isAdmin = isSuperAdmin(user?.email) || isSuperAdmin(user?.username);
+  const isPlusUser = isUserPlus(userId) || isAdmin;
   
   const [quizData, setQuizData] = useState<QuizData | null>(null);
   const [pacote, setPacote] = useState<Pacote | null>(null);
@@ -846,87 +852,108 @@ function PacoteMateriaPage() {
                   <h3 className="text-white font-semibold flex items-center gap-2">
                     <span>📝</span>
                     Minhas Anotações
+                    {!isPlusUser && (
+                      <span className="px-2 py-0.5 bg-amber-500/20 text-amber-400 text-[10px] font-bold rounded">PLUS</span>
+                    )}
                   </h3>
-                  {noteSaving && (
+                  {isPlusUser && noteSaving && (
                     <span className="text-xs text-gray-500 animate-pulse">Salvando...</span>
                   )}
-                  {!noteSaving && noteLastSaved && (
+                  {isPlusUser && !noteSaving && noteLastSaved && (
                     <span className="text-xs text-gray-500">
                       {formatNoteTimestamp(noteLastSaved)}
                     </span>
                   )}
                 </div>
                 
-                <textarea
-                  value={noteContent}
-                  onChange={(e) => handleNoteChange(e.target.value)}
-                  placeholder="Escreva suas anotações sobre esta questão aqui... 
+                {isPlusUser ? (
+                  <>
+                    <textarea
+                      value={noteContent}
+                      onChange={(e) => handleNoteChange(e.target.value)}
+                      placeholder="Escreva suas anotações sobre esta questão aqui... 
 
 Dicas:
 • Anote o que você não sabia
 • Registre pegadinhas importantes
 • Escreva resumos para revisar depois"
-                  className="flex-1 w-full min-h-[200px] lg:min-h-[400px] bg-white/5 border border-white/10 rounded-xl p-4 text-white text-sm placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500/50 resize-none"
-                />
-                
-                {/* Task 145: Explicit Save Button + controls */}
-                <div className="mt-3 flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-3">
-                    {noteContent.trim() && (
-                      <span className="text-xs text-gray-500">
-                        {noteContent.length} caracteres
-                      </span>
-                    )}
-                    {noteSaving && (
-                      <span className="text-xs text-amber-400 animate-pulse">
-                        Salvando...
-                      </span>
-                    )}
-                  </div>
-                  
-                  <div className="flex items-center gap-2">
-                    {/* Manual Save Button */}
-                    <button
-                      onClick={() => {
-                        if (user?.username && currentQuestion && noteContent.trim()) {
-                          const savedNote = saveQuestionNote(user.username, currentQuestion.id, noteContent);
-                          setNoteLastSaved(savedNote.updatedAt);
-                          setNoteSaving(false);
-                          // Show temporary success indicator
-                          const btn = document.getElementById('save-note-btn');
-                          if (btn) {
-                            btn.classList.add('text-emerald-400');
-                            setTimeout(() => btn.classList.remove('text-emerald-400'), 2000);
-                          }
-                        }
-                      }}
-                      disabled={!noteContent.trim()}
-                      id="save-note-btn"
-                      className="px-4 py-2 bg-emerald-500/20 text-emerald-400 rounded-lg text-sm font-medium hover:bg-emerald-500/30 disabled:opacity-30 disabled:cursor-not-allowed transition-all flex items-center gap-2"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                      Salvar
-                    </button>
+                      className="flex-1 w-full min-h-[200px] lg:min-h-[400px] bg-white/5 border border-white/10 rounded-xl p-4 text-white text-sm placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500/50 resize-none"
+                    />
                     
-                    {/* Clear Button */}
-                    {noteContent.trim() && (
-                      <button
-                        onClick={() => {
-                          if (user?.username && currentQuestion) {
-                            deleteQuestionNote(user.username, currentQuestion.id);
-                            setNoteContent("");
-                            setNoteLastSaved(null);
-                          }
-                        }}
-                        className="text-xs text-rose-400 hover:text-rose-300 transition-colors px-3 py-2"
-                      >
-                        Limpar
-                      </button>
-                    )}
+                    {/* Task 145: Explicit Save Button + controls */}
+                    <div className="mt-3 flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-3">
+                        {noteContent.trim() && (
+                          <span className="text-xs text-gray-500">
+                            {noteContent.length} caracteres
+                          </span>
+                        )}
+                        {noteSaving && (
+                          <span className="text-xs text-amber-400 animate-pulse">
+                            Salvando...
+                          </span>
+                        )}
+                      </div>
+                      
+                      <div className="flex items-center gap-2">
+                        {/* Manual Save Button */}
+                        <button
+                          onClick={() => {
+                            if (user?.username && currentQuestion && noteContent.trim()) {
+                              const savedNote = saveQuestionNote(user.username, currentQuestion.id, noteContent);
+                              setNoteLastSaved(savedNote.updatedAt);
+                              setNoteSaving(false);
+                              // Show temporary success indicator
+                              const btn = document.getElementById('save-note-btn');
+                              if (btn) {
+                                btn.classList.add('text-emerald-400');
+                                setTimeout(() => btn.classList.remove('text-emerald-400'), 2000);
+                              }
+                            }
+                          }}
+                          disabled={!noteContent.trim()}
+                          id="save-note-btn"
+                          className="px-4 py-2 bg-emerald-500/20 text-emerald-400 rounded-lg text-sm font-medium hover:bg-emerald-500/30 disabled:opacity-30 disabled:cursor-not-allowed transition-all flex items-center gap-2"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                          Salvar
+                        </button>
+                        
+                        {/* Clear Button */}
+                        {noteContent.trim() && (
+                          <button
+                            onClick={() => {
+                              if (user?.username && currentQuestion) {
+                                deleteQuestionNote(user.username, currentQuestion.id);
+                                setNoteContent("");
+                                setNoteLastSaved(null);
+                              }
+                            }}
+                            className="text-xs text-rose-400 hover:text-rose-300 transition-colors px-3 py-2"
+                          >
+                            Limpar
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex-1 flex flex-col items-center justify-center text-center py-8">
+                    <div className="text-5xl mb-4">🔒</div>
+                    <h4 className="text-white font-semibold mb-2">Recurso Exclusivo Plus</h4>
+                    <p className="text-gray-400 text-sm mb-4 max-w-[200px]">
+                      Faça upgrade para fazer anotações nas questões e estudar melhor
+                    </p>
+                    <a 
+                      href="/planos" 
+                      className="px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg text-sm font-medium hover:opacity-90 transition-all"
+                    >
+                      Ver Planos
+                    </a>
                   </div>
-                </div>
+                )}
               </div>
             </div>
           </div>

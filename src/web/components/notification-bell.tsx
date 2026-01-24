@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Bell, X, Check, CheckCheck, Trash2 } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 import { 
   getNotifications, 
   getUnreadCount, 
@@ -9,14 +10,69 @@ import {
   type AdminNotification 
 } from '../lib/notifications';
 
+interface SupabaseNotification {
+  id: string;
+  type: string;
+  title: string;
+  message: string;
+  user_id: string;
+  user_name: string;
+  user_email: string;
+  read: boolean;
+  created_at: string;
+}
+
 export function NotificationBell() {
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState<AdminNotification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
 
-  const refreshNotifications = () => {
-    setNotifications(getNotifications());
-    setUnreadCount(getUnreadCount());
+  const refreshNotifications = async () => {
+    // Busca do localStorage (fallback)
+    const localNotifications = getNotifications();
+    const localUnread = getUnreadCount();
+    
+    // Busca do Supabase
+    try {
+      const { data: supabaseNotifs, error } = await supabase
+        .from('admin_notifications')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(50);
+      
+      if (!error && supabaseNotifs && supabaseNotifs.length > 0) {
+        // Converte notificações do Supabase para o formato local
+        const convertedNotifs: AdminNotification[] = supabaseNotifs.map((n: SupabaseNotification) => ({
+          id: n.id,
+          type: n.type as AdminNotification['type'],
+          title: n.title,
+          message: n.message,
+          userId: n.user_id,
+          userName: n.user_name,
+          userEmail: n.user_email,
+          timestamp: n.created_at,
+          read: n.read
+        }));
+        
+        // Combina com localStorage sem duplicatas (Supabase tem prioridade)
+        const supabaseIds = new Set(convertedNotifs.map(n => n.id));
+        const uniqueLocal = localNotifications.filter(n => !supabaseIds.has(n.id));
+        
+        const allNotifications = [...convertedNotifs, ...uniqueLocal]
+          .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+        
+        setNotifications(allNotifications);
+        setUnreadCount(allNotifications.filter(n => !n.read).length);
+        console.log('📬 Notificações carregadas:', allNotifications.length, '(Supabase:', supabaseNotifs.length, ')');
+        return;
+      }
+    } catch (e) {
+      console.log('⚠️ Erro ao buscar notificações do Supabase:', e);
+    }
+    
+    // Fallback para localStorage apenas
+    setNotifications(localNotifications);
+    setUnreadCount(localUnread);
   };
 
   useEffect(() => {
@@ -28,17 +84,48 @@ export function NotificationBell() {
     return () => clearInterval(interval);
   }, []);
 
-  const handleMarkAsRead = (notificationId: string) => {
+  const handleMarkAsRead = async (notificationId: string) => {
+    // Tenta marcar no Supabase primeiro
+    try {
+      await supabase
+        .from('admin_notifications')
+        .update({ read: true })
+        .eq('id', notificationId);
+    } catch (e) {
+      console.log('Erro ao marcar no Supabase, usando localStorage');
+    }
+    
+    // Marca no localStorage também
     markAsRead(notificationId);
     refreshNotifications();
   };
 
-  const handleMarkAllAsRead = () => {
+  const handleMarkAllAsRead = async () => {
+    // Tenta marcar todas no Supabase
+    try {
+      await supabase
+        .from('admin_notifications')
+        .update({ read: true })
+        .eq('read', false);
+    } catch (e) {
+      console.log('Erro ao marcar todas no Supabase');
+    }
+    
     markAllAsRead();
     refreshNotifications();
   };
 
-  const handleDelete = (notificationId: string) => {
+  const handleDelete = async (notificationId: string) => {
+    // Tenta deletar do Supabase
+    try {
+      await supabase
+        .from('admin_notifications')
+        .delete()
+        .eq('id', notificationId);
+    } catch (e) {
+      console.log('Erro ao deletar do Supabase');
+    }
+    
     deleteNotification(notificationId);
     refreshNotifications();
   };

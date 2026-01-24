@@ -312,20 +312,38 @@ Responda de forma clara, didática e objetiva, focando em ajudar o aluno a enten
               <div className="flex items-center gap-2 mb-4">
                 <span className="text-2xl">📝</span>
                 <h3 className="text-lg font-bold text-white">Minhas Anotações</h3>
+                {!isPlusUser && (
+                  <span className="px-2 py-0.5 bg-amber-500/20 text-amber-400 text-[10px] font-bold rounded">PLUS</span>
+                )}
               </div>
-              <p className="text-xs text-gray-400 mb-3">
-                Anote pontos importantes da questão
-              </p>
-              <textarea
-                value={anotacoes[currentIndex] || ''}
-                onChange={(e) => salvarAnotacao(e.target.value)}
-                placeholder="Digite suas anotações aqui...&#10;&#10;Ex:&#10;- Ponto importante&#10;- Dica para lembrar&#10;- Palavras-chave"
-                className="w-full h-64 p-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-blue-500/50 resize-none text-sm"
-              />
-              <div className="mt-3 flex items-center justify-between text-xs text-gray-500">
-                <span>💾 Salvo automaticamente</span>
-                <span>{(anotacoes[currentIndex] || '').length} caracteres</span>
-              </div>
+              
+              {isPlusUser ? (
+                <>
+                  <p className="text-xs text-gray-400 mb-3">
+                    Anote pontos importantes da questão
+                  </p>
+                  <textarea
+                    value={anotacoes[currentIndex] || ''}
+                    onChange={(e) => salvarAnotacao(e.target.value)}
+                    placeholder="Digite suas anotações aqui...&#10;&#10;Ex:&#10;- Ponto importante&#10;- Dica para lembrar&#10;- Palavras-chave"
+                    className="w-full h-64 p-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-blue-500/50 resize-none text-sm"
+                  />
+                  <div className="mt-3 flex items-center justify-between text-xs text-gray-500">
+                    <span>💾 Salvo automaticamente</span>
+                    <span>{(anotacoes[currentIndex] || '').length} caracteres</span>
+                  </div>
+                </>
+              ) : (
+                <div className="text-center py-8">
+                  <div className="text-4xl mb-3">🔒</div>
+                  <p className="text-gray-400 text-sm mb-2">
+                    Recurso exclusivo do Plano Plus
+                  </p>
+                  <p className="text-gray-500 text-xs">
+                    Faça upgrade para fazer anotações nas questões
+                  </p>
+                </div>
+              )}
               
               {isPlusUser && (
                 <div className="mt-4 pt-4 border-t border-white/10">
