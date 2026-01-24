@@ -2489,44 +2489,52 @@ function AdminPage() {
                         <label className="text-gray-500 text-xs font-medium block mb-2">
                           🔄 Alterar Status do Pedido:
                         </label>
-                        <div className="flex flex-wrap gap-2">
+                        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
                           {[
-                            { status: "aguardando_pagamento", label: "💳 Aguardando Pagamento", color: "yellow" },
-                            { status: "aguardando_montagem", label: "⏳ Aguardando Montagem", color: "amber" },
-                            { status: "em_andamento", label: "🔨 Em Andamento", color: "blue" },
-                            { status: "pronto", label: "✅ Pronto", color: "emerald" },
-                            { status: "cancelado", label: "❌ Cancelado", color: "red" },
-                          ].map(({ status, label, color }) => {
+                            { status: "aguardando_pagamento", label: "💳 Aguardando Pagamento", color: "yellow", bgClass: "bg-yellow-500/20 hover:bg-yellow-500/30 border-yellow-500/40", activeClass: "bg-yellow-500/40 border-2 border-yellow-400 shadow-lg shadow-yellow-500/20" },
+                            { status: "aguardando_montagem", label: "⏳ Aguardando Montagem", color: "amber", bgClass: "bg-amber-500/20 hover:bg-amber-500/30 border-amber-500/40", activeClass: "bg-amber-500/40 border-2 border-amber-400 shadow-lg shadow-amber-500/20" },
+                            { status: "em_andamento", label: "🔨 Em Produção", color: "blue", bgClass: "bg-blue-500/20 hover:bg-blue-500/30 border-blue-500/40", activeClass: "bg-blue-500/40 border-2 border-blue-400 shadow-lg shadow-blue-500/20" },
+                            { status: "pronto", label: "✅ Pronto", color: "emerald", bgClass: "bg-emerald-500/20 hover:bg-emerald-500/30 border-emerald-500/40", activeClass: "bg-emerald-500/40 border-2 border-emerald-400 shadow-lg shadow-emerald-500/20" },
+                            { status: "cancelado", label: "❌ Cancelado", color: "red", bgClass: "bg-red-500/20 hover:bg-red-500/30 border-red-500/40", activeClass: "bg-red-500/40 border-2 border-red-400 shadow-lg shadow-red-500/20" },
+                          ].map(({ status, label, bgClass, activeClass }) => {
                             const isCurrentStatus = (isWaitingPayment && status === "aguardando_pagamento") ||
                                                    (!isWaitingPayment && request.status === status);
                             return (
                               <button
                                 key={status}
-                                onClick={() => {
-                                  if (confirm(`Mudar status para "${label}"?`)) {
-                                    // Update request status
-                                    updatePackageRequestStatus(request.userId, status as any);
-                                    // If it's ready, also update access
+                                onClick={async () => {
+                                  if (!confirm(`Mudar status para "${label}"?\n\nO aluno será notificado da mudança.`)) return;
+                                  
+                                  // Animação de loading
+                                  const btn = document.getElementById(`status-btn-${status}-${i}`);
+                                  if (btn) {
+                                    btn.innerHTML = '<span class="animate-spin">⏳</span>';
+                                  }
+                                  
+                                  // Update no Supabase
+                                  try {
+                                    await supabase
+                                      .from('plan_requests')
+                                      .update({ status, updated_at: new Date().toISOString() })
+                                      .eq('id', request.id);
+                                    
+                                    // Update local
                                     if (status === "pronto") {
                                       updateProgressAndRefresh(request.userId, "pronto", "🎉 Pacote marcado como pronto!");
-                                    } else if (status === "aguardando_pagamento") {
-                                      // Revert to waiting payment
-                                      const userAccess = getAllUserAccesses()[request.userId] || {};
-                                      saveUserAccess(request.userId, {
-                                        ...userAccess,
-                                        packageStatus: "aguardando_pagamento"
-                                      });
-                                      toast.success("Status alterado para Aguardando Pagamento");
-                                    } else {
-                                      toast.success(`Status alterado: ${label}`);
                                     }
-                                    loadPackageRequests();
+                                    
+                                    await loadPackageRequests();
+                                    alert(`✅ Status atualizado! O aluno verá: "${label}"`);
+                                  } catch (e) {
+                                    alert('Erro ao atualizar status');
                                   }
                                 }}
-                                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                                id={`status-btn-${status}-${i}`}
+                                disabled={isCurrentStatus}
+                                className={`px-4 py-3 rounded-xl text-sm font-bold transition-all duration-200 border ${
                                   isCurrentStatus
-                                    ? `bg-${color}-500/30 border-2 border-${color}-500 text-${color}-300`
-                                    : `bg-${color}-500/10 border border-${color}-500/30 text-${color}-400 hover:bg-${color}-500/20`
+                                    ? `${activeClass} cursor-default`
+                                    : `${bgClass} hover:scale-105 active:scale-95 cursor-pointer`
                                 }`}
                               >
                                 {label}

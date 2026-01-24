@@ -19,6 +19,7 @@ export default function ConfigurarPacoteIndividual() {
   const [qtdQuestoes, setQtdQuestoes] = useState('100');
   const [edital, setEdital] = useState<File | null>(null);
   const [enviando, setEnviando] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const toggleBanca = (b: string) => {
     setBancasSelecionadas(prev => prev.includes(b) ? prev.filter(x => x !== b) : [...prev, b]);
@@ -98,8 +99,8 @@ export default function ConfigurarPacoteIndividual() {
         return;
       }
 
-      // Redirecionar para acompanhamento
-      setLocation('/acompanhar-pedido');
+      // Mostrar modal de sucesso
+      setShowSuccessModal(true);
     } catch (e: any) {
       alert('Erro: ' + e.message);
     } finally {
@@ -340,6 +341,39 @@ export default function ConfigurarPacoteIndividual() {
           </div>
         </div>
       </div>
+
+      {/* Modal de Sucesso */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl p-8 max-w-lg w-full border-2 border-green-500/50 shadow-2xl shadow-green-500/30 animate-scale-in">
+            <div className="text-center">
+              <div className="w-20 h-20 bg-gradient-to-br from-green-500 to-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6 animate-bounce">
+                <span className="text-5xl">✅</span>
+              </div>
+              <h2 className="text-3xl font-bold text-white mb-3">Pedido Enviado!</h2>
+              <p className="text-gray-300 mb-6 text-lg">
+                Seu pedido foi recebido com sucesso! Agora você pode acompanhar o status e fazer o pagamento.
+              </p>
+              
+              <div className="space-y-3">
+                <button
+                  onClick={() => setLocation('/acompanhar-pedido')}
+                  className="w-full py-4 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-400 hover:to-cyan-400 rounded-xl text-white font-bold text-lg shadow-xl shadow-blue-500/30 transition-all active:scale-95 flex items-center justify-center gap-3"
+                >
+                  <span className="text-2xl">👁️</span>
+                  <span>Acompanhar Meu Pedido</span>
+                </button>
+                <button
+                  onClick={() => setLocation('/dashboard')}
+                  className="w-full py-3 bg-white/10 hover:bg-white/20 rounded-xl text-gray-300 font-medium transition-all active:scale-95"
+                >
+                  Ir para Dashboard
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </AppLayout>
   );
 }
