@@ -158,26 +158,34 @@ function DashboardPage() {
                   {activePedido.status === 'em_andamento' ? '🔨' : '⏳'}
                 </div>
                 <h2 className="text-2xl md:text-3xl font-black text-white">
-                  {activePedido.status === 'em_andamento' ? 'Seu Pacote está em Produção!' : 'Pedido Recebido!'}
+                  {activePedido.status === 'em_andamento' ? '🔨 Seu Pacote está em Produção!' : 
+                   activePedido.status === 'pronto' ? '🎉 Seu Pacote foi Entregue!' :
+                   '⏳ Pedido Recebido!'}
                 </h2>
                 <p className="text-gray-300 text-base max-w-md">
                   {activePedido.status === 'em_andamento' 
                     ? 'Estamos montando seu pacote personalizado. Em breve estará pronto!'
+                    : activePedido.status === 'pronto'
+                    ? 'Seu pacote está pronto! Acesse agora e comece a estudar.'
                     : 'Seu pedido foi recebido. Aguarde enquanto preparamos tudo para você.'}
                 </p>
                 <button
                   onClick={() => setLocation('/acompanhar-pedido')}
-                  className="mt-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-400 hover:to-purple-400 rounded-xl text-white font-bold text-lg shadow-lg shadow-blue-500/30 transition-all active:scale-95 hover:scale-105 flex items-center gap-2"
+                  className="mt-2 px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-400 hover:to-purple-400 rounded-2xl text-white font-bold text-xl shadow-2xl shadow-blue-500/40 transition-all active:scale-95 hover:scale-105 flex items-center gap-3"
                 >
-                  <span>👁️</span>
+                  <span className="text-3xl">👁️</span>
                   <span>Acompanhar Pedido</span>
                 </button>
-                <div className={`mt-2 px-4 py-2 rounded-full text-sm font-bold ${
+                <div className={`mt-3 px-5 py-2.5 rounded-full text-base font-bold shadow-lg ${
                   activePedido.status === 'em_andamento' 
-                    ? 'bg-blue-500/30 text-blue-300' 
-                    : 'bg-amber-500/30 text-amber-300'
+                    ? 'bg-blue-500 text-white shadow-blue-500/30' 
+                    : activePedido.status === 'pronto'
+                    ? 'bg-emerald-500 text-white shadow-emerald-500/30'
+                    : 'bg-amber-500 text-white shadow-amber-500/30'
                 }`}>
-                  Status: {activePedido.status === 'em_andamento' ? '🔨 Em Produção' : '⏳ Aguardando'}
+                  {activePedido.status === 'em_andamento' ? '🔨 Em Produção' : 
+                   activePedido.status === 'pronto' ? '✅ Entregue' :
+                   '⏳ Aguardando'}
                 </div>
               </div>
             </div>
