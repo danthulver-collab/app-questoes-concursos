@@ -237,7 +237,7 @@ export default function PlanosPage() {
               
               <div className="space-y-2">
                 <button
-                  onClick={() => canUpgradeTo("individual") && handleImmediatePayment("individual")}
+                  onClick={() => canUpgradeTo("individual") && setLocation("/individual/configurar")}
                   disabled={!canUpgradeTo("individual")}
                   className={`w-full py-3 rounded-xl font-bold transition-all ${
                     currentPlan === "individual"

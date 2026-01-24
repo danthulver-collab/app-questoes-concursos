@@ -20,6 +20,7 @@ import PacoteMateriaPage from "./pages/pacote-materia";
 import PacoteEstudarPage from "./pages/pacote-estudar";
 import SubjectStatsPage from "./pages/subject-stats";
 import ConfiguracoesPage from "./pages/configuracoes";
+import ConfigurarPacoteIndividual from "./pages/configurar-pacote-individual";
 import { Provider } from "./components/provider";
 import { AuthProvider } from "./lib/auth-context-supabase";
 import { ProtectedRoute } from "./components/protected-route";
@@ -126,6 +127,11 @@ function App() {
                                         <Route path="/configuracoes">
                                                 <ProtectedRoute>
                                                         <ConfiguracoesPage />
+                                                </ProtectedRoute>
+                                        </Route>
+                                        <Route path="/individual/configurar">
+                                                <ProtectedRoute>
+                                                        <ConfigurarPacoteIndividual />
                                                 </ProtectedRoute>
                                         </Route>
                                 </Switch>
