@@ -281,36 +281,86 @@ export default function HomeNovo() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {concursos.map((concurso, index) => (
-                <Link key={index} href={`/?concurso=${encodeURIComponent(concurso.name)}&autostart=true`}>
-                  <div className="group glass-card rounded-2xl p-6 border border-white/10 hover:border-white/30 transition-all hover:scale-105 hover:shadow-2xl relative overflow-hidden cursor-pointer">
-                    {/* Gradient Background */}
-                    <div className={`absolute inset-0 bg-gradient-to-br ${concurso.color} opacity-0 group-hover:opacity-10 transition-opacity`} />
-                    
-                    <div className="relative">
-                      <div className="flex items-center justify-between mb-4">
-                        <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${concurso.color} flex items-center justify-center text-2xl shadow-lg`}>
-                          {concurso.icon}
-                        </div>
-                        <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-white group-hover:translate-x-1 transition-all" />
-                      </div>
-
-                      <h3 className="text-lg font-bold text-white mb-2 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-blue-400 group-hover:to-cyan-400">
-                        {concurso.name}
-                      </h3>
+              {concursos.map((concurso, index) => {
+                const isLocked = isFree && index > 2; // Grátis vê apenas 3 primeiros
+                
+                return (
+                  <Link key={index} href={isLocked ? '/planos' : `/?concurso=${encodeURIComponent(concurso.name)}&autostart=true`}>
+                    <div className={`group glass-card rounded-2xl p-6 border border-white/10 transition-all hover:scale-105 hover:shadow-2xl relative overflow-hidden ${isLocked ? 'opacity-60' : 'cursor-pointer hover:border-white/30'}`}>
+                      {/* Gradient Background */}
+                      <div className={`absolute inset-0 bg-gradient-to-br ${concurso.color} opacity-0 group-hover:opacity-10 transition-opacity`} />
                       
-                      <p className="text-sm text-gray-400">
-                        {concurso.questions} questões disponíveis
-                      </p>
+                      {/* Cadeado para plano grátis */}
+                      {isLocked && (
+                        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center gap-2 z-10">
+                          <div className="text-4xl">🔒</div>
+                          <span className="px-3 py-1 bg-amber-500 text-white text-xs font-bold rounded-full">PLANO PLUS</span>
+                        </div>
+                      )}
+                      
+                      <div className="relative">
+                        <div className="flex items-center justify-between mb-4">
+                          <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${concurso.color} flex items-center justify-center text-2xl shadow-lg`}>
+                            {concurso.icon}
+                          </div>
+                          <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-white group-hover:translate-x-1 transition-all" />
+                        </div>
 
-                      {/* Progress Bar */}
-                      <div className="mt-4 h-1.5 bg-white/10 rounded-full overflow-hidden">
-                        <div className={`h-full bg-gradient-to-r ${concurso.color} rounded-full`} style={{ width: '60%' }} />
+                        <h3 className="text-lg font-bold text-white mb-2">
+                          {concurso.name}
+                        </h3>
+                        
+                        <p className="text-sm text-gray-400">
+                          {concurso.questions} questões disponíveis
+                        </p>
+
+                        {/* Progress Bar */}
+                        <div className="mt-4 h-1.5 bg-white/10 rounded-full overflow-hidden">
+                          <div className={`h-full bg-gradient-to-r ${concurso.color} rounded-full`} style={{ width: '60%' }} />
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </Link>
-              ))}
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+          
+          {/* Simulados */}
+          <div>
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-2xl font-bold text-white mb-1">📝 Simulados</h2>
+                <p className="text-gray-400">Teste seus conhecimentos com simulados completos</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {['Português', 'Matemática', 'Direito Constitucional', 'Direito Administrativo', 'Informática', 'Raciocínio Lógico'].map((materia, index) => {
+                const icons = ['📖', '🔢', '⚖️', '🏛️', '💻', '🧩'];
+                const colors = ['blue', 'green', 'purple', 'red', 'cyan', 'orange'];
+                const questoesMateria = quizData.questions.filter(q => q.disciplina === materia).length;
+                
+                return (
+                  <Link key={index} href="/escolher-simulado">
+                    <div className="group glass-card rounded-2xl p-6 border border-white/10 hover:border-emerald-500/50 transition-all hover:scale-105 cursor-pointer">
+                      <div className="flex items-center gap-4 mb-4">
+                        <div className={`w-14 h-14 rounded-xl bg-${colors[index]}-500/20 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform`}>
+                          {icons[index]}
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="font-bold text-white mb-1">{materia}</h3>
+                          <p className="text-sm text-gray-400">{questoesMateria} questões</p>
+                        </div>
+                        <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-emerald-400 group-hover:translate-x-1 transition-all" />
+                      </div>
+                      <div className="mt-3 px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/30 rounded-lg text-emerald-400 text-xs font-bold text-center">
+                        Fazer Simulado
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
             </div>
           </div>
 
