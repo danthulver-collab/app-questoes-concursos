@@ -63,20 +63,27 @@ export default function ConfigurarPacoteIndividual() {
     setEnviando(true);
 
     try {
-      // Campos mínimos - apenas os que certamente existem
+      // Usando apenas campos básicos
       const insertData: any = {
-        user_id: user?.id,
+        user_id: user?.id || 'unknown',
         email: user?.email || '',
-        nome: user?.nome || user?.email?.split('@')[0],
+        nome: user?.nome || user?.email?.split('@')[0] || '',
         banca: bancasSelecionadas.join(', '),
         plano: 'individual',
-        num_questoes: parseInt(qtdQuestoes) || 100,
-        status: 'aguardando_montagem',
-        // Tudo no telefone como workaround
-        telefone: `Concurso: ${concurso.trim()} | Cargo: ${cargo.trim()} | Matérias: ${materias.join(', ')}`
+        status: 'aguardando_montagem'
       };
 
-      console.log('Enviando dados:', insertData);
+      // Adicionar num_questoes se campo existir
+      try {
+        insertData.num_questoes = parseInt(qtdQuestoes) || 100;
+      } catch {}
+
+      // Adicionar telefone com dados
+      try {
+        insertData.telefone = `Concurso: ${concurso} | Cargo: ${cargo} | Matérias: ${materias.join(', ')}`;
+      } catch {}
+
+      console.log('📤 Enviando:', insertData);
 
       const { data, error } = await supabase
         .from('plan_requests')
@@ -85,8 +92,8 @@ export default function ConfigurarPacoteIndividual() {
         .single();
 
       if (error) {
-        console.error('Erro ao enviar pedido:', error);
-        alert('Erro ao enviar pedido: ' + error.message);
+        console.error('❌ Erro:', error);
+        alert('Erro: ' + error.message);
         setEnviando(false);
         return;
       }

@@ -3034,139 +3034,34 @@ function AdminPage() {
           {/* USUARIOS SECTION */}
           {activeSection === "usuarios" && (
             <div className="max-w-5xl mx-auto space-y-6 animate-slide-in-up">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h1 className="text-3xl font-extrabold mb-2">Gerenciar Usuários</h1>
-                  <p className="text-gray-500">
-                    {supabaseUsers.length} do Supabase + {users.length} locais = {supabaseUsers.length + users.length} total
-                  </p>
-                </div>
-                <button
-                  onClick={async () => {
-                    await loadData();
-                    alert('Dados atualizados!');
-                  }}
-                  className="px-4 py-2 bg-blue-500/20 text-blue-400 rounded-lg hover:bg-blue-500/30 transition-all flex items-center gap-2"
-                >
-                  <span>🔄</span> Atualizar
-                </button>
-              </div>
-
-              {/* Stats */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="glass-card rounded-xl p-4 text-center">
-                  <div className="text-2xl font-black text-blue-400">{supabaseUsers.length + users.length}</div>
-                  <div className="text-xs text-gray-500">Total Geral</div>
-                </div>
-                <div className="glass-card rounded-xl p-4 text-center">
-                  <div className="text-2xl font-black text-purple-400">{supabaseUsers.length}</div>
-                  <div className="text-xs text-gray-500">Supabase</div>
-                </div>
-                <div className="glass-card rounded-xl p-4 text-center">
-                  <div className="text-2xl font-black text-orange-400">{users.length}</div>
-                  <div className="text-xs text-gray-500">localStorage</div>
-                </div>
-                <div className="glass-card rounded-xl p-4 text-center">
-                  <div className="text-2xl font-black text-amber-400">{supabaseUsers.filter(u => u.plan === 'plus').length}</div>
-                  <div className="text-xs text-gray-500">Plano Plus</div>
-                </div>
+              <div>
+                <h1 className="text-3xl font-extrabold mb-2">Gerenciar Usuários</h1>
+                <p className="text-gray-500">{users.length} usuários cadastrados</p>
               </div>
 
               <div className="space-y-3">
-                {/* Usuários do Supabase */}
-                {supabaseUsers.map((supaUser, i) => {
-                  const userEmail = supaUser.email || '';
-                  const userName = userEmail.split('@')[0] || 'Usuário';
-                  const createdAt = supaUser.created_at ? new Date(supaUser.created_at).toLocaleDateString('pt-BR') : 'N/A';
-                  
-                  return (
-                    <div key={`supa-${supaUser.id || i}`} className="glass-card rounded-xl p-5 group hover:bg-white/[0.06] transition-all">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-xl font-bold flex-shrink-0">
-                          {userName.charAt(0).toUpperCase()}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-bold text-white truncate">{userEmail}</h3>
-                          <p className="text-sm text-gray-500">
-                            🔵 Supabase • {createdAt}
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-2 flex-shrink-0">
-                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                            supaUser.plan === 'plus' ? 'bg-amber-500/20 text-amber-400' :
-                            supaUser.plan === 'individual' ? 'bg-orange-500/20 text-orange-400' :
-                            'bg-emerald-500/20 text-emerald-400'
-                          }`}>
-                            {supaUser.plan === 'plus' ? '⭐ Plus' : 
-                             supaUser.plan === 'individual' ? '📦 Individual' : 
-                             '🆓 Grátis'}
-                          </span>
-                          {supaUser.is_admin && (
-                            <span className="px-2 py-1 bg-red-500/20 text-red-400 rounded-full text-xs font-medium">
-                              👑 Admin
-                            </span>
-                          )}
-                        </div>
+                {users.map((user, i) => (
+                  <div key={i} className="glass-card rounded-xl p-5">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center text-xl font-bold">
+                        {user.username?.charAt(0).toUpperCase() || "U"}
                       </div>
-                    </div>
-                  );
-                })}
-                
-                {/* Usuários do localStorage */}
-                {users.map((user, i) => {
-                  const onboardingKey = `quiz_user_onboarding_${user.username}`;
-                  let onboardingData: { concursoObjetivo?: string; cargoDesejado?: string; bancaOrganizadora?: string } | null = null;
-                  try {
-                    const storedOnboarding = localStorage.getItem(onboardingKey);
-                    if (storedOnboarding) {
-                      onboardingData = JSON.parse(storedOnboarding);
-                    }
-                  } catch {}
-                  
-                  return (
-                    <div key={`local-${i}`} className="glass-card rounded-xl p-5 group hover:bg-white/[0.06] transition-all border-l-4 border-orange-500/30">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center text-xl font-bold flex-shrink-0">
-                          {user.avatar ? (
-                            <img src={user.avatar} alt="" className="w-full h-full rounded-full object-cover" />
-                          ) : (
-                            user.username?.charAt(0).toUpperCase() || "U"
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-bold text-white truncate">{user.username}</h3>
-                          <p className="text-sm text-gray-500">
-                            💾 localStorage • {user.provider === "google" ? "🔵 Google" : user.provider === "facebook" ? "🔵 Facebook" : "🔐 Local"}
-                          </p>
-                        </div>
-                        <span className="px-3 py-1 bg-emerald-500/20 text-emerald-400 rounded-full text-xs font-medium flex-shrink-0">Ativo</span>
+                      <div className="flex-1">
+                        <h3 className="font-bold text-white">{user.username}</h3>
+                        <p className="text-sm text-gray-500">
+                          {user.provider === "google" && "🔵 Google"}
+                          {user.provider === "local" && "🔐 Local"}
+                          {!user.provider && "🔐 Local"}
+                        </p>
                       </div>
-                      
-                      {onboardingData && (
-                        <div className="mt-4 pt-4 border-t border-white/10 grid grid-cols-1 md:grid-cols-3 gap-3">
-                          <div className="bg-white/5 rounded-lg p-3">
-                            <div className="text-xs text-gray-500">🎯 Concurso</div>
-                            <div className="text-sm font-medium text-orange-400 mt-1">{onboardingData.concursoObjetivo}</div>
-                          </div>
-                          <div className="bg-white/5 rounded-lg p-3">
-                            <div className="text-xs text-gray-500">💼 Cargo</div>
-                            <div className="text-sm font-medium text-white mt-1">{onboardingData.cargoDesejado}</div>
-                          </div>
-                          <div className="bg-white/5 rounded-lg p-3">
-                            <div className="text-xs text-gray-500">📝 Banca</div>
-                            <div className="text-sm font-medium text-white mt-1">{onboardingData.bancaOrganizadora}</div>
-                          </div>
-                        </div>
-                      )}
+                      <span className="px-3 py-1 bg-emerald-500/20 text-emerald-400 rounded-full text-xs">Ativo</span>
                     </div>
-                  );
-                })}
-                
-                {supabaseUsers.length === 0 && users.length === 0 && (
+                  </div>
+                ))}
+                {users.length === 0 && (
                   <div className="glass-card rounded-xl p-12 text-center">
                     <p className="text-4xl mb-4">👥</p>
-                    <p className="text-gray-500">Nenhum usuário cadastrado ainda</p>
-                    <p className="text-sm text-gray-600 mt-2">Usuários aparecerão aqui após se cadastrarem</p>
+                    <p className="text-gray-500">Nenhum usuário cadastrado</p>
                   </div>
                 )}
               </div>
