@@ -992,6 +992,14 @@ function AdminPage() {
   const [, setLocation] = useLocation();
   const [quizData, setQuizData] = useState<QuizData | null>(null);
   const [activeSection, setActiveSection] = useState<AdminSection>("config");
+  
+  // Recarregar dados quando mudar de seção
+  useEffect(() => {
+    if (activeSection === "solicitacoes") {
+      console.log('🔄 Carregando solicitações...');
+      loadPackageRequests();
+    }
+  }, [activeSection]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
   const [accessDenied, setAccessDenied] = useState(false);
