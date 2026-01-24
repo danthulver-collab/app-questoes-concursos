@@ -247,7 +247,7 @@ export default function PlanosPage() {
                       : "bg-white/10 text-gray-400 cursor-not-allowed"
                   }`}
                 >
-                  {currentPlan === "individual" ? "Plano Atual" : canUpgradeTo("individual") ? "💳 Pagar Agora" : "—"}
+                  {currentPlan === "individual" ? "Plano Atual" : canUpgradeTo("individual") ? "📦 Escolher Pacote" : "—"}
                 </button>
                 {canUpgradeTo("individual") && (
                   <button
