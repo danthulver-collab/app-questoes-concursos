@@ -407,10 +407,15 @@ export default function HomeNovo() {
               </Link>
 
               <Link href="/planos">
-                <a className="block glass-card rounded-2xl p-6 border border-purple-500/30 bg-gradient-to-br from-purple-500/10 to-pink-500/10 hover:scale-105 transition-all group">
-                  <Sparkles className="w-8 h-8 text-purple-400 mb-3 group-hover:scale-110 transition-transform" />
-                  <h3 className="font-bold text-white mb-2">Upgrade Plus</h3>
-                  <p className="text-sm text-gray-400">Acesso ilimitado</p>
+                <a className="block glass-card rounded-2xl p-6 border-2 border-amber-500/50 bg-gradient-to-br from-amber-500/20 to-orange-500/20 hover:scale-110 transition-all group shadow-xl shadow-amber-500/30">
+                  <div className="relative">
+                    <div className="absolute -top-2 -right-2 px-2 py-1 bg-red-500 text-white text-xs font-bold rounded-full animate-pulse">
+                      OFERTA
+                    </div>
+                    <Sparkles className="w-10 h-10 text-amber-400 mb-3 group-hover:scale-110 transition-transform" />
+                    <h3 className="font-bold text-white mb-2 text-lg">⭐ Fazer Upgrade</h3>
+                    <p className="text-sm text-gray-300 font-semibold">Ver planos e valores</p>
+                  </div>
                 </a>
               </Link>
             </div>
