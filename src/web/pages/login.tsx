@@ -97,8 +97,8 @@ function LoginPage() {
             Faça login para acessar a plataforma
           </p>
 
-          {/* Social Login Buttons */}
-          <div className="space-y-3 mb-8">
+          {/* Login apenas com usuário e senha */}
+          <div className="mb-6" style={{ display: 'none' }}>
             <button
               onClick={() => handleSocialLogin("google")}
               disabled={socialLoading !== null || isSubmitting}
