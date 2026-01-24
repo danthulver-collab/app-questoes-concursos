@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { AppLayout } from '../components/app-layout';
 import { useLocation } from 'wouter';
+import { QUESTOES_INICIAIS } from '../lib/questoes-iniciais';
 
 const BANCAS = ['CESPE/CEBRASPE', 'FCC', 'VUNESP', 'FGV', 'IBFC', 'CESGRANRIO'];
 const MATERIAS = ['Português', 'Matemática', 'Direito Constitucional', 'Direito Administrativo', 'Informática', 'Raciocínio Lógico'];
@@ -16,8 +17,18 @@ export default function EscolherSimulado() {
       return;
     }
 
-    // Ir para página de questões com filtros
-    setLocation(`/questoes?banca=${banca}&materia=${materia}`);
+    // Filtrar questões da matéria escolhida
+    const questoesFiltradas = QUESTOES_INICIAIS.filter(q => q.disciplina === materia);
+    
+    // Salvar questões filtradas no localStorage para o simulado
+    localStorage.setItem('simulado_atual', JSON.stringify({
+      banca,
+      materia,
+      questoes: questoesFiltradas
+    }));
+
+    // Ir direto para o simulado
+    setLocation('/simulado');
   };
 
   return (

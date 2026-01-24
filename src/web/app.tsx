@@ -23,6 +23,7 @@ import ConfiguracoesPage from "./pages/configuracoes";
 import ConfigurarPacoteIndividual from "./pages/configurar-pacote-individual";
 import EscolherSimulado from "./pages/escolher-simulado";
 import AcompanharPedido from "./pages/acompanhar-pedido";
+import SimuladoPage from "./pages/simulado";
 import { Provider } from "./components/provider";
 import { AuthProvider } from "./lib/auth-context-supabase";
 import { ProtectedRoute } from "./components/protected-route";
@@ -144,6 +145,11 @@ function App() {
                                         <Route path="/acompanhar-pedido">
                                                 <ProtectedRoute>
                                                         <AcompanharPedido />
+                                                </ProtectedRoute>
+                                        </Route>
+                                        <Route path="/simulado">
+                                                <ProtectedRoute>
+                                                        <SimuladoPage />
                                                 </ProtectedRoute>
                                         </Route>
                                 </Switch>

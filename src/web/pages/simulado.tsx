@@ -1,0 +1,130 @@
+import { useState, useEffect } from 'react';
+import { AppLayout } from '../components/app-layout';
+
+export default function SimuladoPage() {
+  const [simulado, setSimulado] = useState<any>(null);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [respostas, setRespostas] = useState<Record<number, string>>({});
+  const [mostrarGabarito, setMostrarGabarito] = useState(false);
+
+  useEffect(() => {
+    const data = localStorage.getItem('simulado_atual');
+    if (data) {
+      setSimulado(JSON.parse(data));
+    }
+  }, []);
+
+  if (!simulado || !simulado.questoes || simulado.questoes.length === 0) {
+    return (
+      <AppLayout>
+        <div className="text-white text-center p-12">
+          <h2 className="text-2xl mb-4">Nenhuma questão encontrada</h2>
+          <p className="text-gray-400">Volte e escolha banca e matéria</p>
+        </div>
+      </AppLayout>
+    );
+  }
+
+  const questao = simulado.questoes[currentIndex];
+  const totalQuestoes = simulado.questoes.length;
+
+  const responder = (opcao: string) => {
+    setRespostas(prev => ({ ...prev, [currentIndex]: opcao }));
+  };
+
+  const proxima = () => {
+    if (currentIndex < totalQuestoes - 1) {
+      setCurrentIndex(currentIndex + 1);
+    } else {
+      setMostrarGabarito(true);
+    }
+  };
+
+  const calcularAcertos = () => {
+    let acertos = 0;
+    simulado.questoes.forEach((q: any, i: number) => {
+      if (respostas[i] === q.correctAnswer) acertos++;
+    });
+    return acertos;
+  };
+
+  if (mostrarGabarito) {
+    const acertos = calcularAcertos();
+    const percentual = Math.round((acertos / totalQuestoes) * 100);
+
+    return (
+      <AppLayout>
+        <div className="max-w-2xl mx-auto p-6 text-center">
+          <h1 className="text-4xl font-bold text-white mb-4">🎉 Simulado Finalizado!</h1>
+          <div className="bg-white/5 rounded-2xl p-8 mb-6">
+            <div className="text-6xl font-bold text-green-400 mb-2">{percentual}%</div>
+            <p className="text-xl text-white">Você acertou {acertos} de {totalQuestoes} questões</p>
+          </div>
+          <button
+            onClick={() => window.location.href = '/'}
+            className="px-8 py-4 bg-blue-600 rounded-xl text-white font-bold"
+          >
+            Voltar ao Início
+          </button>
+        </div>
+      </AppLayout>
+    );
+  }
+
+  return (
+    <AppLayout>
+      <div className="max-w-3xl mx-auto p-6">
+        <div className="mb-4 flex justify-between items-center">
+          <span className="text-gray-400">Questão {currentIndex + 1} de {totalQuestoes}</span>
+          <span className="text-blue-400">{simulado.banca} • {simulado.materia}</span>
+        </div>
+
+        <div className="bg-white/5 rounded-2xl p-8">
+          <h2 className="text-xl text-white font-semibold mb-6">{questao.title}</h2>
+
+          <div className="space-y-3">
+            {['A', 'B', 'C', 'D'].map(opcao => (
+              <button
+                key={opcao}
+                onClick={() => responder(opcao)}
+                className={`w-full p-4 rounded-xl text-left transition-all ${
+                  respostas[currentIndex] === opcao
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-white/10 text-gray-300 hover:bg-white/20'
+                }`}
+              >
+                <span className="font-bold mr-3">{opcao})</span>
+                {questao[`option${opcao}`]}
+              </button>
+            ))}
+          </div>
+
+          {respostas[currentIndex] && (
+            <div className="mt-6">
+              <div className={`p-4 rounded-xl ${
+                respostas[currentIndex] === questao.correctAnswer
+                  ? 'bg-green-500/20 text-green-400'
+                  : 'bg-red-500/20 text-red-400'
+              }`}>
+                <div className="font-bold mb-2">
+                  {respostas[currentIndex] === questao.correctAnswer ? '✅ Correto!' : '❌ Incorreto'}
+                </div>
+                <div className="text-sm">
+                  Resposta correta: <strong>{questao.correctAnswer}</strong>
+                </div>
+                <div className="text-sm mt-2">{questao.explanation}</div>
+              </div>
+
+              <button
+                onClick={proxima}
+                className="w-full mt-4 py-4 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl text-white font-bold"
+              >
+                {currentIndex < totalQuestoes - 1 ? 'Próxima →' : '🏁 Finalizar'}
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    </AppLayout>
+  );
+}
