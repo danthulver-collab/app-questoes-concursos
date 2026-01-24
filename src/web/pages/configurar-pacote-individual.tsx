@@ -63,20 +63,21 @@ export default function ConfigurarPacoteIndividual() {
     setEnviando(true);
 
     try {
-      // Campos que existem na tabela plan_requests
+      // Campos mínimos necessários para plan_requests
       const insertData: any = {
         user_id: user?.id,
         email: user?.email || '',
         nome: user?.nome || user?.email?.split('@')[0],
-        concurso: concurso.trim(),
         banca: bancasSelecionadas.join(', '),
         materias: materias,
         plano: 'individual',
         num_questoes: parseInt(qtdQuestoes) || 100,
         status: 'aguardando_montagem',
-        // Coloca cargo no campo extras ou message
-        extras: `Cargo: ${cargo.trim()}`
+        // Coloca concurso e cargo no extras
+        extras: `Concurso: ${concurso.trim()} | Cargo: ${cargo.trim()}`
       };
+
+      console.log('Enviando dados:', insertData);
 
       const { data, error } = await supabase
         .from('plan_requests')

@@ -113,7 +113,6 @@ CREATE TABLE IF NOT EXISTS plan_requests (
   nome text,
   email text,
   telefone text,
-  concurso text,
   banca text,
   materias jsonb,
   plano text NOT NULL DEFAULT 'individual',
@@ -123,6 +122,10 @@ CREATE TABLE IF NOT EXISTS plan_requests (
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now()
 );
+
+-- Adicionar colunas concurso e cargo se não existirem (OPCIONAL)
+ALTER TABLE plan_requests ADD COLUMN IF NOT EXISTS concurso text;
+ALTER TABLE plan_requests ADD COLUMN IF NOT EXISTS cargo text;
 
 ALTER TABLE plan_requests ENABLE ROW LEVEL SECURITY;
 
