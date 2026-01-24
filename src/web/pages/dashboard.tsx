@@ -59,14 +59,30 @@ function DashboardPage() {
         // Buscar pedido ativo do usuário
         const checkPedido = async () => {
           try {
-            console.log('🔍 Buscando pedido para user_id:', user.id);
-            const { data, error } = await supabase
+            console.log('🔍 Buscando pedido para user_id:', user.id, 'email:', user.email);
+            
+            // Buscar por user_id OU email
+            let { data, error } = await supabase
               .from('plan_requests')
               .select('*')
               .eq('user_id', user.id)
               .order('created_at', { ascending: false })
               .limit(1)
               .single();
+            
+            // Se não achar por user_id, tenta por email
+            if (error && user.email) {
+              console.log('Tentando buscar por email:', user.email);
+              const result = await supabase
+                .from('plan_requests')
+                .select('*')
+                .eq('email', user.email)
+                .order('created_at', { ascending: false })
+                .limit(1)
+                .single();
+              data = result.data;
+              error = result.error;
+            }
             
             console.log('📦 Resultado:', data, 'Erro:', error);
             
@@ -75,7 +91,7 @@ function DashboardPage() {
               // Mostrar card para qualquer status exceto pronto/cancelado
               if (data.status !== 'pronto' && data.status !== 'cancelado') {
                 setActivePedido(data);
-                console.log('✅ Card ativado!');
+                console.log('✅ Card ativado! Status:', data.status);
               } else {
                 setActivePedido(null);
                 console.log('❌ Pedido finalizado, card oculto');
@@ -195,9 +211,14 @@ function DashboardPage() {
                     ? 'Seu pacote está pronto! Acesse agora e comece a estudar.'
                     : 'Seu pedido foi recebido. Aguarde enquanto preparamos tudo para você.'}
                 </p>
+                <div className="mt-2 px-4 py-2 bg-white/5 rounded-lg border border-white/10">
+                  <p className="text-gray-400 text-sm">
+                    ⏰ Prazo de entrega: <span className="text-white font-bold">até 7 dias úteis</span>
+                  </p>
+                </div>
                 <button
                   onClick={() => setLocation('/acompanhar-pedido')}
-                  className="mt-2 px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-400 hover:to-purple-400 rounded-2xl text-white font-bold text-xl shadow-2xl shadow-blue-500/40 transition-all active:scale-95 hover:scale-105 flex items-center gap-3"
+                  className="mt-4 px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-400 hover:to-purple-400 rounded-2xl text-white font-bold text-xl shadow-2xl shadow-blue-500/40 transition-all active:scale-95 hover:scale-105 flex items-center gap-3"
                 >
                   <span className="text-3xl">👁️</span>
                   <span>Acompanhar Pedido</span>
