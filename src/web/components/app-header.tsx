@@ -3,6 +3,7 @@ import { useAuth } from "../lib/auth-context-supabase";
 import { useState, useEffect } from "react";
 import { getUserPlan, isAdmin, type PlanType } from "../lib/access-control";
 import { TrialBadge } from "./trial-badge";
+import { getRemainingQuestions } from "../lib/questions-limit";
 import { getActiveUserRequest } from "../lib/plan-requests";
 
 interface AppHeaderProps {
@@ -115,6 +116,14 @@ export function AppHeader({ showAdmin = false, showBack = false, backUrl = "/", 
         </div>
 
         <div className="flex items-center gap-2 md:gap-3">
+          {/* Questões Restantes - Plano Grátis */}
+          {(userPlan === "free" || userPlan === "gratuito") && user && (
+            <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-orange-500/20 border border-orange-500/30 rounded-full text-xs font-bold text-orange-300">
+              <span>📝</span>
+              <span>{getRemainingQuestions(user.email || user.username) || 0} questões restantes</span>
+            </div>
+          )}
+          
           {/* Trial Badge */}
           {userPlan === "trial" && user && (
             <div className="hidden sm:block">

@@ -31,22 +31,24 @@ export const PLAN_LIMITS = {
     ]
   },
   free: {
-    questionsPerDay: 5, // 🔥 REDUZIDO: Era 10, agora 5
+    questionsPerDay: 10, // 🔥 TOTAL: 10 questões no total, não por dia
     maxConcursos: Infinity,
     hasComments: false,
     hasAdvancedStats: false,
     hasAI: false, // Plano free NÃO tem IA
+    hasAudioComments: false, // Sem áudio
+    hasNotes: false, // Sem anotações
     aiMessagesPerDay: 0,
     name: "Grátis",
     price: 0,
     features: [
-      "Acesso a TODOS os concursos",
-      "Todas as matérias e filtros",
-      "5 questões por dia",
+      "10 questões no total",
+      "Todas as matérias",
       "Ver respostas corretas",
       "Estatísticas básicas",
-      "❌ Sem comentários das questões",
-      "❌ Sem Chat IA"
+      "❌ Sem comentários em áudio",
+      "❌ Sem Chat IA",
+      "❌ Sem anotações"
     ]
   },
   individual: {
@@ -54,19 +56,23 @@ export const PLAN_LIMITS = {
     maxConcursos: 1,
     hasComments: true,
     hasAdvancedStats: true,
-    hasAI: true, // Basic AI access
-    aiMessagesPerMonth: 20, // ⚠️ LIMITE: 20 mensagens IA por mês
+    hasAI: false, // Sem IA
+    hasAudioComments: false, // Sem áudio
+    hasNotes: true, // Com anotações
+    aiMessagesPerMonth: 0,
     name: "Individual",
     price: 97,
     features: [
-      "Questões ilimitadas",
+      "Questões ilimitadas do seu pacote",
       "1 concurso específico personalizado",
       "Escolha concurso, cargo, banca e matérias",
       "📦 Pacote montado em até 7 dias",
       "Comentários detalhados",
+      "Anotações nas questões",
       "Estatísticas completas",
       "Plano de estudos personalizado",
-      "Chat IA: 20 mensagens/mês"
+      "❌ Sem áudio",
+      "❌ Sem Chat IA"
     ]
   },
   plus: {
@@ -75,6 +81,8 @@ export const PLAN_LIMITS = {
     hasComments: true,
     hasAdvancedStats: true,
     hasAI: true, // Full AI access
+    hasAudioComments: true, // Com áudio
+    hasNotes: true, // Com anotações
     aiMessagesPerMonth: 200, // ⚠️ LIMITE: 200 mensagens IA por mês (bem generoso)
     name: "Plus",
     price: 197,
@@ -82,8 +90,9 @@ export const PLAN_LIMITS = {
       "Questões ilimitadas",
       "Acesso TOTAL a todos os concursos",
       "Todas as matérias incluídas",
-      "✨ ChatGPT incluso no plano",
-      "Chat IA: 200 mensagens/mês",
+      "🎧 Comentários em áudio",
+      "✨ ChatGPT incluso: 200 msgs/mês",
+      "📝 Anotações ilimitadas",
       "Questões sob demanda",
       "Comentários completos",
       "Estatísticas avançadas",

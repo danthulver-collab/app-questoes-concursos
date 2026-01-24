@@ -6,7 +6,8 @@ import { useAuth } from "../lib/auth-context-supabase";
 import { recordQuizResult, analyzeError, type ErrorAnalysis } from "../lib/user-stats";
 import { getRecommendedTechnique, toggleFavoriteTechnique, isFavoriteTechnique, type StudyTechnique } from "../lib/study-techniques";
 import { getQuestionNote, saveQuestionNote, deleteQuestionNote, questionHasNote, formatNoteTimestamp } from "../lib/notes";
-import { isUserPlus, isSuperAdmin } from "../lib/access-control";
+import { isUserPlus, isSuperAdmin, getUserPlan } from "../lib/access-control";
+import { canAnswerQuestion, incrementQuestionsAnswered, getRemainingQuestions, getLimitMessage } from "../lib/questions-limit";
 
 // Task 111, 113, 114, 115, 135, 136, 137, 138: Package subject quiz page with tracking, notes, and study techniques
 
@@ -226,6 +227,12 @@ function PacoteMateriaPage() {
   const handleConfirmAnswer = useCallback(() => {
     if (selectedOption === null || hasAnswered || !currentQuestion) return;
     
+    // 🔥 Verifica limite de questões para plano grátis
+    if (user?.email && !canAnswerQuestion(user.email)) {
+      alert(getLimitMessage(user.email));
+      return;
+    }
+    
     setHasAnswered(true);
     setSelectedAnswer(selectedOption);
     
@@ -243,6 +250,11 @@ function PacoteMateriaPage() {
       }
     };
     saveProgress(newProgress);
+    
+    // 🔥 Incrementa contador de questões respondidas
+    if (user?.email) {
+      incrementQuestionsAnswered(user.email);
+    }
     
     // Record for stats
     if (user?.username) {
