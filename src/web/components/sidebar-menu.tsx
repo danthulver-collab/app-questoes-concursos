@@ -22,6 +22,12 @@ export function SidebarMenu() {
       path: '/dashboard',
       active: location.includes('/stats')
     },
+    { 
+      label: 'Configurações', 
+      icon: '⚙️', 
+      path: '/configuracoes',
+      active: location === '/configuracoes'
+    },
   ];
 
   return (
