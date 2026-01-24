@@ -3035,35 +3035,17 @@ function AdminPage() {
           {activeSection === "usuarios" && (
             <div className="max-w-5xl mx-auto space-y-6 animate-slide-in-up">
               <div>
-                <h1 className="text-3xl font-extrabold mb-2">Gerenciar Usuários</h1>
-                <p className="text-gray-500">{users.length} usuários cadastrados</p>
+                <h1 className="text-3xl font-extrabold mb-2">👥 Gerenciar Usuários</h1>
+                <p className="text-gray-500">{users?.length || 0} usuários</p>
               </div>
 
-              <div className="space-y-3">
-                {users.map((user, i) => (
-                  <div key={i} className="glass-card rounded-xl p-5">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center text-xl font-bold">
-                        {user.username?.charAt(0).toUpperCase() || "U"}
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="font-bold text-white">{user.username}</h3>
-                        <p className="text-sm text-gray-500">
-                          {user.provider === "google" && "🔵 Google"}
-                          {user.provider === "local" && "🔐 Local"}
-                          {!user.provider && "🔐 Local"}
-                        </p>
-                      </div>
-                      <span className="px-3 py-1 bg-emerald-500/20 text-emerald-400 rounded-full text-xs">Ativo</span>
-                    </div>
-                  </div>
-                ))}
-                {users.length === 0 && (
-                  <div className="glass-card rounded-xl p-12 text-center">
-                    <p className="text-4xl mb-4">👥</p>
-                    <p className="text-gray-500">Nenhum usuário cadastrado</p>
-                  </div>
-                )}
+              <div className="glass-card rounded-xl p-12 text-center">
+                <p className="text-4xl mb-4">👥</p>
+                <p className="text-white text-xl mb-2">Seção em Manutenção</p>
+                <p className="text-gray-400">Total: {users?.length || 0} usuários</p>
+                <p className="text-sm text-gray-500 mt-4">
+                  Os usuários estão sendo migrados para o Supabase
+                </p>
               </div>
             </div>
           )}
