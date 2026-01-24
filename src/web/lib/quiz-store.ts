@@ -14,6 +14,7 @@ export interface Question {
   banca?: string;
   cargo?: string;
   assunto?: string;
+  plano?: 'free' | 'plus' | 'all'; // Controla quem vê a questão
 }
 
 export interface Concurso {
