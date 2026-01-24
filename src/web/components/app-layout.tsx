@@ -32,10 +32,13 @@ export function AppLayout({ children }: AppLayoutProps) {
 
   const menuItems = [
     { icon: Home, label: "Início", path: "/", badge: null },
-    { icon: BookOpen, label: "Questões", path: "/questoes/escolher", badge: null },
+    { icon: BookOpen, label: "QUESTÕES", path: "/questoes/escolher", badge: null, highlight: true },
     { icon: BarChart3, label: "Estatísticas", path: "/dashboard", badge: null },
-    { icon: Sparkles, label: "Chat IA", path: "/ai", badge: "Novo" },
     ...(isAdmin ? [{ icon: Shield, label: "Admin", path: "/admin", badge: null }] : []),
+  ];
+
+  const menuItemsRight = [
+    { icon: Home, label: "Dashboard", path: "/dashboard", badge: null },
     { icon: Settings, label: "Configurações", path: "/configuracoes", badge: null },
   ];
 
@@ -215,15 +218,17 @@ export function AppLayout({ children }: AppLayoutProps) {
                   <a 
                     onClick={() => setSidebarOpen(false)}
                     className={`
-                      flex items-center gap-3 px-4 py-3 rounded-xl transition-all
+                      flex items-center gap-3 px-4 py-4 rounded-xl transition-all transform hover:scale-105
                       ${isActive 
-                        ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white' 
+                        ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-lg' 
                         : 'text-gray-400 hover:text-white hover:bg-white/5'
                       }
+                      ${(item as any).highlight ? 'ring-2 ring-orange-500/50 font-bold text-lg' : 'font-medium'}
                     `}
                   >
-                    <Icon className="w-5 h-5" />
-                    <span className="flex-1 font-medium">{item.label}</span>
+                    <Icon className={`${(item as any).highlight ? 'w-6 h-6' : 'w-5 h-5'}`} />
+                    <span className="flex-1">{item.label}</span>
+                    {(item as any).highlight && <span className="text-xs bg-white/20 px-2 py-1 rounded-full">HOT</span>}
                   </a>
                 </Link>
               );

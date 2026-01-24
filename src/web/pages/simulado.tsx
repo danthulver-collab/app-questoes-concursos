@@ -118,14 +118,14 @@ export default function SimuladoPage() {
               <button
                 key={opcao}
                 onClick={() => responder(opcao)}
-                className={`w-full p-4 rounded-xl text-left transition-all ${
+                className={`w-full p-5 rounded-xl text-left transition-all transform hover:scale-102 ${
                   respostas[currentIndex] === opcao
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-white/10 text-gray-300 hover:bg-white/20'
+                    ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg shadow-blue-500/50 scale-105'
+                    : 'bg-white/10 text-gray-300 hover:bg-white/20 hover:shadow-md'
                 }`}
               >
-                <span className="font-bold mr-3">{opcao})</span>
-                {questao[`option${opcao}`]}
+                <span className="font-bold text-lg mr-3">{opcao})</span>
+                <span className="text-base">{questao[`option${opcao}`]}</span>
               </button>
             ))}
           </div>
@@ -146,8 +146,16 @@ export default function SimuladoPage() {
                 {podeVerComentarios ? (
                   <div className="text-sm mt-2">{questao.explanation}</div>
                 ) : (
-                  <div className="text-sm mt-2 p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg text-amber-400">
-                    🔒 Comentários disponíveis nos planos Individual e Plus
+                  <div className="text-sm mt-2">
+                    <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg text-amber-400 mb-3">
+                      🔒 Comentários disponíveis nos planos Individual e Plus
+                    </div>
+                    <button
+                      onClick={() => window.location.href = '/planos'}
+                      className="w-full py-3 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 rounded-xl text-white font-bold transition-all"
+                    >
+                      ⭐ Fazer Upgrade Agora
+                    </button>
                   </div>
                 )}
               </div>
