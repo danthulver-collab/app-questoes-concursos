@@ -93,17 +93,11 @@ export function AppHeader({ showAdmin = false, showBack = false, backUrl = "/", 
             </Link>
           ) : (
             <Link href="/" className="flex items-center gap-3 hover:opacity-90 transition-all group">
-              <div className="relative">
-                <div className="absolute inset-0 bg-orange-500/30 rounded-xl blur group-hover:bg-orange-500/40 transition-all" />
-                <img
-                  src="./1522a1ec-a823-4b8d-b840-956fc29e2cf8.jpg"
-                  alt="Logo"
-                  className="relative w-10 h-10 md:w-11 md:h-11 rounded-xl object-cover ring-1 ring-white/10"
-                />
-              </div>
-              <span className="hidden sm:block font-bold text-white text-lg">
-                Só Questões
-              </span>
+              <img
+                src="/logo.png"
+                alt="Só Questões de Concursos"
+                className="h-10 md:h-12 w-auto object-contain"
+              />
             </Link>
           )}
           
