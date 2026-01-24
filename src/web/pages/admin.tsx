@@ -1761,6 +1761,7 @@ function AdminPage() {
     { id: "acessos", icon: "🔐", label: "Gerenciar Acessos" },
     { id: "opcoes", icon: "🏷️", label: "Bancas e Órgãos" },
     { id: "estatisticas", icon: "📊", label: "Estatísticas" },
+    { id: "config", icon: "⚙️", label: "Configurações" },
     { id: "importexport", icon: "🔄", label: "Importar/Exportar" },
   ];
 
@@ -2286,6 +2287,40 @@ function AdminPage() {
                             </span>
                           </p>
                         </div>
+                        
+                        {/* Botão Confirmar Pagamento Plus */}
+                        {request.status === 'em_andamento' && request.plano === 'plus' && (
+                          <div className="mt-4 pt-4 border-t border-white/10">
+                            <button
+                              onClick={async () => {
+                                if (!confirm(`Confirmar pagamento do Plano Plus?\n\nO aluno ${userName} receberá:\n• Plano Plus ativado\n• Áudio nos comentários\n• ChatGPT ilimitado\n• Anotações ilimitadas\n• Badge "Plano Plus"`)) return;
+                                
+                                try {
+                                  // Atualizar plano no Supabase profiles
+                                  await supabase
+                                    .from('profiles')
+                                    .update({ plan: 'plus' })
+                                    .eq('email', request.email);
+                                  
+                                  // Marcar pedido como pronto
+                                  await supabase
+                                    .from('plan_requests')
+                                    .update({ status: 'pronto' })
+                                    .eq('id', request.id);
+                                  
+                                  await loadPackageRequests();
+                                  alert('✅ Plano Plus ativado com sucesso!');
+                                } catch (e) {
+                                  alert('Erro ao confirmar pagamento');
+                                }
+                              }}
+                              className="w-full py-4 bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-400 hover:to-green-400 rounded-xl text-white font-bold text-lg shadow-xl shadow-emerald-500/30 transition-all active:scale-95 hover:scale-105 flex items-center justify-center gap-3"
+                            >
+                              <span className="text-2xl">💰</span>
+                              <span>Confirmar Pagamento Plus</span>
+                            </button>
+                          </div>
+                        )}
                       </div>
                     );
                   })}
