@@ -21,6 +21,7 @@ import PacoteEstudarPage from "./pages/pacote-estudar";
 import SubjectStatsPage from "./pages/subject-stats";
 import ConfiguracoesPage from "./pages/configuracoes";
 import ConfigurarPacoteIndividual from "./pages/configurar-pacote-individual";
+import EscolherSimulado from "./pages/escolher-simulado";
 import { Provider } from "./components/provider";
 import { AuthProvider } from "./lib/auth-context-supabase";
 import { ProtectedRoute } from "./components/protected-route";
@@ -37,6 +38,11 @@ function App() {
                                         <Route path="/">
                                                 <ProtectedRoute>
                                                         <HomeNovo />
+                                                </ProtectedRoute>
+                                        </Route>
+                                        <Route path="/questoes/escolher">
+                                                <ProtectedRoute>
+                                                        <EscolherSimulado />
                                                 </ProtectedRoute>
                                         </Route>
                                         <Route path="/questoes">

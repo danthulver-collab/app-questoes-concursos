@@ -32,7 +32,7 @@ export function AppLayout({ children }: AppLayoutProps) {
 
   const menuItems = [
     { icon: Home, label: "Início", path: "/", badge: null },
-    { icon: BookOpen, label: "Questões", path: "/questoes", badge: null },
+    { icon: BookOpen, label: "Questões", path: "/questoes/escolher", badge: null },
     { icon: BarChart3, label: "Estatísticas", path: "/dashboard", badge: null },
     { icon: Sparkles, label: "Chat IA", path: "/ai", badge: "Novo" },
     ...(isAdmin ? [{ icon: Shield, label: "Admin", path: "/admin", badge: null }] : []),
