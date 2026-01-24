@@ -1903,16 +1903,32 @@ function AdminPage() {
             ))}
           </nav>
 
-          {/* Botão WhatsApp Suporte */}
-          <div className="mt-6">
+          {/* Botões WhatsApp Suporte */}
+          <div className="mt-6 space-y-3">
             <a
-              href="https://wa.me/5511999999999?text=Olá!%20Preciso%20de%20suporte"
+              href="https://wa.me/5521980645070?text=Olá!%20Preciso%20de%20suporte%20-%20Admin"
               target="_blank"
               rel="noopener noreferrer"
               className="w-full flex items-center justify-center gap-3 px-4 py-4 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-400 hover:to-emerald-400 rounded-xl text-white font-bold shadow-lg shadow-green-500/30 transition-all active:scale-95 hover:scale-105"
             >
               <span className="text-2xl">💬</span>
-              <span>Suporte WhatsApp</span>
+              <div className="text-left">
+                <div className="text-sm font-bold">Suporte 1</div>
+                <div className="text-xs opacity-80">(21) 98064-5070</div>
+              </div>
+            </a>
+            
+            <a
+              href="https://wa.me/5521997661329?text=Olá!%20Preciso%20de%20suporte%20-%20Admin"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full flex items-center justify-center gap-3 px-4 py-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 rounded-xl text-white font-bold shadow-lg shadow-green-600/30 transition-all active:scale-95 hover:scale-105"
+            >
+              <span className="text-2xl">📱</span>
+              <div className="text-left">
+                <div className="text-sm font-bold">Suporte 2</div>
+                <div className="text-xs opacity-80">(21) 99766-1329</div>
+              </div>
             </a>
           </div>
 

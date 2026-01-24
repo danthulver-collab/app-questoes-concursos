@@ -448,12 +448,20 @@ export default function HomeNovo() {
         
         {/* Botão WhatsApp Fixo */}
         <a
-          href="https://wa.me/5511999999999?text=Olá!%20Vim%20do%20site%20Só%20Questões"
+          href="https://wa.me/5521980645070?text=Olá!%20Vim%20do%20site%20Só%20Questões"
           target="_blank"
           rel="noopener noreferrer"
-          className="fixed bottom-6 right-6 z-50 w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center text-3xl shadow-2xl shadow-green-500/50 hover:scale-110 active:scale-95 transition-all animate-bounce cursor-pointer group"
+          className="fixed bottom-6 right-6 z-50 group"
         >
-          <span className="group-hover:scale-125 transition-transform">💬</span>
+          <div className="relative">
+            <div className="absolute inset-0 bg-green-500/40 rounded-full blur-xl animate-pulse"></div>
+            <div className="relative w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center text-3xl shadow-2xl shadow-green-500/50 hover:scale-110 active:scale-95 transition-all cursor-pointer ring-4 ring-green-400/20">
+              <span className="group-hover:scale-125 transition-transform">💬</span>
+            </div>
+          </div>
+          <div className="absolute -top-12 right-0 opacity-0 group-hover:opacity-100 transition-opacity bg-green-500 text-white px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap shadow-lg">
+            Fale Conosco!
+          </div>
         </a>
       </div>
     </AppLayout>
