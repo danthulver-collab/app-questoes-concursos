@@ -343,7 +343,7 @@ export default function HomeNovo() {
                 const questoesMateria = quizData.questions.filter(q => q.disciplina === materia).length;
                 
                 return (
-                  <Link key={index} href="/escolher-simulado">
+                  <Link key={index} href="/questoes/escolher">
                     <div className="group glass-card rounded-2xl p-6 border border-white/10 hover:border-emerald-500/50 transition-all hover:scale-105 cursor-pointer">
                       <div className="flex items-center gap-4 mb-4">
                         <div className={`w-14 h-14 rounded-xl bg-${colors[index]}-500/20 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform`}>
@@ -365,41 +365,6 @@ export default function HomeNovo() {
             </div>
           </div>
 
-          {/* Matérias/Subjects */}
-          <div>
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h2 className="text-2xl font-bold text-white mb-1">Estude por Matéria</h2>
-                <p className="text-gray-400">Foque nas disciplinas que mais precisa</p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {subjects.map((subject, index) => (
-                <Link key={index} href={`/?disciplina=${encodeURIComponent(subject.name)}&autostart=true`}>
-                  <div className="group glass-card rounded-2xl p-6 border border-white/10 hover:border-white/30 transition-all hover:scale-105 cursor-pointer">
-                    <div className="flex items-center gap-4 mb-4">
-                      <div className={`w-14 h-14 rounded-xl bg-${subject.color}-500/20 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform`}>
-                        {subject.icon}
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="font-bold text-white mb-1 group-hover:text-${subject.color}-400 transition-colors">{subject.name}</h3>
-                        <p className="text-sm text-gray-400">{subject.progress}% completo</p>
-                      </div>
-                    </div>
-
-                    {/* Progress Bar */}
-                    <div className="relative h-2 bg-white/10 rounded-full overflow-hidden">
-                      <div 
-                        className={`absolute inset-y-0 left-0 bg-gradient-to-r from-${subject.color}-500 to-${subject.color}-400 rounded-full transition-all group-hover:h-3`}
-                        style={{ width: `${subject.progress}%` }}
-                      />
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </div>
 
           {/* Weekly Progress Chart */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
