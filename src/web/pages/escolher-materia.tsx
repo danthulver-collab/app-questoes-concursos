@@ -45,11 +45,21 @@ export default function EscolherMateria() {
                   </svg>
                 </div>
                 
-                <Link href={`/?disciplina=${encodeURIComponent(materia.nome)}&autostart=true`}>
-                  <button className="w-full py-3 bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-400 hover:to-green-400 rounded-xl text-white font-bold transition-all active:scale-95">
-                    Fazer Simulado
-                  </button>
-                </Link>
+                <button
+                  onClick={() => {
+                    // Salvar matéria selecionada e questões no localStorage
+                    const questoesMateria = quizData.questions.filter(q => q.disciplina === materia.nome);
+                    localStorage.setItem('simulado_atual', JSON.stringify({
+                      materia: materia.nome,
+                      banca: 'Geral',
+                      questoes: questoesMateria.slice(0, 20) // 20 questões por simulado
+                    }));
+                    window.location.href = '/simulado';
+                  }}
+                  className="w-full py-3 bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-400 hover:to-green-400 rounded-xl text-white font-bold transition-all active:scale-95"
+                >
+                  Fazer Simulado
+                </button>
               </div>
             ))}
           </div>
