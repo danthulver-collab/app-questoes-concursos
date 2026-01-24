@@ -134,21 +134,42 @@ function AccessManagementSection({
   }, []);
 
   const loadData = async () => {
-    // Carrega dados do localStorage (antigo)
+    // Carrega dados do localStorage (compatibilidade)
     setUserAccesses(getAllUserAccesses());
     setAccessStats(getAccessStatistics());
     setPlanStats(getPlanStatistics());
     setPendingUsers(getPendingApprovalUsers());
 
-    // Carrega dados do Supabase (novo) - SINCRONIZADO EM TODOS OS PCS!
-    const pendingPackages = await getUsersWithPendingPackages();
-    const allUsers = await getAllUsers();
-    
-    console.log('📦 Pedidos pendentes do Supabase:', pendingPackages);
-    console.log('👥 Todos os usuários do Supabase:', allUsers);
-    
-    setSupabasePendingPackages(pendingPackages);
-    setSupabaseUsers(allUsers);
+    // BUSCAR USUARIOS DIRETO DO PROFILES (SUPABASE)
+    try {
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, email, is_admin, plan, active, created_at')
+        .order('created_at', { ascending: false });
+
+      if (profilesError) {
+        console.error('Erro ao buscar profiles:', profilesError);
+      } else {
+        console.log('👥 Usuários do Supabase profiles:', profilesData);
+        setSupabaseUsers(profilesData || []);
+      }
+    } catch (e) {
+      console.error('Erro ao carregar profiles:', e);
+    }
+
+    // Carregar pedidos
+    try {
+      const { data: requestsData } = await supabase
+        .from('plan_requests')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (requestsData) {
+        setSupabasePendingPackages(requestsData);
+      }
+    } catch (e) {
+      console.error('Erro ao carregar pedidos:', e);
+    }
   };
 
   const refreshData = async () => {
