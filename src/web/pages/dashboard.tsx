@@ -58,7 +58,8 @@ function DashboardPage() {
         // Buscar pedido ativo do usuário
         const checkPedido = async () => {
           try {
-            const { data } = await supabase
+            console.log('🔍 Buscando pedido para user_id:', user.id);
+            const { data, error } = await supabase
               .from('plan_requests')
               .select('*')
               .eq('user_id', user.id)
@@ -66,13 +67,24 @@ function DashboardPage() {
               .limit(1)
               .single();
             
-            if (data && data.status !== 'pronto' && data.status !== 'cancelado') {
-              setActivePedido(data);
-              console.log('📦 Pedido ativo:', data.status);
+            console.log('📦 Resultado:', data, 'Erro:', error);
+            
+            if (data) {
+              console.log('Status do pedido:', data.status);
+              // Mostrar card para qualquer status exceto pronto/cancelado
+              if (data.status !== 'pronto' && data.status !== 'cancelado') {
+                setActivePedido(data);
+                console.log('✅ Card ativado!');
+              } else {
+                setActivePedido(null);
+                console.log('❌ Pedido finalizado, card oculto');
+              }
             } else {
               setActivePedido(null);
+              console.log('❌ Nenhum pedido encontrado');
             }
           } catch (e) {
+            console.error('Erro ao buscar pedido:', e);
             setActivePedido(null);
           }
         };
