@@ -1,0 +1,68 @@
+No arquivo admin.tsx, procure a linha 2880 onde tem:
+
+{activeSection === "usuarios" && (
+
+E SUBSTITUA TODA essa seção (de 2880 até o próximo }}) por:
+
+{activeSection === "usuarios" && (
+  <UsuariosSupabase />
+)}
+
+Depois, no TOPO do arquivo admin.tsx, ADICIONE este componente:
+
+function UsuariosSupabase() {
+  const [users, setUsers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadUsers();
+  }, []);
+
+  async function loadUsers() {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("id, email, is_admin, plan, active, created_at")
+      .order("created_at", { ascending: false });
+
+    if (!error && data) {
+      setUsers(data);
+    }
+    setLoading(false);
+  }
+
+  if (loading) return <div className="text-white">Carregando usuários...</div>;
+
+  return (
+    <div className="max-w-5xl mx-auto">
+      <h1 className="text-3xl font-bold text-white mb-4">👥 Usuários</h1>
+      <p className="text-gray-400 mb-6">{users.length} usuários no Supabase</p>
+      
+      <div className="space-y-2">
+        {users.map(u => (
+          <div key={u.id} className="bg-white/5 p-4 rounded-xl">
+            <div className="flex justify-between items-center">
+              <div>
+                <div className="text-white font-semibold">{u.email}</div>
+                <div className="text-sm text-gray-400">
+                  {new Date(u.created_at).toLocaleDateString('pt-BR')}
+                </div>
+              </div>
+              <div className="flex gap-3 items-center">
+                <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                  u.is_admin ? 'bg-amber-500/20 text-amber-400' : 'bg-blue-500/20 text-blue-400'
+                }`}>
+                  {u.is_admin ? 'Admin' : 'Aluno'}
+                </span>
+                <span className="px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-sm">
+                  {u.plan}
+                </span>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+ISSO SUBSTITUI A SEÇÃO DE USUÁRIOS POR UMA QUE BUSCA DO SUPABASE.

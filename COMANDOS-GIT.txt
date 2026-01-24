@@ -1,0 +1,57 @@
+# ===================================================
+# COMANDOS GIT - COPIE E COLE NO TERMINAL
+# ===================================================
+
+# 1. NAVEGUE ATÉ A PASTA DO PROJETO
+cd /caminho/para/quiz-app-pwa
+
+# 2. INICIALIZAR GIT (SÓ UMA VEZ)
+git init
+
+# 3. ADICIONAR TODOS OS ARQUIVOS
+git add .
+
+# 4. PRIMEIRO COMMIT
+git commit -m "Initial commit - Quiz App"
+
+# 5. CONECTAR COM GITHUB
+# ATENÇÃO: Substitua SEU-USUARIO pelo seu usuário do GitHub
+git remote add origin https://github.com/SEU-USUARIO/quiz-app.git
+
+# 6. RENOMEAR BRANCH PARA MAIN
+git branch -M main
+
+# 7. ENVIAR PARA GITHUB
+git push -u origin main
+
+# ===================================================
+# COMANDOS PARA TODA VEZ QUE FIZER UMA MUDANÇA:
+# ===================================================
+
+# Adicionar mudanças
+git add .
+
+# Commit com mensagem descritiva
+git commit -m "Descrição da mudança"
+
+# Enviar para GitHub (deploy automático acontece aqui!)
+git push
+
+# ===================================================
+# COMANDOS ÚTEIS:
+# ===================================================
+
+# Ver status dos arquivos
+git status
+
+# Ver histórico de commits
+git log --oneline
+
+# Desfazer última mudança (antes do commit)
+git checkout -- .
+
+# Voltar para commit anterior
+git reset --hard HEAD~1
+
+# Atualizar do GitHub (puxar mudanças)
+git pull origin main
