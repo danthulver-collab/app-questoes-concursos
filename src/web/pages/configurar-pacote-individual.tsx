@@ -63,7 +63,7 @@ export default function ConfigurarPacoteIndividual() {
     setEnviando(true);
 
     try {
-      // Campos mínimos necessários para plan_requests
+      // Campos mínimos - apenas os que certamente existem
       const insertData: any = {
         user_id: user?.id,
         email: user?.email || '',
@@ -73,8 +73,8 @@ export default function ConfigurarPacoteIndividual() {
         plano: 'individual',
         num_questoes: parseInt(qtdQuestoes) || 100,
         status: 'aguardando_montagem',
-        // Coloca concurso e cargo no extras
-        extras: `Concurso: ${concurso.trim()} | Cargo: ${cargo.trim()}`
+        // Coloca concurso e cargo no telefone como workaround
+        telefone: `Concurso: ${concurso.trim()} | Cargo: ${cargo.trim()}`
       };
 
       console.log('Enviando dados:', insertData);
