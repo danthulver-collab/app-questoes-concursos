@@ -183,34 +183,60 @@ export default function AcompanharPedido() {
           </div>
         )}
 
-        {/* Timeline de Progresso */}
-        <div className="glass-card rounded-2xl p-6 mb-6">
-          <h3 className="text-white font-semibold mb-6">Progresso:</h3>
-          <div className="space-y-4">
-            {PROGRESS_STAGES.map((stage, index) => {
-              const isCompleted = index <= currentStage;
-              const isCurrent = index === currentStage;
-              
-              return (
-                <div key={stage.id} className="flex items-center gap-4">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold ${
-                    isCompleted 
-                      ? 'bg-emerald-500 text-white' 
-                      : 'bg-white/10 text-gray-500'
-                  }`}>
-                    {isCompleted ? '✓' : index + 1}
-                  </div>
-                  <div className="flex-1">
-                    <div className={`font-medium ${isCompleted ? 'text-white' : 'text-gray-500'}`}>
-                      {stage.label}
+        {/* Timeline de Progresso Visual - Estilo Rastreamento */}
+        <div className="glass-card rounded-2xl p-8 mb-6">
+          <h3 className="text-white font-bold text-xl mb-8 text-center">Acompanhamento do Pedido</h3>
+          <div className="relative">
+            {/* Linha vertical */}
+            <div className="absolute left-8 top-0 bottom-0 w-1 bg-white/10"></div>
+            
+            <div className="space-y-8">
+              {PROGRESS_STAGES.map((stage, index) => {
+                const isCompleted = index <= currentStage;
+                const isCurrent = index === currentStage;
+                
+                return (
+                  <div key={stage.id} className="relative flex items-start gap-6">
+                    {/* Ícone */}
+                    <div className={`relative z-10 w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold transition-all ${
+                      isCompleted 
+                        ? 'bg-gradient-to-br from-emerald-500 to-green-500 text-white shadow-lg shadow-emerald-500/50 scale-110' 
+                        : 'bg-white/10 text-gray-500'
+                    }`}>
+                      {isCompleted ? '✓' : index + 1}
+                      {isCurrent && (
+                        <>
+                          <div className="absolute inset-0 bg-emerald-500/30 rounded-full blur-xl animate-pulse"></div>
+                          <div className="absolute -inset-2 border-4 border-emerald-400/30 rounded-full animate-ping"></div>
+                        </>
+                      )}
                     </div>
-                    {isCurrent && (
-                      <div className="text-xs text-orange-400 animate-pulse">← Você está aqui</div>
-                    )}
+                    
+                    {/* Conteúdo */}
+                    <div className="flex-1 pt-2">
+                      <div className={`font-bold text-lg mb-1 ${isCompleted ? 'text-white' : 'text-gray-500'}`}>
+                        {stage.label}
+                      </div>
+                      {isCurrent && (
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="px-3 py-1 bg-emerald-500/20 border border-emerald-500/40 rounded-full text-emerald-400 text-xs font-bold animate-pulse">
+                            ← VOCÊ ESTÁ AQUI
+                          </div>
+                        </div>
+                      )}
+                      {isCompleted && !isCurrent && (
+                        <div className="text-sm text-emerald-400 flex items-center gap-2">
+                          <span>✓</span> Concluído
+                        </div>
+                      )}
+                      {!isCompleted && (
+                        <div className="text-sm text-gray-500">Aguardando</div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
         </div>
 
