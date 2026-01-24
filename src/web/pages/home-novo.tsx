@@ -266,17 +266,6 @@ export default function HomeNovo() {
               )}
             </div>
           </div>
-              ) : (
-                <Link href="/escolher-materia">
-                  <div className="glass-card rounded-3xl p-8 md:p-10 cursor-pointer group hover:scale-[1.02] transition-all duration-300 bg-gradient-to-br from-emerald-500/20 to-green-500/10 border-2 border-emerald-500/30 hover:border-emerald-500/60 shadow-2xl shadow-emerald-500/20">
-                    <div className="flex flex-col items-center justify-center gap-4 text-center">
-                      <div className="w-20 h-20 rounded-full bg-gradient-to-br from-emerald-500 to-green-500 flex items-center justify-center text-4xl shadow-xl shadow-emerald-500/40 group-hover:scale-110 transition-transform">📖</div>
-                      <h2 className="text-3xl md:text-4xl font-black text-white group-hover:text-emerald-400 transition-colors">📖 ESTUDE POR MATÉRIAS</h2>
-                      <p className="text-gray-400 text-lg">Escolha a matéria e faça simulados específicos</p>
-                      <div className="flex items-center gap-2 text-emerald-400 font-semibold text-xl"><span>Ver Matérias</span><ArrowRight className="w-6 h-6 group-hover:translate-x-2 transition-transform" /></div>
-                    </div>
-                  </div>
-                </Link>
         </div>
 
         <div className="max-w-7xl mx-auto px-6 lg:px-8 pb-12 space-y-12">
