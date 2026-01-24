@@ -10,6 +10,8 @@ const MATERIAS_PADRAO = ['Português', 'Matemática', 'Direito Constitucional', 
 export default function ConfigurarPacoteIndividual() {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
+  const [concurso, setConcurso] = useState('');
+  const [cargo, setCargo] = useState('');
   const [bancasSelecionadas, setBancasSelecionadas] = useState<string[]>([]);
   const [bancaCustomInput, setBancaCustomInput] = useState('');
   const [materias, setMaterias] = useState<string[]>([]);
@@ -41,27 +43,46 @@ export default function ConfigurarPacoteIndividual() {
   };
 
   const handleSubmit = async () => {
-    if (bancasSelecionadas.length === 0 || materias.length === 0) {
-      alert('Selecione pelo menos uma banca e uma matéria');
+    if (!concurso.trim()) {
+      alert('Informe o concurso desejado');
+      return;
+    }
+    if (!cargo.trim()) {
+      alert('Informe o cargo desejado');
+      return;
+    }
+    if (bancasSelecionadas.length === 0) {
+      alert('Selecione pelo menos uma banca');
+      return;
+    }
+    if (materias.length === 0) {
+      alert('Selecione pelo menos uma matéria');
       return;
     }
 
     setEnviando(true);
 
     try {
-      const { data, error } = await supabase.from('plan_requests').insert({
+      // Campos que existem na tabela plan_requests
+      const insertData: any = {
         user_id: user?.id,
         email: user?.email || '',
         nome: user?.nome || user?.email?.split('@')[0],
-        requested_plan: 'individual',
-        plano: 'individual',
-        concurso: 'Personalizado',
-        cargo: 'A definir',
+        concurso: concurso.trim(),
         banca: bancasSelecionadas.join(', '),
         materias: materias,
+        plano: 'individual',
         num_questoes: parseInt(qtdQuestoes) || 100,
-        status: 'aguardando_montagem'
-      }).select().single();
+        status: 'aguardando_montagem',
+        // Coloca cargo no campo extras ou message
+        extras: `Cargo: ${cargo.trim()}`
+      };
+
+      const { data, error } = await supabase
+        .from('plan_requests')
+        .insert(insertData)
+        .select()
+        .single();
 
       if (error) {
         console.error('Erro ao enviar pedido:', error);
@@ -89,6 +110,35 @@ export default function ConfigurarPacoteIndividual() {
         <p className="text-gray-400 mb-8">Personalize seu concurso</p>
 
         <div className="space-y-8">
+          {/* Concurso e Cargo */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="glass-card rounded-2xl p-6">
+              <label className="block text-white font-semibold mb-3 flex items-center gap-2">
+                <span className="text-xl">🎯</span> Concurso *
+              </label>
+              <input
+                type="text"
+                value={concurso}
+                onChange={(e) => setConcurso(e.target.value)}
+                placeholder="Ex: Polícia Federal, INSS, TRT..."
+                className="w-full p-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500/50"
+              />
+            </div>
+
+            <div className="glass-card rounded-2xl p-6">
+              <label className="block text-white font-semibold mb-3 flex items-center gap-2">
+                <span className="text-xl">💼</span> Cargo *
+              </label>
+              <input
+                type="text"
+                value={cargo}
+                onChange={(e) => setCargo(e.target.value)}
+                placeholder="Ex: Agente, Técnico, Analista..."
+                className="w-full p-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+              />
+            </div>
+          </div>
+
           {/* Bancas */}
           <div className="glass-card rounded-2xl p-6">
             <label className="block text-white font-semibold mb-4 flex items-center gap-2">
@@ -221,12 +271,20 @@ export default function ConfigurarPacoteIndividual() {
           </div>
 
           {/* Resumo */}
-          {(bancasSelecionadas.length > 0 || materias.length > 0) && (
+          {(concurso || cargo || bancasSelecionadas.length > 0 || materias.length > 0) && (
             <div className="glass-card rounded-2xl p-6 border-2 border-orange-500/30">
-              <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
+              <h3 className="text-white font-semibold mb-4 flex items-center gap-2">
                 <span className="text-xl">📋</span> Resumo do Pedido
               </h3>
-              <div className="grid grid-cols-2 gap-4 text-sm">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+                <div>
+                  <span className="text-gray-400">Concurso:</span>
+                  <div className="text-orange-400 font-semibold">{concurso || '-'}</div>
+                </div>
+                <div>
+                  <span className="text-gray-400">Cargo:</span>
+                  <div className="text-blue-400 font-semibold">{cargo || '-'}</div>
+                </div>
                 <div>
                   <span className="text-gray-400">Bancas:</span>
                   <div className="text-orange-400 font-semibold">{bancasSelecionadas.length} selecionada(s)</div>
@@ -237,11 +295,11 @@ export default function ConfigurarPacoteIndividual() {
                 </div>
                 <div>
                   <span className="text-gray-400">Questões:</span>
-                  <div className="text-blue-400 font-semibold">{qtdQuestoes}</div>
+                  <div className="text-purple-400 font-semibold">{qtdQuestoes}</div>
                 </div>
                 <div>
                   <span className="text-gray-400">Edital:</span>
-                  <div className="text-gray-300">{edital ? edital.name : 'Não anexado'}</div>
+                  <div className="text-gray-300 truncate">{edital ? edital.name : 'Não anexado'}</div>
                 </div>
               </div>
             </div>
@@ -252,7 +310,7 @@ export default function ConfigurarPacoteIndividual() {
             <button
               type="button"
               onClick={handleSubmit}
-              disabled={enviando || bancasSelecionadas.length === 0 || materias.length === 0}
+              disabled={enviando || !concurso || !cargo || bancasSelecionadas.length === 0 || materias.length === 0}
               className="flex-1 py-5 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl font-bold text-white text-lg disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg hover:shadow-orange-500/30 transition-all active:scale-[0.98]"
             >
               {enviando ? (
