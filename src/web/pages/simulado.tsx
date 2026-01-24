@@ -227,91 +227,146 @@ Responda de forma clara, didática e objetiva, focando em ajudar o aluno a enten
               <h2 className="text-xl text-white font-semibold mb-6">{questao.title}</h2>
 
               <div className="space-y-3">
-                {['A', 'B', 'C', 'D'].map(opcao => (
-                  <button
-                    key={opcao}
-                    onClick={() => responder(opcao)}
-                    className={`w-full p-5 rounded-xl text-left transition-all transform hover:scale-102 ${
-                      respostas[currentIndex] === opcao
-                        ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg shadow-blue-500/50 scale-105'
-                        : 'bg-white/10 text-gray-300 hover:bg-white/20 hover:shadow-md'
-                    }`}
-                  >
-                    <span className="font-bold text-lg mr-3">{opcao})</span>
-                    <span className="text-base">{questao[`option${opcao}`]}</span>
-              </button>
-            ))}
-          </div>
-
-          {respostas[currentIndex] && (
-            <div className="mt-6">
-              <div className={`p-4 rounded-xl ${
-                respostas[currentIndex] === questao.correctAnswer
-                  ? 'bg-green-500/20 text-green-400'
-                  : 'bg-red-500/20 text-red-400'
-              }`}>
-                <div className="font-bold mb-2">
-                  {respostas[currentIndex] === questao.correctAnswer ? '✅ Correto!' : '❌ Incorreto'}
-                </div>
-                <div className="text-sm mb-3">
-                  Resposta correta: <strong>{questao.correctAnswer}</strong>
-                </div>
-                
-                {/* Comentários diferenciados por plano */}
-                {isPlusUser ? (
-                  <>
-                    <div className="text-sm mb-4">{questao.explanation}</div>
-                    <div className="flex flex-wrap gap-3 pt-3 border-t border-white/10">
-                      <button
-                        onClick={() => {
-                          const text = questao.explanation || "";
-                          if ('speechSynthesis' in window && text) {
-                            const utterance = new SpeechSynthesisUtterance(text);
-                            utterance.lang = 'pt-BR';
-                            utterance.rate = 0.9;
-                            speechSynthesis.speak(utterance);
-                          }
-                        }}
-                        className="flex items-center gap-2 px-4 py-2 bg-purple-500/20 border border-purple-500/30 rounded-xl text-purple-400 hover:bg-purple-500/30 transition-all text-sm font-medium"
-                      >
-                        🎧 Ouvir Comentário
-                        <span className="px-1.5 py-0.5 bg-amber-500/20 text-amber-400 text-[10px] font-bold rounded">PLUS</span>
-                      </button>
-                      <button
-                        onClick={() => setShowAIModal(true)}
-                        className="flex items-center gap-2 px-4 py-2 bg-emerald-500/20 border border-emerald-500/30 rounded-xl text-emerald-400 hover:bg-emerald-500/30 transition-all text-sm font-medium"
-                      >
-                        🤖 Pesquisar com ChatGPT
-                        <span className="px-1.5 py-0.5 bg-amber-500/20 text-amber-400 text-[10px] font-bold rounded">PLUS</span>
-                      </button>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="text-sm mb-3 text-gray-400">
-                      {questao.explanation ? questao.explanation.substring(0, 60) + '...' : 'Resposta verificada.'}
-                    </div>
-                    <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg text-amber-400 text-sm mb-3">
-                      🔒 Comentário completo, áudio e ChatGPT disponíveis no Plano Plus
-                    </div>
+                {['A', 'B', 'C', 'D'].map(opcao => {
+                  const respondeu = respostas[currentIndex];
+                  const isCorrect = opcao === questao.correctAnswer;
+                  const isSelected = respondeu === opcao;
+                  const showResult = !!respondeu;
+                  
+                  let buttonClass = 'bg-white/10 text-gray-300 hover:bg-white/20';
+                  
+                  if (showResult) {
+                    if (isCorrect) {
+                      // Alternativa correta sempre em verde
+                      buttonClass = 'bg-green-500/30 text-green-400 border-2 border-green-500';
+                    } else if (isSelected && !isCorrect) {
+                      // Alternativa selecionada errada em vermelho
+                      buttonClass = 'bg-red-500/30 text-red-400 border-2 border-red-500';
+                    } else {
+                      // Outras alternativas ficam opacas
+                      buttonClass = 'bg-white/5 text-gray-500 opacity-60';
+                    }
+                  } else if (isSelected) {
+                    buttonClass = 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg shadow-blue-500/50';
+                  }
+                  
+                  return (
                     <button
-                      onClick={() => setLocation('/planos')}
-                      className="w-full py-3 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl text-white font-bold transition-all hover:opacity-90"
+                      key={opcao}
+                      onClick={() => !respondeu && responder(opcao)}
+                      disabled={!!respondeu}
+                      className={`w-full p-5 rounded-xl text-left transition-all ${buttonClass} ${!respondeu ? 'hover:scale-[1.02] active:scale-[0.98]' : ''}`}
                     >
-                      ⭐ Fazer Upgrade
+                      <span className="font-bold text-lg mr-3">{opcao})</span>
+                      <span className="text-base">{questao[`option${opcao}`]}</span>
+                      {showResult && isCorrect && <span className="float-right text-green-400">✓ Correta</span>}
+                      {showResult && isSelected && !isCorrect && <span className="float-right text-red-400">✗ Sua resposta</span>}
                     </button>
-                  </>
-                )}
+                  );
+                })}
               </div>
 
-              <button
-                onClick={proxima}
-                className="w-full mt-4 py-4 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl text-white font-bold"
-              >
-                {currentIndex < totalQuestoes - 1 ? 'Próxima →' : '🏁 Finalizar'}
-              </button>
-            </div>
-          )}
+              {respostas[currentIndex] && (
+                <div className="mt-6">
+                  {/* Resultado */}
+                  <div className={`p-5 rounded-xl ${
+                    respostas[currentIndex] === questao.correctAnswer
+                      ? 'bg-green-500/20 border border-green-500/30'
+                      : 'bg-red-500/20 border border-red-500/30'
+                  }`}>
+                    <div className={`font-bold text-lg mb-3 ${
+                      respostas[currentIndex] === questao.correctAnswer ? 'text-green-400' : 'text-red-400'
+                    }`}>
+                      {respostas[currentIndex] === questao.correctAnswer ? '✅ Parabéns! Você acertou!' : '❌ Você errou!'}
+                    </div>
+                    
+                    <div className="text-white text-sm mb-4">
+                      A alternativa correta é a letra <strong className="text-green-400 text-lg">{questao.correctAnswer}</strong>
+                    </div>
+                    
+                    {/* Comentários diferenciados por plano */}
+                    {isPlusUser ? (
+                      <>
+                        {/* PLANO PLUS - Comentário completo */}
+                        <div className="mt-4 p-4 bg-white/5 rounded-xl border border-white/10">
+                          <div className="flex items-center gap-2 mb-3">
+                            <span className="text-lg">📚</span>
+                            <span className="font-semibold text-white">Comentário do Professor</span>
+                            <span className="px-2 py-0.5 bg-amber-500/20 text-amber-400 text-[10px] font-bold rounded">PLUS</span>
+                          </div>
+                          <div className="text-gray-300 text-sm leading-relaxed">{questao.explanation}</div>
+                        </div>
+                        
+                        {/* Botões Plus - Áudio e ChatGPT */}
+                        <div className="flex flex-wrap gap-3 mt-4">
+                          <button
+                            onClick={() => {
+                              const text = questao.explanation || "";
+                              if ('speechSynthesis' in window && text) {
+                                speechSynthesis.cancel();
+                                const utterance = new SpeechSynthesisUtterance(text);
+                                utterance.lang = 'pt-BR';
+                                utterance.rate = 0.9;
+                                speechSynthesis.speak(utterance);
+                              }
+                            }}
+                            className="flex items-center gap-2 px-4 py-3 bg-purple-500/20 border border-purple-500/30 rounded-xl text-purple-400 hover:bg-purple-500/30 transition-all text-sm font-medium active:scale-95"
+                          >
+                            🎧 Ouvir Comentário
+                          </button>
+                          <button
+                            onClick={() => setShowAIModal(true)}
+                            className="flex items-center gap-2 px-4 py-3 bg-emerald-500/20 border border-emerald-500/30 rounded-xl text-emerald-400 hover:bg-emerald-500/30 transition-all text-sm font-medium active:scale-95"
+                          >
+                            🤖 Perguntar ao ChatGPT
+                          </button>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        {/* PLANO GRÁTIS - Apenas preview do comentário */}
+                        <div className="mt-4 p-4 bg-white/5 rounded-xl border border-white/10 relative overflow-hidden">
+                          <div className="flex items-center gap-2 mb-3">
+                            <span className="text-lg">📚</span>
+                            <span className="font-semibold text-white">Comentário do Professor</span>
+                          </div>
+                          <div className="text-gray-400 text-sm leading-relaxed">
+                            {questao.explanation ? questao.explanation.substring(0, 100) : 'Explicação detalhada disponível'}...
+                          </div>
+                          {/* Gradiente de fade */}
+                          <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-slate-900 to-transparent" />
+                        </div>
+                        
+                        {/* CTA para upgrade */}
+                        <div className="mt-4 p-4 bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/30 rounded-xl">
+                          <div className="flex items-start gap-3">
+                            <span className="text-2xl">🔒</span>
+                            <div className="flex-1">
+                              <p className="text-amber-400 font-semibold mb-1">Quer ver o comentário completo?</p>
+                              <p className="text-gray-400 text-sm mb-3">
+                                No Plano Plus você tem acesso a comentários detalhados, áudio explicativo e ChatGPT para tirar dúvidas!
+                              </p>
+                              <button
+                                onClick={() => setLocation('/planos')}
+                                className="px-6 py-2.5 bg-gradient-to-r from-orange-500 to-amber-500 rounded-lg text-white font-bold text-sm transition-all hover:opacity-90 active:scale-95"
+                              >
+                                ⭐ Fazer Upgrade Agora
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </div>
+
+                  <button
+                    onClick={proxima}
+                    className="w-full mt-4 py-4 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl text-white font-bold text-lg hover:shadow-lg hover:shadow-green-500/30 transition-all active:scale-[0.98]"
+                  >
+                    {currentIndex < totalQuestoes - 1 ? 'Próxima Questão →' : '🏁 Finalizar Simulado'}
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 
