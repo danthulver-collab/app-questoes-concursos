@@ -57,6 +57,21 @@ export function SidebarMenu() {
             </button>
           </Link>
         ))}
+        
+        {/* Botão WhatsApp Piscante */}
+        <a
+          href="https://wa.me/5521980645070?text=Olá!%20Vim%20do%20site%20Só%20Questões"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="group relative flex items-center gap-3 px-4 py-3 rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg shadow-green-500/50 hover:scale-110 active:scale-95 transition-all animate-pulse-slow w-full"
+        >
+          <span className="text-2xl animate-bounce">💬</span>
+          <span className="text-sm font-semibold whitespace-nowrap opacity-0 group-hover:opacity-100 w-0 group-hover:w-auto overflow-hidden transition-all duration-300">
+            Suporte
+          </span>
+          <div className="absolute -right-1 -top-1 w-3 h-3 bg-red-500 rounded-full animate-ping"></div>
+          <div className="absolute -right-1 -top-1 w-3 h-3 bg-red-500 rounded-full"></div>
+        </a>
       </div>
 
       {/* Estilos de animação */}
