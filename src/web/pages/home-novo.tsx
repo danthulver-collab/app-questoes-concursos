@@ -24,6 +24,7 @@ export default function HomeNovo() {
   const [, setLocation] = useLocation();
   const userId = user?.email || user?.username || "";
   const userPlan = getUserPlan(userId) || "free";
+  const isFree = !userPlan || userPlan === 'free' || userPlan === 'gratuito';
   const remaining = getRemainingQuestions(userId);
   const activeConcursos = getActiveConcursos(userId);
   const [activePedido, setActivePedido] = useState<any>(null);
