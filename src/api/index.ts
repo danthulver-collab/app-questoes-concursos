@@ -4,6 +4,7 @@ import { drizzle } from 'drizzle-orm/d1';
 import * as schema from './database/schema';
 import { usersRouter } from './routes/users';
 import { questionsRouter } from './routes/questions';
+import mercadopagoWebhook from './routes/mercadopago-webhook';
 import { createAuth } from './auth';
 
 const app = new Hono<{ Bindings: CloudflareBindings }>()
@@ -33,5 +34,6 @@ app.on(["POST", "GET"], "/auth/**", async (c) => {
 // Rotas da API
 app.route('/users', usersRouter);
 app.route('/questions', questionsRouter);
+app.route('/webhook', mercadopagoWebhook);
 
 export default app;
