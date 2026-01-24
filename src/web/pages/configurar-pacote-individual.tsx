@@ -51,10 +51,13 @@ export default function ConfigurarPacoteIndividual() {
     try {
       const { data, error } = await supabase.from('plan_requests').insert({
         user_id: user?.id,
-        concurso: 'Plano Individual',
+        email: user?.email || '',
+        plano: 'individual',
         banca: bancasSelecionadas.join(', '),
-        materias: materias,
-        observacoes: `Quantidade: ${qtdQuestoes} questões`,
+        concurso: 'Concurso Personalizado',
+        materias: materias.join(', '),
+        quantidade: parseInt(qtdQuestoes),
+        mensagem: 'Pedido via plataforma',
         status: 'aguardando_inicio'
       }).select().single();
 
