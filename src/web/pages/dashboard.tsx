@@ -56,19 +56,32 @@ function DashboardPage() {
         });
         
         // Buscar pedido ativo do usuário
-        supabase
-          .from('plan_requests')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .single()
-          .then(({ data }) => {
+        const checkPedido = async () => {
+          try {
+            const { data } = await supabase
+              .from('plan_requests')
+              .select('*')
+              .eq('user_id', user.id)
+              .order('created_at', { ascending: false })
+              .limit(1)
+              .single();
+            
             if (data && data.status !== 'pronto' && data.status !== 'cancelado') {
               setActivePedido(data);
+              console.log('📦 Pedido ativo:', data.status);
+            } else {
+              setActivePedido(null);
             }
-          })
-          .catch(() => {});
+          } catch (e) {
+            setActivePedido(null);
+          }
+        };
+        
+        checkPedido();
+        
+        // Atualizar a cada 5 segundos
+        const interval = setInterval(checkPedido, 5000);
+        return () => clearInterval(interval);
       }
     }
   }, [user]);
