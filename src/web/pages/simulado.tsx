@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
+import { useLocation } from 'wouter';
 import { AppLayout } from '../components/app-layout';
 import { useAuth } from '../lib/auth-context-supabase';
-import { isUserPlus, isSuperAdmin } from '../lib/access-control';
+import { isUserPlus, isSuperAdmin, getUserPlan } from '../lib/access-control';
+import { canAnswerQuestion, incrementQuestionsAnswered, getRemainingQuestions, hasReachedQuestionLimit } from '../lib/questions-limit';
 
 // Usando Groq API (gratuita) com Llama 3 - via env var
 const getGroqKey = () => {
@@ -10,6 +12,7 @@ const getGroqKey = () => {
 
 export default function SimuladoPage() {
   const { user } = useAuth();
+  const [, setLocation] = useLocation();
   const [simulado, setSimulado] = useState<any>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [respostas, setRespostas] = useState<Record<number, string>>({});
@@ -19,12 +22,17 @@ export default function SimuladoPage() {
   const [aiResponse, setAiResponse] = useState('');
   const [aiLoading, setAiLoading] = useState(false);
   const [anotacoes, setAnotacoes] = useState<Record<number, string>>({});
+  const [showLimitModal, setShowLimitModal] = useState(false);
+  const [questoesRespondidas, setQuestoesRespondidas] = useState(0);
   
   // Verificar plano para comentários - incluindo admin
   const userId = user?.email || user?.username || '';
   const isAdmin = isSuperAdmin(user?.email) || isSuperAdmin(user?.username) || user?.email === 'danthulver@gmail.com';
   const isPlusUser = isUserPlus(userId) || isAdmin;
+  const userPlan = getUserPlan(userId);
+  const isFreePlan = userPlan === 'free' || userPlan === 'gratuito' || !userPlan;
   const podeVerComentarios = isPlusUser || user?.username === 'admin';
+  const remaining = getRemainingQuestions(userId);
 
   useEffect(() => {
     const data = localStorage.getItem('simulado_atual');
@@ -119,10 +127,28 @@ Responda de forma clara, didática e objetiva, focando em ajudar o aluno a enten
   const totalQuestoes = simulado.questoes.length;
 
   const responder = (opcao: string) => {
+    // Verificar limite para plano grátis
+    if (isFreePlan && !canAnswerQuestion(userId)) {
+      setShowLimitModal(true);
+      return;
+    }
+    
+    // Se ainda não respondeu esta questão, incrementa contador
+    if (!respostas[currentIndex]) {
+      incrementQuestionsAnswered(userId);
+      setQuestoesRespondidas(prev => prev + 1);
+    }
+    
     setRespostas(prev => ({ ...prev, [currentIndex]: opcao }));
   };
 
   const proxima = () => {
+    // Verificar limite antes de avançar
+    if (isFreePlan && hasReachedQuestionLimit(userId)) {
+      setShowLimitModal(true);
+      return;
+    }
+    
     if (currentIndex < totalQuestoes - 1) {
       setCurrentIndex(currentIndex + 1);
     } else {
@@ -446,6 +472,34 @@ Responda de forma clara, didática e objetiva, focando em ajudar o aluno a enten
                 ))}
               </div>
             )}
+          </div>
+        </div>
+      )}
+      
+      {/* Modal de Limite de Questões */}
+      {showLimitModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+          <div className="bg-slate-900 rounded-3xl p-8 max-w-md w-full border border-white/10 text-center">
+            <div className="text-6xl mb-4">🔒</div>
+            <h2 className="text-2xl font-bold text-white mb-3">Limite Atingido!</h2>
+            <p className="text-gray-400 mb-6">
+              Você já respondeu as 10 questões gratuitas do seu plano. 
+              Faça upgrade para continuar estudando sem limites!
+            </p>
+            <div className="space-y-3">
+              <button
+                onClick={() => setLocation('/planos')}
+                className="w-full py-3 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold rounded-xl hover:opacity-90 transition-all"
+              >
+                ⭐ Ver Planos
+              </button>
+              <button
+                onClick={() => setShowLimitModal(false)}
+                className="w-full py-3 bg-white/10 text-gray-300 font-medium rounded-xl hover:bg-white/20 transition-all"
+              >
+                Fechar
+              </button>
+            </div>
           </div>
         </div>
       )}
