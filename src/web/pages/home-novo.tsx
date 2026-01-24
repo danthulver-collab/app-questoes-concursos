@@ -29,10 +29,11 @@ export default function HomeNovo() {
   const quizData = getQuizData();
   const realConcursos = getUniqueConcursos(quizData.questions);
 
-  // Stats zeradas para novos usuarios
+  // Ler metricas reais do usuario
+  const metricas = JSON.parse(localStorage.getItem(`metricas_${userId}`) || '{"total": 0, "acertos": 0}');
   const userStats = {
-    totalQuestions: 0,
-    accuracy: 0,
+    totalQuestions: metricas.total || 0,
+    accuracy: metricas.total > 0 ? Math.round((metricas.acertos / metricas.total) * 100) : 0,
     streak: 0,
     weeklyProgress: 0,
   };

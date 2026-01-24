@@ -33,9 +33,12 @@ export default function EscolherSimulado() {
 
   return (
     <AppLayout>
-      <div className="max-w-2xl mx-auto p-6">
-        <h1 className="text-3xl font-bold text-white mb-2">🎯 Iniciar Simulado</h1>
-        <p className="text-gray-400 mb-8">Escolha banca e matéria para começar</p>
+      <div className="max-w-3xl mx-auto p-6">
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-bold text-white mb-3 animate-pulse">🎯 Iniciar Simulado</h1>
+          <p className="text-xl text-gray-300 mb-2">Escolha sua banca e matéria</p>
+          <p className="text-sm text-gray-500">5 questões por matéria • Feedback instantâneo</p>
+        </div>
 
         <div className="space-y-6">
           <div>

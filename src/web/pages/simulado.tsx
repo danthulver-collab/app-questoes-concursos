@@ -1,11 +1,17 @@
 import { useState, useEffect } from 'react';
 import { AppLayout } from '../components/app-layout';
+import { useAuth } from '../lib/auth-context-supabase';
 
 export default function SimuladoPage() {
+  const { user } = useAuth();
   const [simulado, setSimulado] = useState<any>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [respostas, setRespostas] = useState<Record<number, string>>({});
   const [mostrarGabarito, setMostrarGabarito] = useState(false);
+  
+  // Verificar plano para comentários
+  const userPlan = localStorage.getItem(`user_plan_${user?.email || user?.username}`) || 'free';
+  const podeVerComentarios = userPlan === 'individual' || userPlan === 'plus' || user?.username === 'admin';
 
   useEffect(() => {
     const data = localStorage.getItem('simulado_atual');
@@ -48,9 +54,34 @@ export default function SimuladoPage() {
     return acertos;
   };
 
+  const salvarResultado = (acertos: number, total: number) => {
+    const userId = user?.email || user?.username;
+    if (!userId) return;
+
+    // Salvar histórico no localStorage
+    const historico = JSON.parse(localStorage.getItem(`historico_${userId}`) || '[]');
+    historico.push({
+      data: new Date().toISOString(),
+      acertos,
+      total,
+      percentual: Math.round((acertos / total) * 100),
+      materia: simulado.materia
+    });
+    localStorage.setItem(`historico_${userId}`, JSON.stringify(historico));
+
+    // Atualizar métricas totais
+    const metricas = JSON.parse(localStorage.getItem(`metricas_${userId}`) || '{"total": 0, "acertos": 0}');
+    metricas.total += total;
+    metricas.acertos += acertos;
+    localStorage.setItem(`metricas_${userId}`, JSON.stringify(metricas));
+  };
+
   if (mostrarGabarito) {
     const acertos = calcularAcertos();
     const percentual = Math.round((acertos / totalQuestoes) * 100);
+    
+    // Salvar resultado
+    salvarResultado(acertos, totalQuestoes);
 
     return (
       <AppLayout>
@@ -112,7 +143,13 @@ export default function SimuladoPage() {
                 <div className="text-sm">
                   Resposta correta: <strong>{questao.correctAnswer}</strong>
                 </div>
-                <div className="text-sm mt-2">{questao.explanation}</div>
+                {podeVerComentarios ? (
+                  <div className="text-sm mt-2">{questao.explanation}</div>
+                ) : (
+                  <div className="text-sm mt-2 p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg text-amber-400">
+                    🔒 Comentários disponíveis nos planos Individual e Plus
+                  </div>
+                )}
               </div>
 
               <button
