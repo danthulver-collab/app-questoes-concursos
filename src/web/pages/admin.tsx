@@ -2357,6 +2357,75 @@ function AdminPage() {
               )}
             </div>
           )}
+          
+          {/* PACOTES SECTION */}
+          {activeSection === "pacotes" && (
+            <div className="max-w-5xl mx-auto space-y-6 animate-slide-in-up">
+              <div>
+                <h1 className="text-3xl font-extrabold mb-2">📦 Pacotes de Concurso</h1>
+                <p className="text-gray-500">Crie e gerencie pacotes personalizados para alunos do Plano Individual</p>
+              </div>
+              
+              {/* Stats */}
+              <div className="grid grid-cols-3 gap-4">
+                <div className="glass-card rounded-xl p-4 text-center">
+                  <div className="text-2xl font-black text-purple-400">{quizData.pacotes?.length || 0}</div>
+                  <div className="text-xs text-gray-500">Pacotes Criados</div>
+                </div>
+                <div className="glass-card rounded-xl p-4 text-center">
+                  <div className="text-2xl font-black text-blue-400">{quizData.questions?.length || 0}</div>
+                  <div className="text-xs text-gray-500">Questões Disponíveis</div>
+                </div>
+                <div className="glass-card rounded-xl p-4 text-center">
+                  <div className="text-2xl font-black text-emerald-400">{packageRequests?.filter(r => r.plano === 'individual')?.length || 0}</div>
+                  <div className="text-xs text-gray-500">Pedidos Individual</div>
+                </div>
+              </div>
+              
+              {/* Lista de Pacotes */}
+              <div className="glass-card rounded-2xl p-6">
+                <h3 className="text-white font-semibold mb-4">Pacotes Existentes</h3>
+                {quizData.pacotes && quizData.pacotes.length > 0 ? (
+                  <div className="space-y-3">
+                    {quizData.pacotes.map((pacote, i) => (
+                      <div key={pacote.id} className="bg-white/5 rounded-xl p-4 hover:bg-white/10 transition-all">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h4 className="text-white font-bold">{pacote.nome}</h4>
+                            <p className="text-sm text-gray-400">{pacote.concurso} - {pacote.disciplinas?.join(', ')}</p>
+                          </div>
+                          <span className="px-3 py-1 bg-purple-500/20 text-purple-400 rounded-full text-xs">
+                            {pacote.questions?.length || 0} questões
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <p className="text-4xl mb-3">📦</p>
+                    <p className="text-gray-400">Nenhum pacote criado ainda</p>
+                    <p className="text-sm text-gray-500 mt-2">Os pacotes aparecerão aqui</p>
+                  </div>
+                )}
+              </div>
+              
+              {/* Instruções */}
+              <div className="glass-card rounded-2xl p-6 border border-blue-500/30 bg-blue-500/5">
+                <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
+                  <span>💡</span> Como criar pacotes
+                </h3>
+                <ul className="space-y-2 text-sm text-gray-300">
+                  <li>• Vá em <strong>Solicitações</strong> e veja os pedidos dos alunos</li>
+                  <li>• Crie questões personalizadas em <strong>Questões</strong></li>
+                  <li>• Monte o pacote baseado no pedido (concurso, banca, matérias)</li>
+                  <li>• Atribua o pacote ao aluno</li>
+                  <li>• Mude status para <strong>Pronto</strong> quando terminar</li>
+                </ul>
+              </div>
+            </div>
+          )}
+          
           {/* CONCURSOS SECTION */}
           {activeSection === "concursos" && (
             <div className="max-w-4xl mx-auto space-y-6 animate-slide-in-up">
