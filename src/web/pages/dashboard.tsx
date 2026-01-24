@@ -59,57 +59,49 @@ function DashboardPage() {
         // Buscar pedido ativo do usuário
         const checkPedido = async () => {
           try {
-            console.log('🔍 Buscando pedido para user_id:', user.id, 'email:', user.email);
+            const userEmail = user.email || '';
+            const userId = user.id || '';
             
-            // Buscar por user_id OU email
-            let { data, error } = await supabase
+            console.log('🔍 Buscando pedido para:', { userId, userEmail });
+            
+            // Buscar todos os pedidos do email (mais confiável)
+            const { data: allPedidos, error: allError } = await supabase
               .from('plan_requests')
               .select('*')
-              .eq('user_id', user.id)
-              .order('created_at', { ascending: false })
-              .limit(1)
-              .single();
+              .eq('email', userEmail)
+              .order('created_at', { ascending: false });
             
-            // Se não achar por user_id, tenta por email
-            if (error && user.email) {
-              console.log('Tentando buscar por email:', user.email);
-              const result = await supabase
-                .from('plan_requests')
-                .select('*')
-                .eq('email', user.email)
-                .order('created_at', { ascending: false })
-                .limit(1)
-                .single();
-              data = result.data;
-              error = result.error;
-            }
+            console.log('📦 Pedidos encontrados:', allPedidos?.length || 0, allPedidos);
             
-            console.log('📦 Resultado:', data, 'Erro:', error);
-            
-            if (data) {
-              console.log('Status do pedido:', data.status);
-              // Mostrar card para qualquer status exceto pronto/cancelado
-              if (data.status !== 'pronto' && data.status !== 'cancelado') {
-                setActivePedido(data);
-                console.log('✅ Card ativado! Status:', data.status);
+            if (allPedidos && allPedidos.length > 0) {
+              // Pega o primeiro pedido que não está finalizado
+              const pedidoAtivo = allPedidos.find(p => 
+                p.status !== 'pronto' && p.status !== 'cancelado'
+              ) || allPedidos[0];
+              
+              console.log('📦 Pedido selecionado:', pedidoAtivo);
+              
+              if (pedidoAtivo && pedidoAtivo.status !== 'pronto' && pedidoAtivo.status !== 'cancelado') {
+                setActivePedido(pedidoAtivo);
+                console.log('✅ CARD ATIVADO! Status:', pedidoAtivo.status);
               } else {
                 setActivePedido(null);
-                console.log('❌ Pedido finalizado, card oculto');
+                console.log('❌ Todos os pedidos finalizados');
               }
             } else {
               setActivePedido(null);
-              console.log('❌ Nenhum pedido encontrado');
+              console.log('❌ Nenhum pedido encontrado para email:', userEmail);
             }
           } catch (e) {
-            console.error('Erro ao buscar pedido:', e);
+            console.error('❌ ERRO ao buscar pedido:', e);
             setActivePedido(null);
           }
         };
         
         checkPedido();
         
-        // Atualizar a cada 5 segundos
-        const interval = setInterval(checkPedido, 5000);
+        // Atualizar a cada 3 segundos (mais rápido)
+        const interval = setInterval(checkPedido, 3000);
         return () => clearInterval(interval);
       }
     }
