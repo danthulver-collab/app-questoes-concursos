@@ -2137,608 +2137,122 @@ function AdminPage() {
           {activeSection === "solicitacoes" && (
             <div className="max-w-5xl mx-auto space-y-6 animate-slide-in-up">
               <div>
-                <h1 className="text-3xl font-extrabold mb-2">Solicitações de Pacotes</h1>
+                <h1 className="text-3xl font-extrabold mb-2">📋 Solicitações de Pacotes</h1>
                 <p className="text-gray-500">
-                  {packageRequests.filter(r => r.status === "aguardando_montagem").length} solicitações pendentes
+                  {packageRequests?.length || 0} solicitações no total
                 </p>
               </div>
 
-              {/* Stats - Task 89/95: Added payment waiting count + SUPABASE */}
+              {/* Stats */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="glass-card rounded-xl p-4 text-center">
-                  <div className="text-2xl font-black text-yellow-400">
-                    {Object.values(getAllUserAccesses()).filter((u: any) => u.packageStatus === "aguardando_pagamento").length}
-                  </div>
-                  <div className="text-xs text-gray-500">💳 Aguardando Pagamento</div>
-                  <div className="text-[10px] text-emerald-400 mt-1">✓ Centralizado</div>
-                </div>
-                <div className="glass-card rounded-xl p-4 text-center">
                   <div className="text-2xl font-black text-amber-400">
-                    {packageRequests.filter(r => r.status === "aguardando_montagem").length}
+                    {packageRequests?.filter(r => r.status === "aguardando_montagem")?.length || 0}
                   </div>
-                  <div className="text-xs text-gray-500">🔨 Aguardando Montagem</div>
+                  <div className="text-xs text-gray-500">⏳ Aguardando Montagem</div>
                 </div>
                 <div className="glass-card rounded-xl p-4 text-center">
                   <div className="text-2xl font-black text-blue-400">
-                    {packageRequests.filter(r => r.status === "em_andamento").length}
+                    {packageRequests?.filter(r => r.status === "em_andamento")?.length || 0}
                   </div>
-                  <div className="text-xs text-gray-500">⚙️ Em Andamento</div>
+                  <div className="text-xs text-gray-500">🔨 Em Produção</div>
                 </div>
                 <div className="glass-card rounded-xl p-4 text-center">
                   <div className="text-2xl font-black text-emerald-400">
-                    {packageRequests.filter(r => r.status === "pronto").length}
+                    {packageRequests?.filter(r => r.status === "pronto")?.length || 0}
                   </div>
                   <div className="text-xs text-gray-500">✅ Prontos</div>
                 </div>
+                <div className="glass-card rounded-xl p-4 text-center">
+                  <div className="text-2xl font-black text-purple-400">
+                    {packageRequests?.length || 0}
+                  </div>
+                  <div className="text-xs text-gray-500">📊 Total</div>
+                </div>
               </div>
 
-              {/* Requests list */}
-              {packageRequests.length === 0 ? (
-                <div className="glass-card rounded-2xl p-8 text-center">
-                  <span className="text-4xl mb-4 block">📭</span>
-                  <p className="text-gray-400">Nenhuma solicitação de pacote ainda</p>
+              {/* Lista de Solicitações */}
+              {!packageRequests || packageRequests.length === 0 ? (
+                <div className="glass-card rounded-2xl p-12 text-center">
+                  <span className="text-6xl mb-4 block">📭</span>
+                  <p className="text-gray-400 text-xl">Nenhuma solicitação ainda</p>
+                  <p className="text-sm text-gray-500 mt-2">As solicitações aparecerão aqui</p>
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {packageRequests.map((request, index) => {
-                    const userAccess = getAllUserAccesses()[request.userId];
-                    const isWaitingPayment = userAccess?.packageStatus === "aguardando_pagamento";
-                    const creationProgress = getUserCreationProgress(request.userId);
-                    
-                    // Buscar nome do usuário
-                    const userName = request.nome || request.email || userAccess?.nome || request.userId;
-                    const userEmail = request.email || userAccess?.email || request.userId;
+                  {packageRequests.map((request, i) => {
+                    const userName = request.nome || request.email || 'Usuário';
+                    const userEmail = request.email || '';
                     
                     return (
-                    <div key={index} className={`glass-card rounded-2xl p-5 ${isWaitingPayment ? "border border-yellow-500/30" : ""}`}>
-                      <div className="flex items-start justify-between mb-4">
-                        <div>
-                          <h3 className="font-bold text-white text-lg">{request.concurso}</h3>
-                          <p className="text-sm text-gray-400">
-                            Solicitante: <span className="text-orange-400 font-semibold">{userName}</span>
-                            {userEmail !== userName && (
-                              <span className="text-gray-500 ml-2">({userEmail})</span>
-                            )}
-                          </p>
-                        </div>
-                        {/* Status badge - Task 89: Show payment status */}
-                        <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                          isWaitingPayment
-                            ? "bg-yellow-500/20 text-yellow-400"
-                            : request.status === "aguardando_montagem" 
-                            ? "bg-amber-500/20 text-amber-400"
-                            : request.status === "em_andamento"
-                            ? "bg-blue-500/20 text-blue-400"
-                            : "bg-emerald-500/20 text-emerald-400"
-                        }`}>
-                          {isWaitingPayment ? "💳 Aguardando Pagamento"
-                            : request.status === "aguardando_montagem" ? "Aguardando" 
-                            : request.status === "em_andamento" ? "Em Andamento" 
-                            : "Pronto"}
-                        </span>
-                      </div>
-                      
-                      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm mb-4">
-                        <div>
-                          <span className="text-gray-500 block text-xs">Cargo</span>
-                          <span className="text-white">{request.cargo}</span>
-                        </div>
-                        <div>
-                          <span className="text-gray-500 block text-xs">Banca</span>
-                          <span className="text-white">
-                            {request.banca === "Outra" && request.bancaCustom 
-                              ? `${request.bancaCustom} (customizada)`
-                              : request.banca}
-                          </span>
-                        </div>
-                        <div>
-                          <span className="text-gray-500 block text-xs">Plano</span>
-                          <span className={`font-bold ${request.plano === "plus" ? "text-amber-400" : "text-orange-400"}`}>
-                            {request.plano === "plus" ? "Plus" : "Individual"}
-                          </span>
-                        </div>
-                        {/* Task 96: Display number of questions requested */}
-                        <div>
-                          <span className="text-gray-500 block text-xs">Qtd. Questões</span>
-                          <span className="text-purple-400 font-bold">{request.numQuestoes || 100}</span>
-                        </div>
-                        <div>
-                          <span className="text-gray-500 block text-xs">Data</span>
-                          <span className="text-white">{new Date(request.createdAt).toLocaleDateString("pt-BR")}</span>
-                        </div>
-                      </div>
-                      
-                      {/* Task 83: Display materias selecionadas */}
-                      <div className="mb-4">
-                        <span className="text-gray-500 text-xs block mb-2">Matérias Selecionadas:</span>
-                        <div className="flex flex-wrap gap-2">
-                          {request.materias.map((materia, idx) => (
-                            <span key={idx} className="px-2 py-1 bg-white/5 rounded text-xs text-gray-300">
-                              {materia}
-                            </span>
-                          ))}
-                          {request.materias.length === 0 && (
-                            <span className="text-gray-500 text-xs">Nenhuma matéria selecionada</span>
-                          )}
-                        </div>
-                      </div>
-                      
-                      {/* Task 83: Display custom matérias if present - Task 92: Simplified */}
-                      {request.materiasCustom && (
-                        <div className="mb-4 p-3 bg-orange-500/10 border border-orange-500/20 rounded-xl">
-                          <span className="text-orange-400 text-xs block mb-2 font-medium">📝 Matérias Adicionais Solicitadas:</span>
-                          <p className="text-white text-sm">{request.materiasCustom}</p>
-                        </div>
-                      )}
-                      
-                      {/* Task 122: Display attached edital file */}
-                      {request.editalFile && (
-                        <div className="mb-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-xl">
-                          <span className="text-blue-400 text-xs block mb-2 font-medium">📄 Edital Anexado:</span>
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
-                                <svg className="w-5 h-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                </svg>
-                              </div>
-                              <div>
-                                <p className="text-sm font-medium text-white">{request.editalFile.name}</p>
-                                <p className="text-xs text-gray-400">{(request.editalFile.size / 1024).toFixed(1)} KB</p>
-                              </div>
-                            </div>
-                            <div className="flex gap-2">
-                              <a
-                                href={request.editalFile.dataUrl}
-                                download={request.editalFile.name}
-                                className="px-3 py-1.5 bg-blue-500/20 hover:bg-blue-500/40 text-blue-400 rounded-lg text-xs font-medium transition-all flex items-center gap-1"
-                              >
-                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                                </svg>
-                                Baixar
-                              </a>
-                              {request.editalFile.name.match(/\.(jpg|jpeg|png|gif)$/i) && (
-                                <button
-                                  onClick={() => window.open(request.editalFile?.dataUrl, '_blank')}
-                                  className="px-3 py-1.5 bg-purple-500/20 hover:bg-purple-500/40 text-purple-400 rounded-lg text-xs font-medium transition-all flex items-center gap-1"
-                                >
-                                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                  </svg>
-                                  Visualizar
-                                </button>
-                              )}
-                            </div>
+                      <div key={request.id || i} className="glass-card rounded-2xl p-6 hover:bg-white/[0.06] transition-all">
+                        <div className="flex items-start justify-between mb-4">
+                          <div>
+                            <h3 className="font-bold text-white text-lg mb-1">{userName}</h3>
+                            <p className="text-sm text-gray-400">{userEmail}</p>
+                            <p className="text-xs text-gray-500 mt-1">
+                              Banca: {request.banca || 'N/A'}
+                            </p>
                           </div>
+                          <span className={`px-4 py-2 rounded-xl text-sm font-bold ${
+                            request.status === 'pronto' ? 'bg-emerald-500/20 text-emerald-400' :
+                            request.status === 'em_andamento' ? 'bg-blue-500/20 text-blue-400' :
+                            'bg-amber-500/20 text-amber-400'
+                          }`}>
+                            {request.status === 'pronto' ? '✅ Pronto' :
+                             request.status === 'em_andamento' ? '🔨 Em Produção' :
+                             '⏳ Aguardando'}
+                          </span>
                         </div>
-                      )}
-                      
-                      {/* Task 97: Progress Control Section with 8 stages timeline */}
-                      {request.status !== "pronto" && (
-                        <div className="mb-4 p-4 bg-white/5 border border-white/10 rounded-xl">
-                          <label className="text-gray-400 text-xs font-medium block mb-3 flex items-center gap-2">
-                            <span>📊</span>
-                            Progresso da Criação (clique para avançar):
+                        
+                        {/* Botões de Status */}
+                        <div className="mt-4 pt-4 border-t border-white/10">
+                          <label className="text-gray-400 text-xs font-medium block mb-3">
+                            🔄 Alterar Status:
                           </label>
-                          
-                          {/* Mini timeline visualization */}
-                          <div className="mb-4">
-                            <MiniTimeline currentStage={creationProgress?.stage || "pagamento_pendente"} />
-                          </div>
-                          
-                          {/* Stage selector grid - Task 97: 8 stages */}
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                            {ORDERED_STAGES.map((stage) => {
-                              const currentStage = creationProgress?.stage || "pagamento_pendente";
-                              const stagePercentage = STAGE_PERCENTAGES[stage];
-                              const currentPercentage = STAGE_PERCENTAGES[currentStage];
-                              const isActive = stagePercentage <= currentPercentage;
-                              const isCurrent = currentStage === stage;
-                              const icon = STAGE_ICONS[stage];
-                              
+                          <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+                            {[
+                              { status: "aguardando_montagem", label: "⏳ Aguardando", bg: "bg-amber-500/20 hover:bg-amber-500/30 border-amber-500", active: "bg-amber-500 text-white" },
+                              { status: "em_andamento", label: "🔨 Em Produção", bg: "bg-blue-500/20 hover:bg-blue-500/30 border-blue-500", active: "bg-blue-500 text-white" },
+                              { status: "pronto", label: "✅ Pronto", bg: "bg-emerald-500/20 hover:bg-emerald-500/30 border-emerald-500", active: "bg-emerald-500 text-white" },
+                              { status: "cancelado", label: "❌ Cancelado", bg: "bg-red-500/20 hover:bg-red-500/30 border-red-500", active: "bg-red-500 text-white" },
+                            ].map(({ status, label, bg, active }) => {
+                              const isCurrent = request.status === status;
                               return (
                                 <button
-                                  key={stage}
-                                  onClick={() => {
-                                    updateProgressAndRefresh(
-                                      request.userId, 
-                                      stage, 
-                                      `Progresso atualizado: ${STAGE_LABELS[stage]} (${STAGE_PERCENTAGES[stage]}%)`
-                                    );
+                                  key={status}
+                                  type="button"
+                                  onClick={async () => {
+                                    if (!confirm(`Mudar para "${label}"?`)) return;
+                                    try {
+                                      await supabase
+                                        .from('plan_requests')
+                                        .update({ status, updated_at: new Date().toISOString() })
+                                        .eq('id', request.id);
+                                      await loadPackageRequests();
+                                      alert('✅ Status atualizado!');
+                                    } catch (e) {
+                                      alert('Erro ao atualizar');
+                                    }
                                   }}
-                                  className={`p-2 rounded-lg text-xs font-medium transition-all border ${
-                                    isCurrent 
-                                      ? "bg-orange-500/30 border-orange-500 text-orange-300 ring-2 ring-orange-500/50"
-                                      : isActive 
-                                      ? "bg-emerald-500/20 border-emerald-500/50 text-emerald-400"
-                                      : "bg-white/5 border-white/10 text-gray-500 hover:bg-white/10"
-                                  }`}
+                                  disabled={isCurrent}
+                                  className={`px-3 py-2 rounded-lg text-xs font-bold transition-all border ${
+                                    isCurrent ? active : bg
+                                  } ${!isCurrent ? 'active:scale-95 hover:scale-105' : 'cursor-default'}`}
                                 >
-                                  <div className="flex items-center justify-center gap-1 mb-1">
-                                    <span>{isActive ? "✓" : icon}</span>
-                                    <span>{stagePercentage}%</span>
-                                  </div>
-                                  <div className="text-[10px] truncate">{STAGE_LABELS[stage]}</div>
+                                  {label}
                                 </button>
                               );
                             })}
                           </div>
-                          
-                          {/* Progress bar */}
-                          <div className="mt-3 h-2 bg-white/10 rounded-full overflow-hidden">
-                            <div 
-                              className="h-full bg-gradient-to-r from-emerald-500 via-orange-500 to-amber-500 rounded-full transition-all duration-500"
-                              style={{ width: `${creationProgress?.percentual || 0}%` }}
-                            />
-                          </div>
-                          <p className="text-center text-gray-500 text-xs mt-2">
-                            {creationProgress?.percentual || 0}% concluído
-                          </p>
-                          
-                          {/* Task 98: Timestamps history */}
-                          {creationProgress?.timestamps && Object.keys(creationProgress.timestamps).length > 0 && (
-                            <details className="mt-3">
-                              <summary className="text-xs text-gray-500 cursor-pointer hover:text-gray-400">
-                                📅 Ver histórico de mudanças
-                              </summary>
-                              <div className="mt-2 space-y-1 text-xs">
-                                {ORDERED_STAGES.map((stage) => {
-                                  const timestamp = creationProgress.timestamps[stage as keyof typeof creationProgress.timestamps];
-                                  if (!timestamp) return null;
-                                  return (
-                                    <div key={stage} className="flex items-center gap-2 text-gray-400">
-                                      <span className="text-gray-600">{STAGE_ICONS[stage]}</span>
-                                      <span>{STAGE_LABELS[stage]}:</span>
-                                      <span className="text-gray-500">
-                                        {new Date(timestamp).toLocaleDateString("pt-BR", {
-                                          day: "2-digit",
-                                          month: "2-digit",
-                                          year: "numeric",
-                                          hour: "2-digit",
-                                          minute: "2-digit"
-                                        })}
-                                      </span>
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            </details>
-                          )}
-                        </div>
-                      )}
-                      
-                      {/* Task 97: Action buttons - Quick stage advances */}
-                      <div className="flex gap-2 flex-wrap">
-                        {/* Payment confirmation */}
-                        {isWaitingPayment && (
-                          <button
-                            onClick={() => {
-                              if (confirm("Confirmar que o pagamento foi recebido?")) {
-                                // 🔥 INSTANTÂNEO: Sem await
-                                confirmUserPayment(request.userId);
-                                updateProgressAndRefresh(
-                                  request.userId, 
-                                  "pagamento_confirmado", 
-                                  "✅ Pagamento confirmado com sucesso!"
-                                );
-                              }
-                            }}
-                            className="flex-1 py-3 bg-green-500 hover:bg-green-600 text-white rounded-xl font-bold transition-all shadow-lg shadow-green-500/30"
-                          >
-                            ✅ Confirmar Pagamento
-                          </button>
-                        )}
-                        
-                        {/* Advance to next stage button */}
-                        {!isWaitingPayment && request.status !== "pronto" && (
-                          <>
-                            {/* Get current stage and next stage */}
-                            {(() => {
-                              const currentStage = creationProgress?.stage || "pagamento_pendente";
-                              const currentIndex = ORDERED_STAGES.indexOf(currentStage);
-                              const nextStage = ORDERED_STAGES[currentIndex + 1];
-                              
-                              if (!nextStage) return null;
-                              
-                              return (
-                                <button
-                                  onClick={() => {
-                                    updateProgressAndRefresh(
-                                      request.userId, 
-                                      nextStage, 
-                                      `Avançado para: ${STAGE_LABELS[nextStage]} (${STAGE_PERCENTAGES[nextStage]}%)`
-                                    );
-                                  }}
-                                  className="flex-1 py-2 bg-orange-500/20 hover:bg-orange-500/30 text-orange-400 rounded-xl font-medium transition-all flex items-center justify-center gap-2"
-                                >
-                                  <span>{STAGE_ICONS[nextStage]}</span>
-                                  Avançar para: {STAGE_LABELS[nextStage]}
-                                </button>
-                              );
-                            })()}
-                            
-                            {/* Quick complete button */}
-                            <button
-                              onClick={() => {
-                                if (confirm("Marcar como 100% pronto?")) {
-                                  updateProgressAndRefresh(
-                                    request.userId, 
-                                    "pronto", 
-                                    "🎉 Pacote finalizado com sucesso!"
-                                  );
-                                }
-                              }}
-                              className="py-2 px-4 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 rounded-xl font-medium transition-all"
-                            >
-                              🎉 Finalizar
-                            </button>
-                          </>
-                        )}
-                        
-                        {request.status === "pronto" && (
-                          <div className="flex-1 py-2 text-center text-emerald-400 font-medium">
-                            🎉 Pacote entregue ao aluno
-                          </div>
-                        )}
-                      </div>
-                      
-                      {/* Task 172: Status Change Buttons */}
-                      <div className="mt-4 pt-4 border-t border-white/10">
-                        <label className="text-gray-500 text-xs font-medium block mb-2">
-                          🔄 Alterar Status do Pedido:
-                        </label>
-                        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-                          {[
-                            { status: "aguardando_pagamento", label: "💳 Aguardando Pagamento", color: "yellow", bgClass: "bg-yellow-500/20 hover:bg-yellow-500/30 border-yellow-500/40", activeClass: "bg-yellow-500/40 border-2 border-yellow-400 shadow-lg shadow-yellow-500/20" },
-                            { status: "aguardando_montagem", label: "⏳ Aguardando Montagem", color: "amber", bgClass: "bg-amber-500/20 hover:bg-amber-500/30 border-amber-500/40", activeClass: "bg-amber-500/40 border-2 border-amber-400 shadow-lg shadow-amber-500/20" },
-                            { status: "em_andamento", label: "🔨 Em Produção", color: "blue", bgClass: "bg-blue-500/20 hover:bg-blue-500/30 border-blue-500/40", activeClass: "bg-blue-500/40 border-2 border-blue-400 shadow-lg shadow-blue-500/20" },
-                            { status: "pronto", label: "✅ Pronto", color: "emerald", bgClass: "bg-emerald-500/20 hover:bg-emerald-500/30 border-emerald-500/40", activeClass: "bg-emerald-500/40 border-2 border-emerald-400 shadow-lg shadow-emerald-500/20" },
-                            { status: "cancelado", label: "❌ Cancelado", color: "red", bgClass: "bg-red-500/20 hover:bg-red-500/30 border-red-500/40", activeClass: "bg-red-500/40 border-2 border-red-400 shadow-lg shadow-red-500/20" },
-                          ].map(({ status, label, bgClass, activeClass }) => {
-                            const isCurrentStatus = (isWaitingPayment && status === "aguardando_pagamento") ||
-                                                   (!isWaitingPayment && request.status === status);
-                            return (
-                              <button
-                                key={status}
-                                onClick={async () => {
-                                  if (!confirm(`Mudar status para "${label}"?\n\nO aluno será notificado da mudança.`)) return;
-                                  
-                                  // Animação de loading
-                                  const btn = document.getElementById(`status-btn-${status}-${i}`);
-                                  if (btn) {
-                                    btn.innerHTML = '<span class="animate-spin">⏳</span>';
-                                  }
-                                  
-                                  // Update no Supabase
-                                  try {
-                                    await supabase
-                                      .from('plan_requests')
-                                      .update({ status, updated_at: new Date().toISOString() })
-                                      .eq('id', request.id);
-                                    
-                                    // Update local
-                                    if (status === "pronto") {
-                                      updateProgressAndRefresh(request.userId, "pronto", "🎉 Pacote marcado como pronto!");
-                                    }
-                                    
-                                    await loadPackageRequests();
-                                    alert(`✅ Status atualizado! O aluno verá: "${label}"`);
-                                  } catch (e) {
-                                    alert('Erro ao atualizar status');
-                                  }
-                                }}
-                                id={`status-btn-${status}-${i}`}
-                                disabled={isCurrentStatus}
-                                className={`px-4 py-3 rounded-xl text-sm font-bold transition-all duration-200 border ${
-                                  isCurrentStatus
-                                    ? `${activeClass} cursor-default`
-                                    : `${bgClass} hover:scale-105 active:scale-95 cursor-pointer`
-                                }`}
-                              >
-                                {label}
-                              </button>
-                            );
-                          })}
                         </div>
                       </div>
-                      
-                      {/* Task 104-106: Criar Pacote button */}
-                      {(() => {
-                        const linkedPacoteId = getLinkedPackageId(request.userId);
-                        const linkedPacote = linkedPacoteId ? quizData?.pacotes.find(p => p.id === linkedPacoteId) : null;
-                        
-                        if (linkedPacote) {
-                          // Task 105: Show linked package info
-                          return (
-                            <div className="mt-4 p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl">
-                              <div className="flex items-center justify-between flex-wrap gap-3">
-                                <div className="flex items-center gap-2">
-                                  <span className="text-emerald-400 text-lg">✅</span>
-                                  <div>
-                                    <span className="text-emerald-400 font-medium">Pacote Criado:</span>
-                                    <span className="text-white ml-2">{linkedPacote.nome}</span>
-                                    <span className="text-gray-500 text-xs ml-2">
-                                      ({linkedPacote.questionsIds.length}/{linkedPacote.numQuestoes} questões)
-                                    </span>
-                                  </div>
-                                </div>
-                                <div className="flex gap-2">
-                                  <button
-                                    onClick={() => {
-                                      setActiveSection("pacotes");
-                                      handleEditPacote(linkedPacote);
-                                    }}
-                                    className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-gray-300 rounded-lg text-sm font-medium transition-all flex items-center gap-1"
-                                  >
-                                    ✏️ Editar
-                                  </button>
-                                  <button
-                                    onClick={() => {
-                                      setActiveSection("pacotes");
-                                      handleStartAddingQuestions(linkedPacote);
-                                    }}
-                                    className="px-3 py-1.5 bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 rounded-lg text-sm font-medium transition-all flex items-center gap-1"
-                                  >
-                                    ➕ Adicionar Questões
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
-                          );
-                        }
-                        
-                        // Task 104: Show "Criar Pacote" button
-                        return (
-                          <div className="mt-4">
-                            <button
-                              onClick={() => {
-                                // Task 104: Create package with pre-filled data from request
-                                const newPacote: Pacote = {
-                                  id: generateId(),
-                                  nome: request.concurso,
-                                  banca: request.bancaCustom || request.banca,
-                                  ano: new Date().getFullYear(),
-                                  orgao: "",
-                                  descricao: `Pacote personalizado para ${request.userId} - Cargo: ${request.cargo}`,
-                                  disciplinas: request.materias,
-                                  numQuestoes: request.numQuestoes || 100,
-                                  premium: true,
-                                  alunoAtribuido: request.userId,
-                                  questionsIds: [],
-                                  createdAt: new Date().toISOString(),
-                                  updatedAt: new Date().toISOString()
-                                };
-                                
-                                // Task 105-106: Save package, link to request, and assign to user
-                                if (quizData) {
-                                  const newData = { ...quizData, pacotes: [...quizData.pacotes, newPacote] };
-                                  setQuizData(newData);
-                                  saveQuizData(newData);
-                                  
-                                  // Link package to request
-                                  linkPackageToRequest(request.userId, newPacote.id);
-                                  
-                                  // Assign package to user
-                                  assignPackageToUser(request.userId, newPacote.id);
-                                  
-                                  // Task 108: Show success and offer to add questions
-                                  showSaveMessage("✅ Pacote criado e atribuído ao aluno!");
-                                  
-                                  // Prompt to add questions
-                                  if (confirm("Pacote criado com sucesso! Deseja adicionar questões agora?")) {
-                                    setActiveSection("pacotes");
-                                    handleStartAddingQuestions(newPacote);
-                                  }
-                                }
-                              }}
-                              className="w-full py-3 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 rounded-xl font-bold transition-all shadow-lg shadow-purple-500/20 flex items-center justify-center gap-2"
-                            >
-                              <span className="text-lg">📦</span>
-                              Criar Pacote para este Aluno
-                            </button>
-                          </div>
-                        );
-                      })()}
-                    </div>
                     );
                   })}
                 </div>
               )}
             </div>
           )}
-
-          {/* PACOTES SECTION */}
-          {activeSection === "pacotes" && (
-            <div className="max-w-5xl mx-auto space-y-6 animate-slide-in-up">
-              <div className="flex items-center justify-between flex-wrap gap-4">
-                <div>
-                  <h1 className="text-3xl font-extrabold mb-2">Pacotes de Concurso</h1>
-                  <p className="text-gray-500">{quizData.pacotes.length} pacotes criados</p>
-                </div>
-                <button
-                  onClick={handleAddPacote}
-                  className="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl font-bold text-sm hover:scale-105 transition-transform flex items-center gap-2"
-                >
-                  <span className="text-lg">📦</span> Criar Pacote
-                </button>
-              </div>
-
-              {/* Info Card */}
-              <div className="glass-card rounded-xl p-4 border border-purple-500/20 bg-purple-500/5">
-                <div className="flex items-start gap-3">
-                  <span className="text-2xl">💡</span>
-                  <div>
-                    <h4 className="font-bold text-purple-300 mb-1">O que são Pacotes?</h4>
-                    <p className="text-sm text-gray-400">
-                      Pacotes são agrupamentos de questões de um concurso específico. Crie um pacote, adicione questões em massa e atribua a alunos específicos para estudo focado.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Stats */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="glass-card rounded-xl p-4 text-center">
-                  <div className="text-2xl font-black text-purple-400">{quizData.pacotes.length}</div>
-                  <div className="text-xs text-gray-500">Total Pacotes</div>
-                </div>
-                <div className="glass-card rounded-xl p-4 text-center">
-                  <div className="text-2xl font-black text-orange-400">{quizData.pacotes.reduce((acc, p) => acc + p.questionsIds.length, 0)}</div>
-                  <div className="text-xs text-gray-500">Questões em Pacotes</div>
-                </div>
-                <div className="glass-card rounded-xl p-4 text-center">
-                  <div className="text-2xl font-black text-amber-400">{quizData.pacotes.filter(p => p.premium).length}</div>
-                  <div className="text-xs text-gray-500">Pacotes Premium</div>
-                </div>
-                <div className="glass-card rounded-xl p-4 text-center">
-                  <div className="text-2xl font-black text-emerald-400">{quizData.pacotes.filter(p => getPacoteAssignedUsers(p.id).length > 0).length}</div>
-                  <div className="text-xs text-gray-500">Com Alunos</div>
-                </div>
-              </div>
-
-              {/* Pacotes List */}
-              <div className="space-y-4">
-                {quizData.pacotes.map(pacote => {
-                  const assignedUsers = getPacoteAssignedUsers(pacote.id);
-                  const questoesCount = pacote.questionsIds.length;
-                  const progressPercent = pacote.numQuestoes > 0 ? Math.min(100, (questoesCount / pacote.numQuestoes) * 100) : 0;
-                  
-                  return (
-                    <div key={pacote.id} className="glass-card rounded-2xl p-6 hover:bg-white/[0.04] transition-all group">
-                      <div className="flex flex-col lg:flex-row lg:items-center gap-4">
-                        {/* Info */}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-3 mb-2">
-                            <h3 className="text-xl font-bold text-white truncate">{pacote.nome}</h3>
-                            {pacote.premium && (
-                              <span className="px-2 py-0.5 bg-amber-500/20 text-amber-400 text-xs font-bold rounded-full">PREMIUM</span>
-                            )}
-                          </div>
-                          <div className="flex flex-wrap items-center gap-3 text-sm text-gray-400 mb-3">
-                            <span className="flex items-center gap-1">🏛️ {pacote.banca || "Banca não definida"}</span>
-                            <span className="flex items-center gap-1">📅 {pacote.ano}</span>
-                            <span className="flex items-center gap-1">🏢 {pacote.orgao || "Órgão não definido"}</span>
-                          </div>
-                          
-                          {pacote.descricao && (
-                            <p className="text-sm text-gray-500 mb-3 line-clamp-2">{pacote.descricao}</p>
-                          )}
-                          
-                          {/* Disciplines */}
-                          {pacote.disciplinas.length > 0 && (
-                            <div className="flex flex-wrap gap-1 mb-3">
-                              {pacote.disciplinas.map(d => (
-                                <span key={d} className="px-2 py-0.5 bg-blue-500/20 text-blue-400 text-xs rounded-full">{d}</span>
-                              ))}
-                            </div>
-                          )}
-                          
-                          {/* Progress Bar */}
-                          <div className="mb-2">
-                            <div className="flex items-center justify-between text-xs mb-1">
-                              <span className="text-gray-500">Questões: {questoesCount} / {pacote.numQuestoes}</span>
                               <span className="text-purple-400 font-bold">{Math.round(progressPercent)}%</span>
                             </div>
                             <div className="h-2 bg-white/10 rounded-full overflow-hidden">
