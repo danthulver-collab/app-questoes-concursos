@@ -229,41 +229,38 @@ export default function HomeNovo() {
                 </div>
               </Link>
               
-              {/* Card Pedido em Produção */}
-              {activePedido && (
-                <div className="glass-card rounded-3xl p-8 md:p-10 bg-gradient-to-br from-blue-500/20 to-purple-500/10 border-2 border-blue-500/40 shadow-2xl shadow-blue-500/20 animate-slide-in-up">
-                  <div className="flex flex-col items-center justify-center gap-4 text-center">
-                    <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-4xl shadow-xl shadow-blue-500/40 animate-pulse">
-                      {activePedido.status === 'em_andamento' ? '🔨' : '⏳'}
-                    </div>
-                    <h2 className="text-2xl md:text-3xl font-black text-white">
-                      {activePedido.status === 'em_andamento' ? '🔨 Seu Pacote em Produção!' : '⏳ Pedido Aguardando'}
-                    </h2>
-                    <p className="text-gray-300 text-base">
-                      {activePedido.status === 'em_andamento' 
-                        ? 'Estamos montando seu pacote personalizado!'
-                        : 'Seu pedido foi recebido com sucesso'}
-                    </p>
-                    <div className="px-4 py-2 bg-white/5 rounded-lg border border-white/10">
-                      <p className="text-gray-400 text-sm">
-                        ⏰ Prazo: <span className="text-white font-bold">até 7 dias úteis</span>
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => setLocation('/acompanhar-pedido')}
-                      className="mt-2 px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-400 hover:to-purple-400 rounded-2xl text-white font-bold text-xl shadow-2xl shadow-blue-500/40 transition-all active:scale-95 hover:scale-105 flex items-center gap-3"
-                    >
-                      <span className="text-3xl">👁️</span>
-                      <span>Acompanhar Pedido</span>
-                    </button>
-                    <div className={`px-5 py-2 rounded-full text-base font-bold shadow-lg ${
-                      activePedido.status === 'em_andamento' ? 'bg-blue-500 text-white' : 'bg-amber-500 text-white'
-                    }`}>
-                      {activePedido.status === 'em_andamento' ? '🔨 Em Produção' : '⏳ Aguardando'}
-                    </div>
+              {/* Card Estude por Matérias - SEMPRE VISÍVEL com cadeado para grátis */}
+              <div 
+                onClick={() => isFree ? setLocation('/planos') : setLocation('/escolher-materia')}
+                className="glass-card rounded-3xl p-8 md:p-10 cursor-pointer group hover:scale-[1.02] transition-all duration-300 bg-gradient-to-br from-emerald-500/20 to-green-500/10 border-2 border-emerald-500/30 hover:border-emerald-500/60 shadow-2xl shadow-emerald-500/20 relative"
+              >
+                {/* Cadeado para plano grátis */}
+                {isFree && (
+                  <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center gap-3 z-10 rounded-3xl">
+                    <div className="text-6xl animate-pulse">🔒</div>
+                    <span className="px-4 py-2 bg-amber-500 text-white text-sm font-bold rounded-full shadow-lg">
+                      PLANO PLUS
+                    </span>
+                    <p className="text-white text-sm">Clique para fazer upgrade</p>
+                  </div>
+                )}
+                
+                <div className="flex flex-col items-center justify-center gap-4 text-center">
+                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-emerald-500 to-green-500 flex items-center justify-center text-4xl shadow-xl shadow-emerald-500/40 group-hover:scale-110 transition-transform">
+                    📖
+                  </div>
+                  <h2 className="text-3xl md:text-4xl font-black text-white group-hover:text-emerald-400 transition-colors">
+                    📖 ESTUDE POR MATÉRIAS
+                  </h2>
+                  <p className="text-gray-400 text-lg">
+                    Escolha a matéria e faça simulados específicos
+                  </p>
+                  <div className="flex items-center gap-2 text-emerald-400 font-semibold text-xl">
+                    <span>Ver Matérias</span>
+                    <ArrowRight className="w-6 h-6 group-hover:translate-x-2 transition-transform" />
                   </div>
                 </div>
-              )}
+              </div>
             </div>
           </div>
         </div>
