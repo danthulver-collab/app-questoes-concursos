@@ -327,43 +327,26 @@ export default function HomeNovo() {
             </div>
           </div>
           
-          {/* Simulados */}
-          <div>
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h2 className="text-2xl font-bold text-white mb-1">📝 Simulados</h2>
-                <p className="text-gray-400">Teste seus conhecimentos com simulados completos</p>
+          {/* Botão Estude por Matérias */}
+          <Link href="/escolher-materia">
+            <div className="glass-card rounded-3xl p-8 md:p-12 cursor-pointer group hover:scale-[1.02] transition-all duration-300 bg-gradient-to-br from-emerald-500/20 to-green-500/10 border-2 border-emerald-500/30 hover:border-emerald-500/60 shadow-2xl shadow-emerald-500/20">
+              <div className="flex flex-col items-center justify-center gap-4 text-center">
+                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-emerald-500 to-green-500 flex items-center justify-center text-4xl shadow-xl shadow-emerald-500/40 group-hover:scale-110 transition-transform">
+                  📚
+                </div>
+                <h2 className="text-3xl md:text-4xl font-black text-white group-hover:text-emerald-400 transition-colors">
+                  📚 Estude por Matérias
+                </h2>
+                <p className="text-gray-400 text-lg">
+                  Escolha a matéria e faça simulados específicos
+                </p>
+                <div className="flex items-center gap-2 text-emerald-400 font-semibold text-xl">
+                  <span>Ver Matérias</span>
+                  <ArrowRight className="w-6 h-6 group-hover:translate-x-2 transition-transform" />
+                </div>
               </div>
             </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {['Português', 'Matemática', 'Direito Constitucional', 'Direito Administrativo', 'Informática', 'Raciocínio Lógico'].map((materia, index) => {
-                const icons = ['📖', '🔢', '⚖️', '🏛️', '💻', '🧩'];
-                const colors = ['blue', 'green', 'purple', 'red', 'cyan', 'orange'];
-                const questoesMateria = quizData.questions.filter(q => q.disciplina === materia).length;
-                
-                return (
-                  <Link key={index} href="/questoes/escolher">
-                    <div className="group glass-card rounded-2xl p-6 border border-white/10 hover:border-emerald-500/50 transition-all hover:scale-105 cursor-pointer">
-                      <div className="flex items-center gap-4 mb-4">
-                        <div className={`w-14 h-14 rounded-xl bg-${colors[index]}-500/20 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform`}>
-                          {icons[index]}
-                        </div>
-                        <div className="flex-1">
-                          <h3 className="font-bold text-white mb-1">{materia}</h3>
-                          <p className="text-sm text-gray-400">{questoesMateria} questões</p>
-                        </div>
-                        <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-emerald-400 group-hover:translate-x-1 transition-all" />
-                      </div>
-                      <div className="mt-3 px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/30 rounded-lg text-emerald-400 text-xs font-bold text-center">
-                        Fazer Simulado
-                      </div>
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
-          </div>
+          </Link>
 
 
           {/* Weekly Progress Chart */}
