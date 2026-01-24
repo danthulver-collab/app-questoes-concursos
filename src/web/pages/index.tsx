@@ -9,6 +9,7 @@ import { MiniTimeline } from "../components/progress-timeline";
 import { TrialBadge } from "../components/trial-badge";
 import { useSyncPlan } from "../lib/use-sync-plan";
 import { SidebarMenu } from "../components/sidebar-menu";
+import { supabase } from "../lib/supabase";
 
 const OPTION_LABELS = ["A", "B", "C", "D"] as const;
 const TIME_PER_QUESTION = 30;
@@ -91,6 +92,7 @@ function Index() {
   
   // User's assigned packages
   const [userPacotes, setUserPacotes] = useState<Pacote[]>([]);
+  const [activePedido, setActivePedido] = useState<any>(null);
   
   // "Ver Resposta" and "Ver Comentário" feature
   const [showCorrectAnswer, setShowCorrectAnswer] = useState(false);
@@ -145,6 +147,42 @@ function Index() {
     }
   }, [search]);
 
+  // 🔥 BUSCAR PEDIDO ATIVO DO USUÁRIO
+  useEffect(() => {
+    if (!user?.email) return;
+    
+    const checkPedido = async () => {
+      try {
+        const { data: allPedidos } = await supabase
+          .from('plan_requests')
+          .select('*')
+          .eq('email', user.email)
+          .order('created_at', { ascending: false });
+        
+        console.log('📦 [HOME] Pedidos encontrados:', allPedidos?.length || 0);
+        
+        if (allPedidos && allPedidos.length > 0) {
+          const pedidoAtivo = allPedidos.find(p => 
+            p.status !== 'pronto' && p.status !== 'cancelado'
+          );
+          
+          if (pedidoAtivo) {
+            setActivePedido(pedidoAtivo);
+            console.log('✅ [HOME] CARD ATIVADO:', pedidoAtivo.status);
+          } else {
+            setActivePedido(null);
+          }
+        }
+      } catch (e) {
+        console.error('[HOME] Erro ao buscar pedido:', e);
+      }
+    };
+    
+    checkPedido();
+    const interval = setInterval(checkPedido, 3000);
+    return () => clearInterval(interval);
+  }, [user?.email]);
+  
   // 🔥 REDIRECT: Se pagamento foi confirmado, ir para tela de acompanhamento
   // APENAS SE VIER DE PARÂMETROS DE URL (evita loop infinito)
   useEffect(() => {

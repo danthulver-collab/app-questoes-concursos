@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AppLayout } from "../components/app-layout";
 import { useAuth } from "../lib/auth-context-supabase";
 import { getUserPlan, getRemainingQuestions, getActiveConcursos, PLAN_LIMITS } from "../lib/access-control";
 import { getQuizData, getUniqueConcursos } from "../lib/quiz-store";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
+import { supabase } from "../lib/supabase";
 import { 
   Sparkles, 
   Crown, 
@@ -20,14 +21,45 @@ import {
 
 export default function HomeNovo() {
   const { user } = useAuth();
+  const [, setLocation] = useLocation();
   const userId = user?.email || user?.username || "";
   const userPlan = getUserPlan(userId) || "free";
   const remaining = getRemainingQuestions(userId);
   const activeConcursos = getActiveConcursos(userId);
+  const [activePedido, setActivePedido] = useState<any>(null);
 
   // Pega dados reais do quiz
   const quizData = getQuizData();
   const realConcursos = getUniqueConcursos(quizData.questions);
+  
+  // Buscar pedido ativo
+  useEffect(() => {
+    if (!user?.email) return;
+    
+    const checkPedido = async () => {
+      try {
+        const { data: allPedidos } = await supabase
+          .from('plan_requests')
+          .select('*')
+          .eq('email', user.email)
+          .order('created_at', { ascending: false});
+        
+        console.log('📦 [HOME-NOVO] Pedidos:', allPedidos?.length || 0, allPedidos);
+        
+        if (allPedidos && allPedidos.length > 0) {
+          const pedidoAtivo = allPedidos.find(p => p.status !== 'pronto' && p.status !== 'cancelado');
+          setActivePedido(pedidoAtivo || null);
+          console.log('✅ [HOME-NOVO] Card:', pedidoAtivo ? 'ATIVADO' : 'OCULTO');
+        }
+      } catch (e) {
+        console.error('[HOME-NOVO] Erro:', e);
+      }
+    };
+    
+    checkPedido();
+    const interval = setInterval(checkPedido, 3000);
+    return () => clearInterval(interval);
+  }, [user?.email]);
 
   // Ler metricas reais do usuario
   const metricas = JSON.parse(localStorage.getItem(`metricas_${userId}`) || '{"total": 0, "acertos": 0}');
@@ -136,28 +168,65 @@ export default function HomeNovo() {
               </div>
             </div>
 
-            {/* Big CTA Button - Comece as questões aqui */}
-            <Link href="/questoes/escolher">
-              <div className="glass-card rounded-3xl p-8 md:p-10 cursor-pointer group hover:scale-[1.02] transition-all duration-300 bg-gradient-to-br from-orange-500/20 to-amber-500/10 border-2 border-orange-500/30 hover:border-orange-500/60 shadow-2xl shadow-orange-500/20">
-                <div className="flex flex-col md:flex-row items-center justify-center gap-6 text-center md:text-left">
-                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center text-4xl shadow-xl shadow-orange-500/40 group-hover:scale-110 transition-transform">
-                    📚
-                  </div>
-                  <div>
-                    <h2 className="text-3xl md:text-4xl font-black text-white group-hover:text-orange-400 transition-colors mb-2">
+            {/* Cards: Comece as questões + Pedido em andamento */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Big CTA Button - Comece as questões aqui */}
+              <Link href="/questoes/escolher">
+                <div className="glass-card rounded-3xl p-8 md:p-10 cursor-pointer group hover:scale-[1.02] transition-all duration-300 bg-gradient-to-br from-orange-500/20 to-amber-500/10 border-2 border-orange-500/30 hover:border-orange-500/60 shadow-2xl shadow-orange-500/20">
+                  <div className="flex flex-col items-center justify-center gap-4 text-center">
+                    <div className="w-20 h-20 rounded-full bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center text-4xl shadow-xl shadow-orange-500/40 group-hover:scale-110 transition-transform">
+                      📚
+                    </div>
+                    <h2 className="text-3xl md:text-4xl font-black text-white group-hover:text-orange-400 transition-colors">
                       📚 COMECE AS QUESTÕES AQUI 📚
                     </h2>
                     <p className="text-gray-400 text-lg">
                       Pratique com questões de concursos e melhore seu desempenho
                     </p>
-                  </div>
-                  <div className="flex items-center gap-2 text-orange-400 font-semibold text-xl">
-                    <span>Iniciar</span>
-                    <ArrowRight className="w-6 h-6 group-hover:translate-x-2 transition-transform" />
+                    <div className="flex items-center gap-2 text-orange-400 font-semibold text-xl">
+                      <span>Iniciar</span>
+                      <ArrowRight className="w-6 h-6 group-hover:translate-x-2 transition-transform" />
+                    </div>
                   </div>
                 </div>
-              </div>
-            </Link>
+              </Link>
+              
+              {/* Card Pedido em Produção */}
+              {activePedido && (
+                <div className="glass-card rounded-3xl p-8 md:p-10 bg-gradient-to-br from-blue-500/20 to-purple-500/10 border-2 border-blue-500/40 shadow-2xl shadow-blue-500/20 animate-slide-in-up">
+                  <div className="flex flex-col items-center justify-center gap-4 text-center">
+                    <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-4xl shadow-xl shadow-blue-500/40 animate-pulse">
+                      {activePedido.status === 'em_andamento' ? '🔨' : '⏳'}
+                    </div>
+                    <h2 className="text-2xl md:text-3xl font-black text-white">
+                      {activePedido.status === 'em_andamento' ? '🔨 Seu Pacote em Produção!' : '⏳ Pedido Aguardando'}
+                    </h2>
+                    <p className="text-gray-300 text-base">
+                      {activePedido.status === 'em_andamento' 
+                        ? 'Estamos montando seu pacote personalizado!'
+                        : 'Seu pedido foi recebido com sucesso'}
+                    </p>
+                    <div className="px-4 py-2 bg-white/5 rounded-lg border border-white/10">
+                      <p className="text-gray-400 text-sm">
+                        ⏰ Prazo: <span className="text-white font-bold">até 7 dias úteis</span>
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => setLocation('/acompanhar-pedido')}
+                      className="mt-2 px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-400 hover:to-purple-400 rounded-2xl text-white font-bold text-xl shadow-2xl shadow-blue-500/40 transition-all active:scale-95 hover:scale-105 flex items-center gap-3"
+                    >
+                      <span className="text-3xl">👁️</span>
+                      <span>Acompanhar Pedido</span>
+                    </button>
+                    <div className={`px-5 py-2 rounded-full text-base font-bold shadow-lg ${
+                      activePedido.status === 'em_andamento' ? 'bg-blue-500 text-white' : 'bg-amber-500 text-white'
+                    }`}>
+                      {activePedido.status === 'em_andamento' ? '🔨 Em Produção' : '⏳ Aguardando'}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
