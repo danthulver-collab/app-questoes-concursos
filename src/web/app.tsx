@@ -22,6 +22,7 @@ import SubjectStatsPage from "./pages/subject-stats";
 import ConfiguracoesPage from "./pages/configuracoes";
 import ConfigurarPacoteIndividual from "./pages/configurar-pacote-individual";
 import EscolherSimulado from "./pages/escolher-simulado";
+import AcompanharPedido from "./pages/acompanhar-pedido";
 import { Provider } from "./components/provider";
 import { AuthProvider } from "./lib/auth-context-supabase";
 import { ProtectedRoute } from "./components/protected-route";
@@ -138,6 +139,11 @@ function App() {
                                         <Route path="/individual/configurar">
                                                 <ProtectedRoute>
                                                         <ConfigurarPacoteIndividual />
+                                                </ProtectedRoute>
+                                        </Route>
+                                        <Route path="/acompanhar-pedido">
+                                                <ProtectedRoute>
+                                                        <AcompanharPedido />
                                                 </ProtectedRoute>
                                         </Route>
                                 </Switch>
