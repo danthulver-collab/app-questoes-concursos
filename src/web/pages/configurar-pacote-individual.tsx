@@ -69,12 +69,11 @@ export default function ConfigurarPacoteIndividual() {
         email: user?.email || '',
         nome: user?.nome || user?.email?.split('@')[0],
         banca: bancasSelecionadas.join(', '),
-        materias: materias,
         plano: 'individual',
         num_questoes: parseInt(qtdQuestoes) || 100,
         status: 'aguardando_montagem',
-        // Coloca concurso e cargo no telefone como workaround
-        telefone: `Concurso: ${concurso.trim()} | Cargo: ${cargo.trim()}`
+        // Tudo no telefone como workaround
+        telefone: `Concurso: ${concurso.trim()} | Cargo: ${cargo.trim()} | Matérias: ${materias.join(', ')}`
       };
 
       console.log('Enviando dados:', insertData);
