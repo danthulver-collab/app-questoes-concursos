@@ -29,12 +29,12 @@ export default function HomeNovo() {
   const quizData = getQuizData();
   const realConcursos = getUniqueConcursos(quizData.questions);
 
-  // Mock stats - pode substituir com dados reais
+  // Stats zeradas para novos usuarios
   const userStats = {
-    totalQuestions: 127,
-    accuracy: 70,
-    streak: 5,
-    weeklyProgress: 85,
+    totalQuestions: 0,
+    accuracy: 0,
+    streak: 0,
+    weeklyProgress: 0,
   };
 
   // Concursos reais do sistema
