@@ -117,6 +117,24 @@ export default function AcompanharPedido() {
             )}
           </div>
 
+          {/* Link Pagamento */}
+          {pedido.status === 'aguardando_inicio' && (
+            <div className="mb-8 p-6 bg-orange-500/10 border border-orange-500/30 rounded-xl">
+              <h3 className="font-semibold text-orange-400 mb-3">💳 Realizar Pagamento</h3>
+              <p className="text-gray-300 text-sm mb-4">
+                Clique no botão abaixo para pagar via Mercado Pago
+              </p>
+              <a
+                href="https://mpago.la/2YtXWcV"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block w-full py-4 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 rounded-xl text-white font-bold text-center transition-all"
+              >
+                💳 Pagar via Mercado Pago
+              </a>
+            </div>
+          )}
+
           {/* Timeline */}
           <div className="mt-8 pt-6 border-t border-white/10">
             <h3 className="font-semibold text-white mb-4">Progresso:</h3>

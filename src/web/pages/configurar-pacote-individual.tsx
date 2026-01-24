@@ -59,12 +59,16 @@ export default function ConfigurarPacoteIndividual() {
       }).select().single();
 
       if (error) {
-        alert('Erro: ' + error.message);
+        console.error('Erro ao enviar pedido:', error);
+        alert('Erro ao enviar pedido: ' + error.message);
+        setEnviando(false);
         return;
       }
 
-      alert('✅ Pedido enviado!');
-      setLocation('/acompanhar-pedido');
+      // Redirecionar para acompanhamento
+      setTimeout(() => {
+        setLocation('/acompanhar-pedido');
+      }, 500);
     } catch (e: any) {
       alert('Erro: ' + e.message);
     } finally {
