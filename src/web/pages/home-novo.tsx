@@ -63,11 +63,48 @@ export default function HomeNovo() {
 
   // Ler metricas reais do usuario
   const metricas = JSON.parse(localStorage.getItem(`metricas_${userId}`) || '{"total": 0, "acertos": 0}');
+  
+  // Calcular dias seguidos (streak)
+  const calcularStreak = () => {
+    const historico = JSON.parse(localStorage.getItem(`historico_${userId}`) || '[]');
+    if (historico.length === 0) return 0;
+    
+    let streak = 0;
+    const hoje = new Date().toDateString();
+    
+    for (let i = 0; i < historico.length; i++) {
+      const dataHistorico = new Date(historico[i].data).toDateString();
+      if (i === 0 && dataHistorico === hoje) {
+        streak = 1;
+      } else if (i > 0) {
+        const anterior = new Date(historico[i - 1].data);
+        const atual = new Date(historico[i].data);
+        const diff = Math.abs(anterior.getTime() - atual.getTime());
+        const diffDias = Math.ceil(diff / (1000 * 60 * 60 * 24));
+        if (diffDias === 1) {
+          streak++;
+        } else {
+          break;
+        }
+      }
+    }
+    return streak;
+  };
+  
+  // Calcular tempo de estudo
+  const calcularTempoEstudo = () => {
+    const stats = JSON.parse(localStorage.getItem(`quiz_user_stats_${userId}`) || '{}');
+    const totalSegundos = stats.totalTimeSpent || 0;
+    const horas = Math.floor(totalSegundos / 3600);
+    const minutos = Math.floor((totalSegundos % 3600) / 60);
+    return horas > 0 ? `${horas}h ${minutos}m` : `${minutos}m`;
+  };
+  
   const userStats = {
     totalQuestions: metricas.total || 0,
     accuracy: metricas.total > 0 ? Math.round((metricas.acertos / metricas.total) * 100) : 0,
-    streak: 0,
-    weeklyProgress: 0,
+    streak: calcularStreak(),
+    studyTime: calcularTempoEstudo(),
   };
 
   // Concursos reais do sistema
