@@ -27,7 +27,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   
   const userId = user?.email || user?.username || "";
   const userPlan = getUserPlan(userId) || "free";
-  const isAdmin = isSuperAdmin(userId);
+  const isAdmin = user?.email === 'danthulver@gmail.com' || user?.username === 'admin' || isSuperAdmin(userId);
   const remaining = getRemainingQuestions(userId);
 
   const menuItems = [
