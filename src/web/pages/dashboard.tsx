@@ -8,6 +8,7 @@ import { getOnboardingData } from "./onboarding";
 import { getUserPlan, getRemainingQuestions, PLAN_LIMITS, type PlanType } from "../lib/access-control";
 import { monitorPaymentStatus } from "../lib/plan-upgrade";
 import { supabase } from "../lib/supabase";
+import { resetUserStats } from "../lib/reset-stats";
 
 interface OnboardingData {
   concursoObjetivo: string;
@@ -255,6 +256,20 @@ function DashboardPage() {
                     Fazer Upgrade
                   </Link>
                 ) : null}
+                {/* Botão reset stats - apenas para teste */}
+                {(user?.email === 'danthulver@gmail.com' || user?.email === 'ribeiroduda170@gmail.com') && (
+                  <button
+                    onClick={() => {
+                      if (confirm('Zerar suas estatísticas?')) {
+                        resetUserStats(user.email || user.username);
+                        window.location.reload();
+                      }
+                    }}
+                    className="text-xs text-red-400 hover:text-red-300 underline ml-2"
+                  >
+                    🔄 Reset Stats
+                  </button>
+                )}
               </div>
             </div>
 
