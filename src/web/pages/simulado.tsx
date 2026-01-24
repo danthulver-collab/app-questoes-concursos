@@ -253,71 +253,54 @@ Responda de forma clara, didática e objetiva, focando em ajudar o aluno a enten
                 <div className="font-bold mb-2">
                   {respostas[currentIndex] === questao.correctAnswer ? '✅ Correto!' : '❌ Incorreto'}
                 </div>
-                <div className="text-sm">
+                <div className="text-sm mb-3">
                   Resposta correta: <strong>{questao.correctAnswer}</strong>
                 </div>
-                {podeVerComentarios ? (
-                  <div className="mt-2">
+                
+                {/* Comentários diferenciados por plano */}
+                {isPlusUser ? (
+                  <>
                     <div className="text-sm mb-4">{questao.explanation}</div>
-                    
-                    {/* Funcionalidades Plus - Áudio e ChatGPT */}
-                    {isPlusUser && (
-                      <div className="flex flex-wrap gap-3 pt-3 border-t border-white/10">
-                        {/* Botão Áudio */}
-                        <button
-                          onClick={() => {
-                            const audioFile = questao?.audioComment;
-                            if (audioFile) {
-                              const audio = new Audio(audioFile);
-                              audio.play().catch(() => {
-                                // Fallback TTS
-                                const text = questao.explanation || "";
-                                if ('speechSynthesis' in window && text) {
-                                  const utterance = new SpeechSynthesisUtterance(text);
-                                  utterance.lang = 'pt-BR';
-                                  utterance.rate = 0.9;
-                                  speechSynthesis.speak(utterance);
-                                }
-                              });
-                            } else {
-                              const text = questao.explanation || "";
-                              if ('speechSynthesis' in window && text) {
-                                const utterance = new SpeechSynthesisUtterance(text);
-                                utterance.lang = 'pt-BR';
-                                utterance.rate = 0.9;
-                                speechSynthesis.speak(utterance);
-                              }
-                            }
-                          }}
-                          className="flex items-center gap-2 px-4 py-2 bg-purple-500/20 border border-purple-500/30 rounded-xl text-purple-400 hover:bg-purple-500/30 transition-all text-sm font-medium"
-                        >
-                          🎧 Ouvir Comentário
-                          <span className="px-1.5 py-0.5 bg-amber-500/20 text-amber-400 text-[10px] font-bold rounded">PLUS</span>
-                        </button>
-                        
-                        {/* Botão ChatGPT */}
-                        <button
-                          onClick={() => setShowAIModal(true)}
-                          className="flex items-center gap-2 px-4 py-2 bg-emerald-500/20 border border-emerald-500/30 rounded-xl text-emerald-400 hover:bg-emerald-500/30 transition-all text-sm font-medium"
-                        >
-                          🤖 Pesquisar com ChatGPT
-                          <span className="px-1.5 py-0.5 bg-amber-500/20 text-amber-400 text-[10px] font-bold rounded">PLUS</span>
-                        </button>
-                      </div>
-                    )}
-                  </div>
+                    <div className="flex flex-wrap gap-3 pt-3 border-t border-white/10">
+                      <button
+                        onClick={() => {
+                          const text = questao.explanation || "";
+                          if ('speechSynthesis' in window && text) {
+                            const utterance = new SpeechSynthesisUtterance(text);
+                            utterance.lang = 'pt-BR';
+                            utterance.rate = 0.9;
+                            speechSynthesis.speak(utterance);
+                          }
+                        }}
+                        className="flex items-center gap-2 px-4 py-2 bg-purple-500/20 border border-purple-500/30 rounded-xl text-purple-400 hover:bg-purple-500/30 transition-all text-sm font-medium"
+                      >
+                        🎧 Ouvir Comentário
+                        <span className="px-1.5 py-0.5 bg-amber-500/20 text-amber-400 text-[10px] font-bold rounded">PLUS</span>
+                      </button>
+                      <button
+                        onClick={() => setShowAIModal(true)}
+                        className="flex items-center gap-2 px-4 py-2 bg-emerald-500/20 border border-emerald-500/30 rounded-xl text-emerald-400 hover:bg-emerald-500/30 transition-all text-sm font-medium"
+                      >
+                        🤖 Pesquisar com ChatGPT
+                        <span className="px-1.5 py-0.5 bg-amber-500/20 text-amber-400 text-[10px] font-bold rounded">PLUS</span>
+                      </button>
+                    </div>
+                  </>
                 ) : (
-                  <div className="text-sm mt-2">
-                    <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg text-amber-400 mb-3">
-                      🔒 Comentários disponíveis nos planos Individual e Plus
+                  <>
+                    <div className="text-sm mb-3 text-gray-400">
+                      {questao.explanation ? questao.explanation.substring(0, 60) + '...' : 'Resposta verificada.'}
+                    </div>
+                    <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg text-amber-400 text-sm mb-3">
+                      🔒 Comentário completo, áudio e ChatGPT disponíveis no Plano Plus
                     </div>
                     <button
-                      onClick={() => window.location.href = '/planos'}
-                      className="w-full py-3 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 rounded-xl text-white font-bold transition-all"
+                      onClick={() => setLocation('/planos')}
+                      className="w-full py-3 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl text-white font-bold transition-all hover:opacity-90"
                     >
-                      ⭐ Fazer Upgrade Agora
+                      ⭐ Fazer Upgrade
                     </button>
-                  </div>
+                  </>
                 )}
               </div>
 
