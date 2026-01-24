@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { useAuth } from "../lib/auth-context-supabase";
 import { getUserStats, getAllUsersStats, getBadgeInfo, type UserStats } from "../lib/user-stats";
 import { getQuizData } from "../lib/quiz-store";
@@ -7,6 +7,7 @@ import { AppHeader } from "../components/app-header";
 import { getOnboardingData } from "./onboarding";
 import { getUserPlan, getRemainingQuestions, PLAN_LIMITS, type PlanType } from "../lib/access-control";
 import { monitorPaymentStatus } from "../lib/plan-upgrade";
+import { supabase } from "../lib/supabase";
 
 interface OnboardingData {
   concursoObjetivo: string;
@@ -17,12 +18,14 @@ interface OnboardingData {
 
 function DashboardPage() {
   const { user } = useAuth();
+  const [, setLocation] = useLocation();
   const [stats, setStats] = useState<UserStats | null>(null);
   const [allUsers, setAllUsers] = useState<UserStats[]>([]);
   const [totalQuestions, setTotalQuestions] = useState(0);
   const [activeTab, setActiveTab] = useState<"overview" | "disciplinas" | "history" | "ranking">("overview");
   const [onboardingData, setOnboardingData] = useState<OnboardingData | null>(null);
   const [showEditGoal, setShowEditGoal] = useState(false);
+  const [activePedido, setActivePedido] = useState<any>(null);
   
   // Plan-related state
   const [userPlan, setUserPlan] = useState<PlanType | null>(null);
@@ -51,6 +54,21 @@ function DashboardPage() {
           const updatedPlan = getUserPlan(userId) || "free";
           setUserPlan(updatedPlan);
         });
+        
+        // Buscar pedido ativo do usuário
+        supabase
+          .from('plan_requests')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single()
+          .then(({ data }) => {
+            if (data && data.status !== 'pronto' && data.status !== 'cancelado') {
+              setActivePedido(data);
+            }
+          })
+          .catch(() => {});
       }
     }
   }, [user]);
@@ -107,28 +125,64 @@ function DashboardPage() {
       <AppHeader showBack backUrl="/" title="Meu Perfil" />
 
       <main className="max-w-6xl mx-auto p-4 md:p-6 lg:p-8 relative z-10">
-        {/* Big CTA Button - Comece as questões aqui */}
-        <Link href="/">
-          <div className="glass-card rounded-3xl p-8 md:p-12 mb-8 animate-slide-in-up cursor-pointer group hover:scale-[1.02] transition-all duration-300 bg-gradient-to-br from-orange-500/20 to-amber-500/10 border-2 border-orange-500/30 hover:border-orange-500/60 shadow-2xl shadow-orange-500/20">
-            <div className="flex flex-col items-center justify-center text-center gap-4">
-              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center text-4xl shadow-xl shadow-orange-500/40 group-hover:scale-110 transition-transform">
-                📚
-              </div>
-              <h2 className="text-3xl md:text-4xl font-black text-white group-hover:text-orange-400 transition-colors">
-                Comece as questões aqui
-              </h2>
-              <p className="text-gray-400 text-lg max-w-md">
-                Pratique com questões de concursos e melhore seu desempenho
-              </p>
-              <div className="mt-2 flex items-center gap-2 text-orange-400 font-semibold">
-                <span>Iniciar agora</span>
-                <svg className="w-6 h-6 group-hover:translate-x-2 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                </svg>
+        {/* Cards principais */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          {/* Big CTA Button - Comece as questões aqui */}
+          <Link href="/">
+            <div className="glass-card rounded-3xl p-8 md:p-12 animate-slide-in-up cursor-pointer group hover:scale-[1.02] transition-all duration-300 bg-gradient-to-br from-orange-500/20 to-amber-500/10 border-2 border-orange-500/30 hover:border-orange-500/60 shadow-2xl shadow-orange-500/20">
+              <div className="flex flex-col items-center justify-center text-center gap-4">
+                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center text-4xl shadow-xl shadow-orange-500/40 group-hover:scale-110 transition-transform">
+                  📚
+                </div>
+                <h2 className="text-3xl md:text-4xl font-black text-white group-hover:text-orange-400 transition-colors">
+                  Comece as questões aqui
+                </h2>
+                <p className="text-gray-400 text-lg max-w-md">
+                  Pratique com questões de concursos e melhore seu desempenho
+                </p>
+                <div className="mt-2 flex items-center gap-2 text-orange-400 font-semibold">
+                  <span>Iniciar agora</span>
+                  <svg className="w-6 h-6 group-hover:translate-x-2 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
+                </div>
               </div>
             </div>
-          </div>
-        </Link>
+          </Link>
+          
+          {/* Card de Pedido em Andamento */}
+          {activePedido && (
+            <div className="glass-card rounded-3xl p-8 md:p-12 animate-slide-in-up bg-gradient-to-br from-blue-500/20 to-purple-500/10 border-2 border-blue-500/30 shadow-2xl shadow-blue-500/20">
+              <div className="flex flex-col items-center justify-center text-center gap-4">
+                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-4xl shadow-xl shadow-blue-500/40 animate-pulse">
+                  {activePedido.status === 'em_andamento' ? '🔨' : '⏳'}
+                </div>
+                <h2 className="text-2xl md:text-3xl font-black text-white">
+                  {activePedido.status === 'em_andamento' ? 'Seu Pacote está em Produção!' : 'Pedido Recebido!'}
+                </h2>
+                <p className="text-gray-300 text-base max-w-md">
+                  {activePedido.status === 'em_andamento' 
+                    ? 'Estamos montando seu pacote personalizado. Em breve estará pronto!'
+                    : 'Seu pedido foi recebido. Aguarde enquanto preparamos tudo para você.'}
+                </p>
+                <button
+                  onClick={() => setLocation('/acompanhar-pedido')}
+                  className="mt-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-400 hover:to-purple-400 rounded-xl text-white font-bold text-lg shadow-lg shadow-blue-500/30 transition-all active:scale-95 hover:scale-105 flex items-center gap-2"
+                >
+                  <span>👁️</span>
+                  <span>Acompanhar Pedido</span>
+                </button>
+                <div className={`mt-2 px-4 py-2 rounded-full text-sm font-bold ${
+                  activePedido.status === 'em_andamento' 
+                    ? 'bg-blue-500/30 text-blue-300' 
+                    : 'bg-amber-500/30 text-amber-300'
+                }`}>
+                  Status: {activePedido.status === 'em_andamento' ? '🔨 Em Produção' : '⏳ Aguardando'}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* Profile Header */}
         <div className="glass-card rounded-3xl p-6 md:p-8 mb-6 animate-slide-in-up">
