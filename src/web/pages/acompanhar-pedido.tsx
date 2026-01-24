@@ -173,12 +173,12 @@ export default function AcompanharPedido() {
               Clique no botão abaixo para pagar via Mercado Pago
             </p>
             <a
-              href="https://mpago.la/seu-link-de-pagamento"
+              href={pedido.plano === 'plus' ? 'https://mpago.la/1AtgXnn' : 'https://mpago.la/1ym97zu'}
               target="_blank"
               rel="noopener noreferrer"
               className="block w-full py-4 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl text-white font-bold text-center hover:opacity-90 transition-all"
             >
-              💳 Pagar via Mercado Pago
+              💳 Pagar R$ {pedido.plano === 'plus' ? '197' : '97'} via Mercado Pago
             </a>
           </div>
         )}
