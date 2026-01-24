@@ -2220,11 +2220,11 @@ function AdminPage() {
                           </label>
                           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                             {[
-                              { status: "aguardando_montagem", label: "⏳ Aguardando", labelAluno: "Aguardando" },
-                              { status: "em_andamento", label: "🔨 Em Produção", labelAluno: "Em Produção" },
-                              { status: "pronto", label: "✅ Entregue", labelAluno: "Entregue" },
-                              { status: "cancelado", label: "❌ Cancelado", labelAluno: "Cancelado" },
-                            ].map(({ status, label, labelAluno }) => {
+                              { status: "aguardando_montagem", label: "⏳ Aguardando", labelAluno: "Aguardando", colorActive: "bg-amber-500 border-amber-400 text-white shadow-xl shadow-amber-500/40 scale-110 ring-4 ring-amber-400/30", colorInactive: "bg-amber-500/10 border-amber-500/30 text-amber-400 hover:bg-amber-500/20" },
+                              { status: "em_andamento", label: "🔨 Em Produção", labelAluno: "Em Produção", colorActive: "bg-blue-500 border-blue-400 text-white shadow-xl shadow-blue-500/40 scale-110 ring-4 ring-blue-400/30", colorInactive: "bg-blue-500/10 border-blue-500/30 text-blue-400 hover:bg-blue-500/20" },
+                              { status: "pronto", label: "✅ Entregue", labelAluno: "Entregue", colorActive: "bg-emerald-500 border-emerald-400 text-white shadow-xl shadow-emerald-500/40 scale-110 ring-4 ring-emerald-400/30", colorInactive: "bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20" },
+                              { status: "cancelado", label: "❌ Cancelado", labelAluno: "Cancelado", colorActive: "bg-red-500 border-red-400 text-white shadow-xl shadow-red-500/40", colorInactive: "bg-red-500/10 border-red-500/30 text-red-400 hover:bg-red-500/20" },
+                            ].map(({ status, label, labelAluno, colorActive, colorInactive }) => {
                               const isCurrent = request.status === status;
                               return (
                                 <button
@@ -2234,61 +2234,57 @@ function AdminPage() {
                                     const btn = e.currentTarget;
                                     if (!confirm(`Mudar status para "${labelAluno}"?\n\nO aluno verá: "${labelAluno}"`)) return;
                                     
-                                    // Feedback visual
-                                    btn.innerHTML = '<span class="animate-spin">⏳</span> Alterando...';
+                                    // Feedback visual imediato
+                                    const originalHTML = btn.innerHTML;
+                                    btn.innerHTML = '<span class="animate-spin">⏳</span>';
                                     btn.disabled = true;
                                     
                                     try {
-                                      await supabase
+                                      const { error } = await supabase
                                         .from('plan_requests')
                                         .update({ status, updated_at: new Date().toISOString() })
                                         .eq('id', request.id);
                                       
+                                      if (error) throw error;
+                                      
+                                      // Recarregar lista
                                       await loadPackageRequests();
                                       
                                       // Feedback de sucesso
-                                      btn.innerHTML = '✅ Atualizado!';
-                                      btn.classList.add('bg-emerald-500', 'text-white');
-                                      
+                                      btn.innerHTML = '✅';
                                       setTimeout(() => {
-                                        btn.innerHTML = label;
-                                        btn.disabled = false;
-                                      }, 1500);
-                                    } catch (e) {
+                                        btn.innerHTML = originalHTML;
+                                      }, 1000);
+                                    } catch (err) {
                                       alert('Erro ao atualizar status');
-                                      btn.innerHTML = label;
+                                      btn.innerHTML = originalHTML;
                                       btn.disabled = false;
                                     }
                                   }}
                                   disabled={isCurrent}
-                                  className={`px-4 py-3 rounded-xl text-sm font-bold transition-all border-2 ${
-                                    isCurrent 
-                                      ? status === 'pronto' ? 'bg-emerald-500 border-emerald-400 text-white shadow-lg shadow-emerald-500/30 ring-2 ring-emerald-400/50' :
-                                        status === 'em_andamento' ? 'bg-blue-500 border-blue-400 text-white shadow-lg shadow-blue-500/30 ring-2 ring-blue-400/50' :
-                                        status === 'cancelado' ? 'bg-red-500 border-red-400 text-white shadow-lg shadow-red-500/30' :
-                                        'bg-amber-500 border-amber-400 text-white shadow-lg shadow-amber-500/30'
-                                      : status === 'pronto' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20' :
-                                        status === 'em_andamento' ? 'bg-blue-500/10 border-blue-500/30 text-blue-400 hover:bg-blue-500/20' :
-                                        status === 'cancelado' ? 'bg-red-500/10 border-red-500/30 text-red-400 hover:bg-red-500/20' :
-                                        'bg-amber-500/10 border-amber-500/30 text-amber-400 hover:bg-amber-500/20'
-                                  } ${!isCurrent ? 'active:scale-95 hover:scale-105' : 'cursor-default scale-105'}`}
+                                  className={`px-4 py-3.5 rounded-xl text-sm font-bold transition-all border-2 ${
+                                    isCurrent ? colorActive : colorInactive
+                                  } ${!isCurrent ? 'active:scale-95 hover:scale-105' : 'cursor-default'}`}
                                 >
                                   {label}
-                                  {isCurrent && <span className="ml-2">✓</span>}
+                                  {isCurrent && <span className="ml-2 text-lg">✓</span>}
                                 </button>
                               );
                             })}
                           </div>
-                          {request.status && (
-                            <p className="text-xs text-gray-500 mt-3">
-                              Status atual: <span className="text-white font-semibold">
-                                {request.status === 'em_andamento' ? '🔨 Em Produção' :
-                                 request.status === 'pronto' ? '✅ Entregue' :
-                                 request.status === 'cancelado' ? '❌ Cancelado' :
-                                 '⏳ Aguardando'}
-                              </span>
-                            </p>
-                          )}
+                          <p className="text-sm text-gray-400 mt-4 px-2">
+                            ▶ Status atual: <span className={`font-black text-lg ${
+                              request.status === 'em_andamento' ? 'text-blue-400' :
+                              request.status === 'pronto' ? 'text-emerald-400' :
+                              request.status === 'cancelado' ? 'text-red-400' :
+                              'text-amber-400'
+                            }`}>
+                              {request.status === 'em_andamento' ? '🔨 EM PRODUÇÃO' :
+                               request.status === 'pronto' ? '✅ ENTREGUE' :
+                               request.status === 'cancelado' ? '❌ CANCELADO' :
+                               '⏳ AGUARDANDO'}
+                            </span>
+                          </p>
                         </div>
                       </div>
                     );
