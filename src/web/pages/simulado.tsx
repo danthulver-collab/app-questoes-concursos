@@ -227,9 +227,13 @@ Responda de forma clara, didática e objetiva, focando em ajudar o aluno a enten
               <h2 className="text-xl text-white font-semibold mb-6">{questao.title}</h2>
 
               <div className="space-y-3">
-                {['A', 'B', 'C', 'D'].map(opcao => {
+                {['A', 'B', 'C', 'D'].map((opcao, index) => {
                   const respondeu = respostas[currentIndex];
-                  const isCorrect = opcao === questao.correctAnswer;
+                  // Converter índice numérico para letra ou comparar diretamente
+                  const correctLetter = typeof questao.correctAnswer === 'number' 
+                    ? ['A', 'B', 'C', 'D'][questao.correctAnswer] 
+                    : questao.correctAnswer;
+                  const isCorrect = opcao === correctLetter;
                   const isSelected = respondeu === opcao;
                   const showResult = !!respondeu;
                   
@@ -237,14 +241,11 @@ Responda de forma clara, didática e objetiva, focando em ajudar o aluno a enten
                   
                   if (showResult) {
                     if (isCorrect) {
-                      // Alternativa correta sempre em verde
-                      buttonClass = 'bg-green-500/30 text-green-400 border-2 border-green-500';
+                      buttonClass = 'bg-gradient-to-r from-green-500/40 to-emerald-500/40 text-green-300 border-2 border-green-400 shadow-lg shadow-green-500/20';
                     } else if (isSelected && !isCorrect) {
-                      // Alternativa selecionada errada em vermelho
-                      buttonClass = 'bg-red-500/30 text-red-400 border-2 border-red-500';
+                      buttonClass = 'bg-gradient-to-r from-red-500/40 to-rose-500/40 text-red-300 border-2 border-red-400 shadow-lg shadow-red-500/20';
                     } else {
-                      // Outras alternativas ficam opacas
-                      buttonClass = 'bg-white/5 text-gray-500 opacity-60';
+                      buttonClass = 'bg-white/5 text-gray-500 opacity-50';
                     }
                   } else if (isSelected) {
                     buttonClass = 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg shadow-blue-500/50';
@@ -255,118 +256,154 @@ Responda de forma clara, didática e objetiva, focando em ajudar o aluno a enten
                       key={opcao}
                       onClick={() => !respondeu && responder(opcao)}
                       disabled={!!respondeu}
-                      className={`w-full p-5 rounded-xl text-left transition-all ${buttonClass} ${!respondeu ? 'hover:scale-[1.02] active:scale-[0.98]' : ''}`}
+                      className={`w-full p-5 rounded-xl text-left transition-all ${buttonClass} ${!respondeu ? 'hover:scale-[1.01] active:scale-[0.99]' : ''}`}
                     >
-                      <span className="font-bold text-lg mr-3">{opcao})</span>
-                      <span className="text-base">{questao[`option${opcao}`]}</span>
-                      {showResult && isCorrect && <span className="float-right text-green-400">✓ Correta</span>}
-                      {showResult && isSelected && !isCorrect && <span className="float-right text-red-400">✗ Sua resposta</span>}
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <span className="font-bold text-lg mr-3">{opcao})</span>
+                          <span className="text-base">{questao[`option${opcao}`]}</span>
+                        </div>
+                        {showResult && isCorrect && (
+                          <span className="ml-3 px-3 py-1 bg-green-500 text-white text-sm font-bold rounded-lg flex items-center gap-1">
+                            ✓ CORRETA
+                          </span>
+                        )}
+                        {showResult && isSelected && !isCorrect && (
+                          <span className="ml-3 px-3 py-1 bg-red-500 text-white text-sm font-bold rounded-lg flex items-center gap-1">
+                            ✗ ERRADA
+                          </span>
+                        )}
+                      </div>
                     </button>
                   );
                 })}
               </div>
 
-              {respostas[currentIndex] && (
-                <div className="mt-6">
-                  {/* Resultado */}
-                  <div className={`p-5 rounded-xl ${
-                    respostas[currentIndex] === questao.correctAnswer
-                      ? 'bg-green-500/20 border border-green-500/30'
-                      : 'bg-red-500/20 border border-red-500/30'
-                  }`}>
-                    <div className={`font-bold text-lg mb-3 ${
-                      respostas[currentIndex] === questao.correctAnswer ? 'text-green-400' : 'text-red-400'
+              {respostas[currentIndex] && (() => {
+                const correctLetter = typeof questao.correctAnswer === 'number' 
+                  ? ['A', 'B', 'C', 'D'][questao.correctAnswer] 
+                  : questao.correctAnswer;
+                const acertou = respostas[currentIndex] === correctLetter;
+                
+                return (
+                  <div className="mt-6">
+                    {/* Resultado */}
+                    <div className={`p-6 rounded-2xl ${
+                      acertou
+                        ? 'bg-gradient-to-br from-green-500/20 to-emerald-500/20 border-2 border-green-500/50'
+                        : 'bg-gradient-to-br from-red-500/20 to-rose-500/20 border-2 border-red-500/50'
                     }`}>
-                      {respostas[currentIndex] === questao.correctAnswer ? '✅ Parabéns! Você acertou!' : '❌ Você errou!'}
-                    </div>
-                    
-                    <div className="text-white text-sm mb-4">
-                      A alternativa correta é a letra <strong className="text-green-400 text-lg">{questao.correctAnswer}</strong>
-                    </div>
-                    
-                    {/* Comentários diferenciados por plano */}
-                    {isPlusUser ? (
-                      <>
-                        {/* PLANO PLUS - Comentário completo */}
-                        <div className="mt-4 p-4 bg-white/5 rounded-xl border border-white/10">
-                          <div className="flex items-center gap-2 mb-3">
-                            <span className="text-lg">📚</span>
-                            <span className="font-semibold text-white">Comentário do Professor</span>
-                            <span className="px-2 py-0.5 bg-amber-500/20 text-amber-400 text-[10px] font-bold rounded">PLUS</span>
-                          </div>
-                          <div className="text-gray-300 text-sm leading-relaxed">{questao.explanation}</div>
-                        </div>
-                        
-                        {/* Botões Plus - Áudio e ChatGPT */}
-                        <div className="flex flex-wrap gap-3 mt-4">
-                          <button
-                            onClick={() => {
-                              const text = questao.explanation || "";
-                              if ('speechSynthesis' in window && text) {
-                                speechSynthesis.cancel();
-                                const utterance = new SpeechSynthesisUtterance(text);
-                                utterance.lang = 'pt-BR';
-                                utterance.rate = 0.9;
-                                speechSynthesis.speak(utterance);
-                              }
-                            }}
-                            className="flex items-center gap-2 px-4 py-3 bg-purple-500/20 border border-purple-500/30 rounded-xl text-purple-400 hover:bg-purple-500/30 transition-all text-sm font-medium active:scale-95"
-                          >
-                            🎧 Ouvir Comentário
-                          </button>
-                          <button
-                            onClick={() => setShowAIModal(true)}
-                            className="flex items-center gap-2 px-4 py-3 bg-emerald-500/20 border border-emerald-500/30 rounded-xl text-emerald-400 hover:bg-emerald-500/30 transition-all text-sm font-medium active:scale-95"
-                          >
-                            🤖 Perguntar ao ChatGPT
-                          </button>
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        {/* PLANO GRÁTIS - Apenas preview do comentário */}
-                        <div className="mt-4 p-4 bg-white/5 rounded-xl border border-white/10 relative overflow-hidden">
-                          <div className="flex items-center gap-2 mb-3">
-                            <span className="text-lg">📚</span>
-                            <span className="font-semibold text-white">Comentário do Professor</span>
-                          </div>
-                          <div className="text-gray-400 text-sm leading-relaxed">
-                            {questao.explanation ? questao.explanation.substring(0, 100) : 'Explicação detalhada disponível'}...
-                          </div>
-                          {/* Gradiente de fade */}
-                          <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-slate-900 to-transparent" />
-                        </div>
-                        
-                        {/* CTA para upgrade */}
-                        <div className="mt-4 p-4 bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/30 rounded-xl">
-                          <div className="flex items-start gap-3">
-                            <span className="text-2xl">🔒</span>
-                            <div className="flex-1">
-                              <p className="text-amber-400 font-semibold mb-1">Quer ver o comentário completo?</p>
-                              <p className="text-gray-400 text-sm mb-3">
-                                No Plano Plus você tem acesso a comentários detalhados, áudio explicativo e ChatGPT para tirar dúvidas!
-                              </p>
-                              <button
-                                onClick={() => setLocation('/planos')}
-                                className="px-6 py-2.5 bg-gradient-to-r from-orange-500 to-amber-500 rounded-lg text-white font-bold text-sm transition-all hover:opacity-90 active:scale-95"
-                              >
-                                ⭐ Fazer Upgrade Agora
-                              </button>
+                      <div className={`font-bold text-xl mb-3 flex items-center gap-3 ${
+                        acertou ? 'text-green-400' : 'text-red-400'
+                      }`}>
+                        <span className="text-3xl">{acertou ? '🎉' : '😔'}</span>
+                        {acertou ? 'Parabéns! Você acertou!' : 'Você errou!'}
+                      </div>
+                      
+                      <div className="text-white text-base mb-4 flex items-center gap-2">
+                        A alternativa correta é a letra 
+                        <span className="inline-flex items-center justify-center w-10 h-10 bg-green-500 text-white text-xl font-black rounded-full shadow-lg">
+                          {correctLetter}
+                        </span>
+                      </div>
+                      
+                      {/* Comentários diferenciados por plano */}
+                      {isPlusUser ? (
+                        <>
+                          {/* PLANO PLUS - Comentário completo e elaborado */}
+                          <div className="mt-5 p-5 bg-gradient-to-br from-purple-500/10 to-blue-500/10 rounded-2xl border border-purple-500/30">
+                            <div className="flex items-center gap-3 mb-4">
+                              <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-blue-500 rounded-xl flex items-center justify-center">
+                                <span className="text-xl">📚</span>
+                              </div>
+                              <div>
+                                <span className="font-bold text-white text-lg">Comentário do Professor</span>
+                                <span className="ml-2 px-2 py-0.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] font-bold rounded-full">PLUS</span>
+                              </div>
+                            </div>
+                            <div className="text-gray-200 text-base leading-relaxed">
+                              {questao.explanation || 'Esta questão aborda um conceito fundamental. A alternativa correta apresenta a definição mais precisa de acordo com a doutrina majoritária e jurisprudência consolidada.'}
                             </div>
                           </div>
-                        </div>
-                      </>
-                    )}
-                  </div>
+                          
+                          {/* Botões Plus - Áudio e ChatGPT GRANDES E CHAMATIVOS */}
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-5">
+                            <button
+                              onClick={() => {
+                                const text = questao.explanation || "Comentário não disponível";
+                                if ('speechSynthesis' in window) {
+                                  speechSynthesis.cancel();
+                                  const utterance = new SpeechSynthesisUtterance(text);
+                                  utterance.lang = 'pt-BR';
+                                  utterance.rate = 0.85;
+                                  speechSynthesis.speak(utterance);
+                                }
+                              }}
+                              className="flex items-center justify-center gap-3 p-5 bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-500 hover:to-violet-500 rounded-2xl text-white font-bold text-lg shadow-xl shadow-purple-500/30 transition-all active:scale-95 hover:scale-[1.02]"
+                            >
+                              <span className="text-3xl">🎧</span>
+                              <div className="text-left">
+                                <div>Ouvir Comentário</div>
+                                <div className="text-xs font-normal opacity-80">Áudio explicativo</div>
+                              </div>
+                            </button>
+                            <button
+                              onClick={() => setShowAIModal(true)}
+                              className="flex items-center justify-center gap-3 p-5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 rounded-2xl text-white font-bold text-lg shadow-xl shadow-emerald-500/30 transition-all active:scale-95 hover:scale-[1.02]"
+                            >
+                              <span className="text-3xl">🤖</span>
+                              <div className="text-left">
+                                <div>ChatGPT</div>
+                                <div className="text-xs font-normal opacity-80">Tire suas dúvidas</div>
+                              </div>
+                            </button>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          {/* PLANO GRÁTIS - Preview do comentário */}
+                          <div className="mt-5 p-5 bg-white/5 rounded-2xl border border-white/10 relative overflow-hidden">
+                            <div className="flex items-center gap-2 mb-3">
+                              <span className="text-xl">📚</span>
+                              <span className="font-semibold text-white">Comentário do Professor</span>
+                            </div>
+                            <div className="text-gray-400 text-sm leading-relaxed">
+                              {questao.explanation ? questao.explanation.substring(0, 80) : 'Esta questão aborda um conceito fundamental'}...
+                            </div>
+                            <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-[#0f172a] to-transparent" />
+                          </div>
+                          
+                          {/* CTA upgrade */}
+                          <div className="mt-5 p-5 bg-gradient-to-r from-amber-500/20 to-orange-500/20 border-2 border-amber-500/40 rounded-2xl">
+                            <div className="flex items-start gap-4">
+                              <span className="text-4xl">🔒</span>
+                              <div className="flex-1">
+                                <p className="text-amber-400 font-bold text-lg mb-2">Desbloqueie o conteúdo completo!</p>
+                                <p className="text-gray-300 text-sm mb-4">
+                                  Com o Plano Plus você tem comentários detalhados, áudio explicativo e ChatGPT para tirar todas as suas dúvidas!
+                                </p>
+                                <button
+                                  onClick={() => setLocation('/planos')}
+                                  className="w-full sm:w-auto px-8 py-3 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 rounded-xl text-white font-bold text-base transition-all hover:shadow-lg hover:shadow-orange-500/30 active:scale-95"
+                                >
+                                  ⭐ Fazer Upgrade Agora
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        </>
+                      )}
+                    </div>
 
-                  <button
-                    onClick={proxima}
-                    className="w-full mt-4 py-4 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl text-white font-bold text-lg hover:shadow-lg hover:shadow-green-500/30 transition-all active:scale-[0.98]"
-                  >
-                    {currentIndex < totalQuestoes - 1 ? 'Próxima Questão →' : '🏁 Finalizar Simulado'}
-                  </button>
-                </div>
-              )}
+                    <button
+                      onClick={proxima}
+                      className="w-full mt-5 py-5 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-400 hover:to-emerald-400 rounded-2xl text-white font-bold text-xl shadow-xl shadow-green-500/30 transition-all active:scale-[0.98] hover:scale-[1.01]"
+                    >
+                      {currentIndex < totalQuestoes - 1 ? 'Próxima Questão →' : '🏁 Finalizar Simulado'}
+                    </button>
+                  </div>
+                );
+              })()}
             </div>
           </div>
 
