@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { AppLayout } from "../components/app-layout";
 import { useAuth } from "../lib/auth-context-supabase";
-import { getUserPlan, getRemainingQuestions, getActiveConcursos, PLAN_LIMITS } from "../lib/access-control";
+import { getUserPlan, getRemainingQuestions, getActiveConcursos, PLAN_LIMITS, isSuperAdmin } from "../lib/access-control";
 import { getQuizData, getUniqueConcursos } from "../lib/quiz-store";
 import { Link, useLocation } from "wouter";
 import { supabase } from "../lib/supabase";
@@ -24,7 +24,9 @@ export default function HomeNovo() {
   const [, setLocation] = useLocation();
   const userId = user?.email || user?.username || "";
   const userPlan = getUserPlan(userId) || "free";
-  const isFree = !userPlan || userPlan === 'free' || userPlan === 'gratuito';
+  const isAdmin = isSuperAdmin(user?.email) || isSuperAdmin(user?.username);
+  const isPlusUser = userPlan === 'plus' || isAdmin;
+  const isFree = !isPlusUser;
   const remaining = getRemainingQuestions(userId);
   const activeConcursos = getActiveConcursos(userId);
   const [activePedido, setActivePedido] = useState<any>(null);
