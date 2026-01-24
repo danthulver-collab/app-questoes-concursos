@@ -1,0 +1,34 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "so-questoes-concursos",
+  "compatibility_date": "2025-10-08",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  "main": "./src/api/index.ts",
+  "observability": {
+    "enabled": true
+  },
+  "upload_source_maps": true,
+  "assets": {
+    "directory": "./dist/client",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": [
+      "/api/*"
+    ]
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "so-questoes-concursos",
+      "database_id": "77a39bba-4f16-47e9-8be8-e52d28eb9083",
+      "migrations_dir": "src/api/migrations"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "bucket_name": "so-questoes-concursos",
+      "binding": "BUCKET"
+    }
+  ]
+}
