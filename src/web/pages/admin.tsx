@@ -1903,6 +1903,19 @@ function AdminPage() {
             ))}
           </nav>
 
+          {/* Botão WhatsApp Suporte */}
+          <div className="mt-6">
+            <a
+              href="https://wa.me/5511999999999?text=Olá!%20Preciso%20de%20suporte"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full flex items-center justify-center gap-3 px-4 py-4 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-400 hover:to-emerald-400 rounded-xl text-white font-bold shadow-lg shadow-green-500/30 transition-all active:scale-95 hover:scale-105"
+            >
+              <span className="text-2xl">💬</span>
+              <span>Suporte WhatsApp</span>
+            </a>
+          </div>
+
           {/* Quick stats in sidebar */}
           <div className="mt-8 pt-6 border-t border-white/10 space-y-3">
             <div className="flex items-center justify-between text-sm">
