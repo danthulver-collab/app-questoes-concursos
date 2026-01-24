@@ -65,6 +65,7 @@ import { ProgressTimeline, MiniTimeline } from "../components/progress-timeline"
 
 import { getPackageRequests as getPackageRequestsLocal, updatePackageRequestStatus as updatePackageRequestStatusLocal, updatePackageExtrasResponse as updatePackageExtrasResponseLocal, linkPackageToRequest, getLinkedPackageId } from "./onboarding";
 import { getPackageRequests as getPackageRequestsSupabase, updatePackageRequestStatus as updatePackageRequestStatusSupabase, updatePackageExtrasResponse as updatePackageExtrasResponseSupabase, type PackageRequest } from "../lib/supabase-package-requests";
+import { confirmPaymentAndUpgrade } from "../lib/plan-upgrade";
 import { supabase } from "../lib/supabase";
 
 const OPTION_LABELS = ["A", "B", "C", "D"] as const;

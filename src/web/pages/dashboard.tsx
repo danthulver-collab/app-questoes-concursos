@@ -6,6 +6,7 @@ import { getQuizData } from "../lib/quiz-store";
 import { AppHeader } from "../components/app-header";
 import { getOnboardingData } from "./onboarding";
 import { getUserPlan, getRemainingQuestions, PLAN_LIMITS, type PlanType } from "../lib/access-control";
+import { monitorPaymentStatus } from "../lib/plan-upgrade";
 
 interface OnboardingData {
   concursoObjetivo: string;
@@ -42,6 +43,15 @@ function DashboardPage() {
       const plan = getUserPlan(userId) || "free";
       setUserPlan(plan);
       setRemainingQuestions(getRemainingQuestions(userId));
+      
+      // 🔥 Monitorar status de pagamento e fazer upgrade automático
+      if (user.id && user.email) {
+        monitorPaymentStatus(user.id, user.email).then(() => {
+          // Recarrega plano após verificação
+          const updatedPlan = getUserPlan(userId) || "free";
+          setUserPlan(updatedPlan);
+        });
+      }
     }
   }, [user]);
 
