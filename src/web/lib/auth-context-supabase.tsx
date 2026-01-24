@@ -294,21 +294,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       if (result.user) {
-        // Salva dados do usuário na tabela user_data para o admin ver
-        await saveUserData(result.user.id, {
-          user_id: result.user.id,
+        // Salva direto na tabela profiles
+        await supabase.from('profiles').insert({
+          id: result.user.id,
           email: result.user.email || data.email,
-          username: data.email.split('@')[0],
-          nome: data.nome,
-          telefone: data.telefone,
-          plan: 'gratuito'
+          plan: 'free',
+          is_admin: false
         });
-
-        console.log('✅ Usuário salvo na tabela user_data:', result.user.id);
-
-        // Iniciar trial de 30 dias automaticamente para novo usuário
-        startTrial(result.user.email || result.user.id);
-        console.log('🎉 Trial de 30 dias iniciado automaticamente!');
 
         // Usuário criado com sucesso
         // Supabase envia email de confirmação automaticamente
