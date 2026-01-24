@@ -16,7 +16,7 @@ export default function ConfigurarPacoteIndividual() {
   const [bancaCustomInput, setBancaCustomInput] = useState('');
   const [materias, setMaterias] = useState<string[]>([]);
   const [materiaCustomInput, setMateriaCustomInput] = useState('');
-  const [qtdQuestoes, setQtdQuestoes] = useState('100');
+  const [qtdQuestoesPorMateria, setQtdQuestoesPorMateria] = useState<'50' | '100'>('100');
   const [edital, setEdital] = useState<File | null>(null);
   const [enviando, setEnviando] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -74,14 +74,15 @@ export default function ConfigurarPacoteIndividual() {
         status: 'aguardando_montagem'
       };
 
-      // Adicionar num_questoes se campo existir
+      // Adicionar num_questoes por matéria
       try {
-        insertData.num_questoes = parseInt(qtdQuestoes) || 100;
+        const totalQuestoes = parseInt(qtdQuestoesPorMateria) * materias.length;
+        insertData.num_questoes = totalQuestoes;
       } catch {}
 
       // Adicionar telefone com dados
       try {
-        insertData.telefone = `Concurso: ${concurso} | Cargo: ${cargo} | Matérias: ${materias.join(', ')}`;
+        insertData.telefone = `Concurso: ${concurso} | Cargo: ${cargo} | Matérias: ${materias.join(', ')} | ${qtdQuestoesPorMateria} questões/matéria`;
       } catch {}
 
       console.log('📤 Enviando:', insertData);
@@ -249,33 +250,51 @@ export default function ConfigurarPacoteIndividual() {
             )}
           </div>
 
-          {/* Quantidade e Edital */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="glass-card rounded-2xl p-6">
-              <label className="block text-white font-semibold mb-3 flex items-center gap-2">
-                <span className="text-xl">🔢</span> Quantidade de Questões
-              </label>
-              <input
-                type="number"
-                value={qtdQuestoes}
-                onChange={(e) => setQtdQuestoes(e.target.value)}
-                className="w-full p-4 bg-white/5 border border-white/10 rounded-xl text-white text-lg font-bold focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-                min="50"
-                max="500"
-              />
+          {/* Questões por Matéria */}
+          <div className="glass-card rounded-2xl p-6">
+            <label className="block text-white font-semibold mb-4 flex items-center gap-2">
+              <span className="text-xl">🔢</span> Questões por Matéria
+            </label>
+            <div className="grid grid-cols-2 gap-4">
+              <button
+                type="button"
+                onClick={() => setQtdQuestoesPorMateria('50')}
+                className={`p-5 rounded-xl font-bold text-lg transition-all active:scale-95 ${
+                  qtdQuestoesPorMateria === '50'
+                    ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-xl shadow-blue-500/30'
+                    : 'bg-white/5 text-gray-300 hover:bg-white/10 border border-white/10'
+                }`}
+              >
+                50 questões
+              </button>
+              <button
+                type="button"
+                onClick={() => setQtdQuestoesPorMateria('100')}
+                className={`p-5 rounded-xl font-bold text-lg transition-all active:scale-95 ${
+                  qtdQuestoesPorMateria === '100'
+                    ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-xl shadow-orange-500/30'
+                    : 'bg-white/5 text-gray-300 hover:bg-white/10 border border-white/10'
+                }`}
+              >
+                100 questões
+              </button>
             </div>
+            <p className="text-xs text-gray-400 mt-3">
+              Total: {parseInt(qtdQuestoesPorMateria) * materias.length} questões ({materias.length} matérias)
+            </p>
+          </div>
 
-            <div className="glass-card rounded-2xl p-6">
-              <label className="block text-white font-semibold mb-3 flex items-center gap-2">
-                <span className="text-xl">📄</span> Edital (opcional)
-              </label>
-              <input
-                type="file"
-                accept=".pdf"
-                onChange={(e) => setEdital(e.target.files?.[0] || null)}
-                className="w-full p-4 bg-white/5 border border-white/10 rounded-xl text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-orange-500 file:text-white file:font-semibold"
-              />
-            </div>
+          {/* Edital */}
+          <div className="glass-card rounded-2xl p-6">
+            <label className="block text-white font-semibold mb-3 flex items-center gap-2">
+              <span className="text-xl">📄</span> Edital (opcional)
+            </label>
+            <input
+              type="file"
+              accept=".pdf"
+              onChange={(e) => setEdital(e.target.files?.[0] || null)}
+              className="w-full p-4 bg-white/5 border border-white/10 rounded-xl text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-orange-500 file:text-white file:font-semibold"
+            />
           </div>
 
           {/* Resumo */}
@@ -303,7 +322,7 @@ export default function ConfigurarPacoteIndividual() {
                 </div>
                 <div>
                   <span className="text-gray-400">Questões:</span>
-                  <div className="text-purple-400 font-semibold">{qtdQuestoes}</div>
+                  <div className="text-purple-400 font-semibold">{parseInt(qtdQuestoesPorMateria) * materias.length} total ({qtdQuestoesPorMateria}/matéria)</div>
                 </div>
                 <div>
                   <span className="text-gray-400">Edital:</span>

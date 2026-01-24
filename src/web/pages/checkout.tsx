@@ -98,13 +98,15 @@ export default function CheckoutPage() {
       price: "R$ 197/mês",
       color: "from-amber-400 to-yellow-400",
       features: [
-        "Questões ilimitadas",
-        "TODOS os concursos disponíveis",
-        "Chat IA com 200 mensagens/mês",
-        "Ver comentários e explicações",
-        "Estatísticas avançadas completas",
-        "Plano de estudos personalizado",
-        "Suporte prioritário"
+        "✅ Questões ilimitadas",
+        "✅ TODOS os concursos disponíveis",
+        "✅ Chat IA com 200 mensagens/mês",
+        "✅ Comentários completos e elaborados",
+        "🎧 Comentários em áudio (TTS)",
+        "📝 Anotações ilimitadas",
+        "✅ Estatísticas avançadas completas",
+        "✅ Plano de estudos personalizado",
+        "✅ Suporte prioritário"
       ]
     }
   };
@@ -206,12 +208,15 @@ export default function CheckoutPage() {
                 )}
               </button>
 
-              <button
-                onClick={handleAlreadyPaid}
-                className="w-full py-3 px-6 glass-card rounded-xl font-medium text-emerald-400 hover:bg-emerald-500/10 transition-all border border-emerald-500/30"
-              >
-                ✅ Já fiz o pagamento
-              </button>
+              {/* Botão "Já fiz o pagamento" apenas para Individual */}
+              {request.planType === 'individual' && (
+                <button
+                  onClick={handleAlreadyPaid}
+                  className="w-full py-3 px-6 glass-card rounded-xl font-medium text-emerald-400 hover:bg-emerald-500/10 transition-all border border-emerald-500/30"
+                >
+                  ✅ Já fiz o pagamento
+                </button>
+              )}
 
               <button
                 onClick={() => setLocation("/planos")}
