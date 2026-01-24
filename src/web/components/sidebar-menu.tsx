@@ -1,7 +1,13 @@
 import { Link, useLocation } from 'wouter';
+import { useAuth } from '../lib/auth-context-supabase';
+import { getUserPlan } from '../lib/access-control';
 
 export function SidebarMenu() {
   const [location] = useLocation();
+  const { user } = useAuth();
+  const userId = user?.email || user?.username || '';
+  const userPlan = getUserPlan(userId);
+  const isFree = !userPlan || userPlan === 'free' || userPlan === 'gratuito';
   
   const menuItems = [
     { 
@@ -35,22 +41,18 @@ export function SidebarMenu() {
                 }
               `}
             >
-              {/* Efeito de brilho no hover */}
               <div className={`absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full ${item.active ? '' : 'group-hover:animate-shimmer'} rounded-xl`}></div>
               
-              {/* Ícone */}
               <span className="text-2xl transition-transform duration-300 group-hover:scale-110 relative z-10">
                 {item.icon}
               </span>
               
-              {/* Label - aparece apenas no hover para não logados */}
               <span className={`text-sm font-semibold whitespace-nowrap relative z-10 transition-all duration-300 ${
                 item.active ? 'opacity-100' : 'opacity-0 group-hover:opacity-100 w-0 group-hover:w-auto overflow-hidden'
               }`}>
                 {item.label}
               </span>
               
-              {/* Indicador de ativo */}
               {item.active && (
                 <div className="absolute right-1 top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-white rounded-full animate-pulse"></div>
               )}
@@ -58,12 +60,25 @@ export function SidebarMenu() {
           </Link>
         ))}
         
-        {/* Botão WhatsApp Piscante */}
+        {/* Botão Upgrade Plus - só grátis */}
+        {isFree && (
+          <Link href="/planos">
+            <button className="group relative flex items-center gap-3 px-4 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/50 hover:scale-110 active:scale-95 transition-all w-full">
+              <span className="text-2xl">⭐</span>
+              <span className="text-sm font-semibold whitespace-nowrap opacity-0 group-hover:opacity-100 w-0 group-hover:w-auto overflow-hidden transition-all duration-300">
+                Upgrade
+              </span>
+              <div className="absolute -right-1 -top-1 w-3 h-3 bg-yellow-400 rounded-full animate-ping"></div>
+            </button>
+          </Link>
+        )}
+        
+        {/* Botão WhatsApp */}
         <a
           href="https://wa.me/5521980645070?text=Olá!%20Vim%20do%20site%20Só%20Questões"
           target="_blank"
           rel="noopener noreferrer"
-          className="group relative flex items-center gap-3 px-4 py-3 rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg shadow-green-500/50 hover:scale-110 active:scale-95 transition-all animate-pulse-slow w-full"
+          className="group relative flex items-center gap-3 px-4 py-3 rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg shadow-green-500/50 hover:scale-110 active:scale-95 transition-all w-full"
         >
           <span className="text-2xl animate-bounce">💬</span>
           <span className="text-sm font-semibold whitespace-nowrap opacity-0 group-hover:opacity-100 w-0 group-hover:w-auto overflow-hidden transition-all duration-300">
@@ -74,7 +89,6 @@ export function SidebarMenu() {
         </a>
       </div>
 
-      {/* Estilos de animação */}
       <style>{`
         @keyframes fade-in {
           from { opacity: 0; transform: translateX(-20px); }
