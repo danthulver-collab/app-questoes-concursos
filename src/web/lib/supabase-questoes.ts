@@ -8,6 +8,10 @@ export interface QuestaoArea {
   options: string[];
   correct_answer: number;
   explanation: string;
+  plano?: 'free' | 'plus';
+  audio_voice?: string;
+  enable_chatgpt?: boolean;
+  audio_comentario?: string;
   created_at?: string;
   updated_at?: string;
 }
@@ -61,6 +65,10 @@ export const saveQuestaoSupabase = async (questao: {
   options: string[];
   correct_answer: number;
   explanation: string;
+  plano?: 'free' | 'plus';
+  audio_voice?: string;
+  enable_chatgpt?: boolean;
+  audio_comentario?: string;
 }): Promise<boolean> => {
   try {
     const { error } = await supabase
@@ -73,6 +81,10 @@ export const saveQuestaoSupabase = async (questao: {
         options: questao.options,
         correct_answer: questao.correct_answer,
         explanation: questao.explanation,
+        plano: questao.plano || 'free',
+        audio_voice: questao.audio_voice,
+        enable_chatgpt: questao.enable_chatgpt || false,
+        audio_comentario: questao.audio_comentario,
         updated_at: new Date().toISOString()
       }, { onConflict: 'id' });
 

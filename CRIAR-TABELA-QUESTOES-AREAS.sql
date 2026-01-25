@@ -12,6 +12,10 @@ CREATE TABLE IF NOT EXISTS questoes_areas (
   options JSONB NOT NULL DEFAULT '[]',
   correct_answer INTEGER NOT NULL DEFAULT 0,
   explanation TEXT,
+  plano TEXT DEFAULT 'free',
+  audio_voice TEXT,
+  enable_chatgpt BOOLEAN DEFAULT false,
+  audio_comentario TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );

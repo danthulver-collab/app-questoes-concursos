@@ -153,7 +153,11 @@ function QuestoesAreasEditor({ showSaveMessage }: { showSaveMessage: (msg?: stri
       title: question.title,
       options: question.options,
       correct_answer: question.correctAnswer,
-      explanation: question.explanation
+      explanation: question.explanation,
+      plano: question.plano || 'free',
+      audio_voice: question.audio_voice,
+      enable_chatgpt: question.enable_chatgpt || false,
+      audio_comentario: question.audio_comentario
     });
 
     // Também salvar localmente como backup
@@ -405,7 +409,7 @@ function QuestoesAreasEditor({ showSaveMessage }: { showSaveMessage: (msg?: stri
                         newOpts[i] = e.target.value;
                         setEditingQuestion({ ...editingQuestion, options: newOpts });
                       }}
-                      className="flex-1 px-4 py-3 bg-transparent border-0 text-white placeholder-gray-500 focus:outline-none"
+                      className="flex-1 px-4 py-3 bg-white/5 border-0 text-white placeholder-gray-500 focus:outline-none rounded-lg"
                       placeholder={`Digite a alternativa ${["A", "B", "C", "D"][i]}...`}
                     />
                     {i === editingQuestion.correctAnswer && (
@@ -425,6 +429,92 @@ function QuestoesAreasEditor({ showSaveMessage }: { showSaveMessage: (msg?: stri
                 placeholder="Explique por que a resposta correta está certa..."
               />
             </div>
+
+            {/* Seletor de Plano */}
+            <div className="border-t border-white/10 pt-6">
+              <label className="block text-sm font-medium text-gray-300 mb-3">Plano de acesso</label>
+              <div className="flex gap-4">
+                <button
+                  type="button"
+                  onClick={() => setEditingQuestion({ ...editingQuestion, plano: 'free' })}
+                  className={`flex-1 py-3 rounded-xl font-bold transition-all ${
+                    (editingQuestion.plano || 'free') === 'free'
+                      ? "bg-gradient-to-r from-emerald-500 to-green-500 text-white"
+                      : "bg-white/10 text-gray-400 hover:bg-white/20"
+                  }`}
+                >
+                  🆓 Grátis
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setEditingQuestion({ ...editingQuestion, plano: 'plus' })}
+                  className={`flex-1 py-3 rounded-xl font-bold transition-all ${
+                    editingQuestion.plano === 'plus'
+                      ? "bg-gradient-to-r from-amber-500 to-yellow-500 text-white"
+                      : "bg-white/10 text-gray-400 hover:bg-white/20"
+                  }`}
+                >
+                  ✨ Plus
+                </button>
+              </div>
+            </div>
+
+            {/* Campos Extras para Plus */}
+            {editingQuestion.plano === 'plus' && (
+              <div className="space-y-4 p-6 bg-amber-500/10 border border-amber-500/30 rounded-xl">
+                <h3 className="font-bold text-amber-400 flex items-center gap-2">
+                  <span>✨</span> Recursos Plus
+                </h3>
+                
+                {/* Comentário em Áudio */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Comentário em Áudio (texto para narrar)</label>
+                  <textarea
+                    value={editingQuestion.audio_comentario || ''}
+                    onChange={e => setEditingQuestion({ ...editingQuestion, audio_comentario: e.target.value })}
+                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 h-20"
+                    placeholder="Texto que será narrado em áudio quando o aluno responder..."
+                  />
+                </div>
+
+                {/* Escolher Voz */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Voz do Áudio</label>
+                  <select
+                    value={editingQuestion.audio_voice || 'pt-BR-Standard-A'}
+                    onChange={e => setEditingQuestion({ ...editingQuestion, audio_voice: e.target.value })}
+                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white"
+                  >
+                    <option value="pt-BR-Standard-A">Voz Feminina 1 (Standard-A)</option>
+                    <option value="pt-BR-Standard-B">Voz Masculina 1 (Standard-B)</option>
+                    <option value="pt-BR-Standard-C">Voz Masculina 2 (Standard-C)</option>
+                    <option value="pt-BR-Neural2-A">Voz Feminina Neural (Neural2-A)</option>
+                    <option value="pt-BR-Neural2-B">Voz Masculina Neural (Neural2-B)</option>
+                  </select>
+                </div>
+
+                {/* Toggle ChatGPT */}
+                <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl">
+                  <div>
+                    <div className="font-medium text-white">Habilitar ChatGPT na questão</div>
+                    <div className="text-sm text-gray-400">Permite que o aluno tire dúvidas com IA</div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setEditingQuestion({ ...editingQuestion, enable_chatgpt: !editingQuestion.enable_chatgpt })}
+                    className={`w-14 h-8 rounded-full transition-all ${
+                      editingQuestion.enable_chatgpt 
+                        ? "bg-gradient-to-r from-green-500 to-emerald-500" 
+                        : "bg-white/20"
+                    }`}
+                  >
+                    <div className={`w-6 h-6 bg-white rounded-full transition-transform ${
+                      editingQuestion.enable_chatgpt ? "translate-x-7" : "translate-x-1"
+                    }`} />
+                  </button>
+                </div>
+              </div>
+            )}
 
             <div className="flex gap-4 pt-4">
               <button

@@ -2,6 +2,8 @@ import { useState } from "react";
 import { AppLayout } from "../components/app-layout";
 import { useLocation } from "wouter";
 import { getAllAreas, getCarreirasByArea, getMateriasByArea, getQuizData, saveQuizData } from "../lib/quiz-store";
+import { useAuth } from "../lib/auth-context-supabase";
+import { getUserPlan, isSuperAdmin } from "../lib/access-control";
 
 // Storage key para questões editáveis
 const QUESTOES_STORAGE_KEY = "questoes_por_area_v1";
@@ -168,10 +170,16 @@ export const saveQuestoesPorArea = (questoes: Record<string, Record<string, any[
 };
 
 export default function EscolherSimulado() {
+  const { user } = useAuth();
   const [, setLocation] = useLocation();
   const [step, setStep] = useState<"area" | "carreira" | "materia">("area");
   const [selectedAreaId, setSelectedAreaId] = useState<string>("");
   const [selectedCarreiraId, setSelectedCarreiraId] = useState<string>("");
+
+  const userId = user?.email || user?.username || "";
+  const userPlan = getUserPlan(userId) || "free";
+  const isAdmin = isSuperAdmin(user?.email) || isSuperAdmin(user?.username);
+  const isPlusUser = userPlan === 'plus' || isAdmin;
 
   const areas = getAllAreas();
   const carreiras = selectedAreaId ? getCarreirasByArea(selectedAreaId) : [];
@@ -181,6 +189,9 @@ export default function EscolherSimulado() {
   const selectedCarreira = carreiras.find(c => c.id === selectedCarreiraId);
 
   const QUESTOES_POR_AREA = getQuestoesPorArea();
+  
+  // Matérias que são Plus (bloquear para Free)
+  const MATERIAS_PLUS = ["direito-administrativo", "direito-constitucional", "direito-civil", "direito-penal", "direito-tributario", "contabilidade", "administracao"];
 
   const handleAreaSelect = (areaId: string) => {
     setSelectedAreaId(areaId);
@@ -472,20 +483,37 @@ export default function EscolherSimulado() {
                   {materias.map((materia, index) => {
                     const areaQuestoes = QUESTOES_POR_AREA[selectedAreaId] || {};
                     const numQuestoes = (areaQuestoes[materia.id] || []).length;
+                    const isMateriaPlusOnly = MATERIAS_PLUS.includes(materia.id);
+                    const isLocked = isMateriaPlusOnly && !isPlusUser;
                     
                     return (
                       <button
                         key={materia.id}
-                        onClick={() => numQuestoes > 0 && handleMateriaSelect(materia.id)}
-                        disabled={numQuestoes === 0}
+                        onClick={() => {
+                          if (isLocked) {
+                            setLocation('/planos');
+                            return;
+                          }
+                          if (numQuestoes > 0) handleMateriaSelect(materia.id);
+                        }}
+                        disabled={numQuestoes === 0 && !isLocked}
                         className={`group relative rounded-3xl p-8 border-2 transition-all duration-500 text-left overflow-hidden ${
-                          numQuestoes > 0 
+                          isLocked
+                            ? "border-amber-500/30 bg-gradient-to-br from-amber-500/10 to-yellow-500/5 cursor-pointer hover:scale-[1.03]"
+                            : numQuestoes > 0 
                             ? "border-white/10 hover:border-orange-500 hover:scale-[1.03] bg-gradient-to-br from-white/5 to-white/0 cursor-pointer" 
                             : "border-white/5 opacity-40 cursor-not-allowed bg-white/5"
                         }`}
                         style={{ animationDelay: `${index * 0.05}s` }}
                       >
-                        {numQuestoes > 0 && (
+                        {/* Cadeado para Plus */}
+                        {isLocked && (
+                          <div className="absolute top-4 right-4 w-12 h-12 rounded-full bg-gradient-to-r from-amber-500 to-yellow-500 flex items-center justify-center shadow-lg shadow-amber-500/50 z-10 animate-pulse">
+                            <span className="text-2xl">🔒</span>
+                          </div>
+                        )}
+                        
+                        {numQuestoes > 0 && !isLocked && (
                           <>
                             <div className="absolute inset-0 bg-gradient-to-br from-orange-500/0 to-amber-500/0 group-hover:from-orange-500/20 group-hover:to-amber-500/20 transition-all duration-500 rounded-3xl" />
                             <div className="absolute -inset-1 bg-gradient-to-r from-orange-500 to-amber-500 rounded-3xl opacity-0 group-hover:opacity-20 blur-xl transition-all duration-500" />
@@ -495,7 +523,9 @@ export default function EscolherSimulado() {
                         <div className="relative">
                           <div className="flex items-center gap-5 mb-5">
                             <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-3xl shadow-lg transition-all duration-500 ${
-                              numQuestoes > 0 
+                              isLocked 
+                                ? "bg-gradient-to-br from-amber-500/30 to-yellow-500/30"
+                                : numQuestoes > 0 
                                 ? "bg-gradient-to-br from-orange-500/30 to-amber-500/30 group-hover:scale-110 group-hover:rotate-6" 
                                 : "bg-white/10"
                             }`}>
@@ -503,7 +533,7 @@ export default function EscolherSimulado() {
                             </div>
                             <div className="flex-1">
                               <h3 className={`font-bold text-xl transition-colors ${
-                                numQuestoes > 0 ? "text-white group-hover:text-orange-400" : "text-gray-500"
+                                isLocked ? "text-amber-300" : numQuestoes > 0 ? "text-white group-hover:text-orange-400" : "text-gray-500"
                               }`}>
                                 {materia.nome}
                               </h3>
@@ -513,7 +543,16 @@ export default function EscolherSimulado() {
                             </div>
                           </div>
                           
-                          {numQuestoes > 0 ? (
+                          {isLocked ? (
+                            <div className="space-y-2">
+                              <div className="px-4 py-2.5 bg-gradient-to-r from-amber-500/30 to-yellow-500/30 text-amber-300 text-sm rounded-xl font-bold border border-amber-500/40">
+                                ✨ Apenas Plus
+                              </div>
+                              <p className="text-xs text-amber-400/80">
+                                🔓 Liberado em 7 dias no plano Grátis ou assine Plus para acesso imediato
+                              </p>
+                            </div>
+                          ) : numQuestoes > 0 ? (
                             <div className="flex items-center justify-between">
                               <span className="px-4 py-2 bg-emerald-500/20 text-emerald-400 text-sm rounded-xl font-semibold border border-emerald-500/30">
                                 ✓ Disponível
