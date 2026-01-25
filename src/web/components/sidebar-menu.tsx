@@ -1,10 +1,11 @@
 import { Link, useLocation } from 'wouter';
 import { useAuth } from '../lib/auth-context-supabase';
 import { getUserPlan, getRemainingQuestions } from '../lib/access-control';
+import { LogOut } from 'lucide-react';
 
 export function SidebarMenu() {
   const [location] = useLocation();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const userId = user?.email || user?.username || '';
   const userPlan = getUserPlan(userId);
   const remaining = getRemainingQuestions(userId);
@@ -105,6 +106,20 @@ export function SidebarMenu() {
             <div className="absolute -right-1 -top-1 w-3 h-3 bg-red-500 rounded-full animate-ping"></div>
             <div className="absolute -right-1 -top-1 w-3 h-3 bg-red-500 rounded-full"></div>
           </a>
+          
+          {/* Botão Sair */}
+          <button
+            onClick={async () => {
+              if (confirm('Deseja sair?')) {
+                await logout();
+                window.location.href = '/login';
+              }
+            }}
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-red-500/20 border border-red-500/30 text-red-400 hover:bg-red-500/30 hover:scale-105 transition-all"
+          >
+            <LogOut className="w-5 h-5" />
+            <span className="font-medium text-sm">Sair</span>
+          </button>
         </div>
       </div>
     </nav>
