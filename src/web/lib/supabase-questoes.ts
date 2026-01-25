@@ -71,31 +71,41 @@ export const saveQuestaoSupabase = async (questao: {
   audio_comentario?: string;
 }): Promise<boolean> => {
   try {
-    const { error } = await supabase
+    console.log('💾 Salvando questão no Supabase:', questao);
+    
+    const payload = {
+      id: questao.id,
+      area_id: questao.area_id,
+      materia_id: questao.materia_id,
+      title: questao.title,
+      options: questao.options,
+      correct_answer: questao.correct_answer,
+      explanation: questao.explanation || '',
+      plano: questao.plano || 'free',
+      audio_voice: questao.audio_voice || null,
+      enable_chatgpt: questao.enable_chatgpt || false,
+      audio_comentario: questao.audio_comentario || null,
+      updated_at: new Date().toISOString()
+    };
+    
+    console.log('📦 Payload:', payload);
+    
+    const { data, error } = await supabase
       .from('questoes_areas')
-      .upsert({
-        id: questao.id,
-        area_id: questao.area_id,
-        materia_id: questao.materia_id,
-        title: questao.title,
-        options: questao.options,
-        correct_answer: questao.correct_answer,
-        explanation: questao.explanation,
-        plano: questao.plano || 'free',
-        audio_voice: questao.audio_voice,
-        enable_chatgpt: questao.enable_chatgpt || false,
-        audio_comentario: questao.audio_comentario,
-        updated_at: new Date().toISOString()
-      }, { onConflict: 'id' });
+      .upsert(payload, { onConflict: 'id' });
 
     if (error) {
-      console.error('Erro ao salvar questão:', error);
+      console.error('❌ Erro ao salvar questão:', error);
+      console.error('Detalhes do erro:', JSON.stringify(error, null, 2));
+      alert(`Erro ao salvar no Supabase: ${error.message}\n\nVerifique se a tabela foi criada com todos os campos.`);
       return false;
     }
 
+    console.log('✅ Questão salva com sucesso!', data);
     return true;
-  } catch (e) {
-    console.error('Erro ao salvar questão:', e);
+  } catch (e: any) {
+    console.error('❌ Exceção ao salvar questão:', e);
+    alert(`Erro: ${e.message}`);
     return false;
   }
 };
