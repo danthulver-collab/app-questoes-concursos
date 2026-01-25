@@ -2362,9 +2362,17 @@ function AdminPage() {
           {/* PACOTES SECTION */}
           {activeSection === "pacotes" && (
             <div className="max-w-5xl mx-auto space-y-6 animate-slide-in-up">
-              <div>
-                <h1 className="text-3xl font-extrabold mb-2">📦 Pacotes de Concurso</h1>
-                <p className="text-gray-500">Crie e gerencie pacotes personalizados para alunos do Plano Individual</p>
+              <div className="flex items-center justify-between">
+                <div>
+                  <h1 className="text-3xl font-extrabold mb-2">📦 Pacotes de Concurso</h1>
+                  <p className="text-gray-500">Crie e gerencie pacotes personalizados para alunos do Plano Individual</p>
+                </div>
+                <button
+                  onClick={handleAddPacote}
+                  className="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl font-bold text-white hover:scale-105 transition-all shadow-lg"
+                >
+                  + Criar Pacote
+                </button>
               </div>
               
               {/* Stats */}
