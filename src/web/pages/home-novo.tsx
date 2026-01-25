@@ -5,6 +5,7 @@ import { getUserPlan, getRemainingQuestions, getActiveConcursos, PLAN_LIMITS, is
 import { getQuizData, getUniqueConcursos } from "../lib/quiz-store";
 import { Link, useLocation } from "wouter";
 import { supabase } from "../lib/supabase";
+import { SidebarMenu } from "../components/sidebar-menu";
 import { 
   Sparkles, 
   Crown, 
@@ -145,6 +146,7 @@ export default function HomeNovo() {
 
   return (
     <AppLayout>
+      <SidebarMenu />
       <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
         {/* Hero Section with Stats */}
         <div className="relative overflow-hidden">
