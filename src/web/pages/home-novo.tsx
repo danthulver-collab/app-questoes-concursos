@@ -6,6 +6,7 @@ import { getQuizData, getUniqueConcursos } from "../lib/quiz-store";
 import { Link, useLocation } from "wouter";
 import { supabase } from "../lib/supabase";
 import { SidebarMenu } from "../components/sidebar-menu";
+import { getUserPackagesDetails } from "../lib/user-packages";
 import { 
   Sparkles, 
   Crown, 
@@ -31,6 +32,9 @@ export default function HomeNovo() {
   const remaining = getRemainingQuestions(userId);
   const activeConcursos = getActiveConcursos(userId);
   const [activePedido, setActivePedido] = useState<any>(null);
+  
+  // Buscar pacotes atribuídos ao usuário (Individual)
+  const userPackages = getUserPackagesDetails(userId);
 
   // Pega dados reais do quiz
   const quizData = getQuizData();
