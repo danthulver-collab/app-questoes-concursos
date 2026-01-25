@@ -11,6 +11,8 @@ import {
   type Modulo, 
   type Pacote,
   type CustomOption,
+  type Area,
+  type Carreira,
   getAllBancas,
   getAllOrgaos,
   getCustomBancas,
@@ -22,7 +24,16 @@ import {
   updateCustomBanca,
   updateCustomOrgao,
   countPacotesUsingBanca,
-  countPacotesUsingOrgao
+  countPacotesUsingOrgao,
+  getAllAreas,
+  getAllCarreiras,
+  getCarreirasByArea,
+  addArea,
+  updateArea,
+  deleteArea,
+  addCarreira,
+  updateCarreira,
+  deleteCarreira
 } from "../lib/quiz-store";
 import { AppHeader } from "../components/app-header";
 import { NotificationBell } from "../components/notification-bell";
@@ -70,7 +81,7 @@ import { supabase } from "../lib/supabase";
 
 const OPTION_LABELS = ["A", "B", "C", "D"] as const;
 
-type AdminSection = "config" | "concursos" | "disciplinas" | "modulos" | "questoes" | "usuarios" | "acessos" | "estatisticas" | "importexport" | "pacotes" | "solicitacoes" | "opcoes" | "simulados";
+type AdminSection = "config" | "concursos" | "disciplinas" | "modulos" | "questoes" | "usuarios" | "acessos" | "estatisticas" | "importexport" | "pacotes" | "solicitacoes" | "opcoes" | "simulados" | "areas";
 
 interface UserData {
   username: string;
@@ -1753,6 +1764,7 @@ function AdminPage() {
   const sidebarItems: { id: AdminSection; icon: string; label: string; badge?: number }[] = [
     { id: "config", icon: "⚙️", label: "Configurações" },
     { id: "solicitacoes", icon: "📋", label: "Solicitações", badge: pendingPackagesCount },
+    { id: "areas", icon: "🎯", label: "Áreas e Carreiras" },
     { id: "pacotes", icon: "📦", label: "Pacotes de Concurso" },
     { id: "simulados", icon: "📝", label: "Simulados" },
     { id: "concursos", icon: "🏆", label: "Concursos" },
@@ -2785,6 +2797,61 @@ function AdminPage() {
               users={users}
               showSaveMessage={showSaveMessage}
             />
+          )}
+
+          {/* AREAS E CARREIRAS SECTION */}
+          {activeSection === "areas" && (
+            <div className="max-w-5xl mx-auto space-y-6 animate-slide-in-up">
+              <div>
+                <h1 className="text-3xl font-extrabold mb-2">🎯 Áreas e Carreiras</h1>
+                <p className="text-gray-500">Gerencie as áreas de concurso e suas carreiras</p>
+              </div>
+
+              {/* Listagem de Áreas */}
+              <div className="glass-card rounded-2xl p-6">
+                <h2 className="text-xl font-bold mb-4">📋 Áreas Cadastradas</h2>
+                <div className="grid md:grid-cols-2 gap-4">
+                  {getAllAreas().map(area => {
+                    const carreiras = getCarreirasByArea(area.id);
+                    return (
+                      <div key={area.id} className="p-4 bg-white/5 rounded-xl border border-white/10">
+                        <div className="flex items-start gap-3">
+                          <div className="text-3xl">{area.icone}</div>
+                          <div className="flex-1">
+                            <h3 className="font-bold text-lg">{area.nome}</h3>
+                            <p className="text-sm text-gray-400 mt-1">{area.descricao}</p>
+                            <div className="flex gap-2 mt-2 text-xs text-gray-500">
+                              <span>{carreiras.length} carreiras</span>
+                              <span>•</span>
+                              <span>{area.materias.length} matérias</span>
+                            </div>
+                            <div className="flex flex-wrap gap-1 mt-2">
+                              {carreiras.map(carr => (
+                                <span key={carr.id} className="px-2 py-1 bg-orange-500/20 text-orange-400 text-xs rounded">
+                                  {carr.nome}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Total Stats */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="glass-card rounded-xl p-4 text-center">
+                  <div className="text-3xl font-black text-orange-400">{getAllAreas().length}</div>
+                  <div className="text-sm text-gray-500">Áreas Cadastradas</div>
+                </div>
+                <div className="glass-card rounded-xl p-4 text-center">
+                  <div className="text-3xl font-black text-amber-400">{getAllCarreiras().length}</div>
+                  <div className="text-sm text-gray-500">Carreiras Cadastradas</div>
+                </div>
+              </div>
+            </div>
           )}
 
           {/* ESTATISTICAS SECTION */}
