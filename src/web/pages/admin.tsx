@@ -2397,25 +2397,29 @@ function AdminPage() {
                 {quizData.pacotes && quizData.pacotes.length > 0 ? (
                   <div className="space-y-3">
                     {quizData.pacotes.map((pacote, i) => (
-                      <div key={pacote.id} className="bg-white/5 rounded-xl p-4 hover:bg-white/10 transition-all">
-                        <div className="flex items-center justify-between">
+                      <div key={pacote.id} className="bg-white/5 rounded-xl p-5 hover:bg-white/10 transition-all">
+                        <div className="flex items-center justify-between gap-4">
                           <div className="flex-1">
-                            <h4 className="text-white font-bold">{pacote.nome}</h4>
-                            <p className="text-sm text-gray-400">{pacote.concurso} - {pacote.disciplinas?.join(', ')}</p>
+                            <h4 className="text-white font-bold text-lg mb-1">
+                              {pacote.nome || 'Pacote sem nome'}
+                            </h4>
+                            <p className="text-sm text-gray-400">
+                              {pacote.banca || 'Sem banca'} • {pacote.disciplinas?.join(', ') || 'Sem matérias'}
+                            </p>
                           </div>
                           <div className="flex items-center gap-3">
-                            <span className="px-3 py-1 bg-purple-500/20 text-purple-400 rounded-full text-xs">
-                              {pacote.questions?.length || 0} questões
+                            <span className="px-4 py-2 bg-purple-500/20 text-purple-400 rounded-lg text-sm font-bold">
+                              {pacote.questionsIds?.length || pacote.questions?.length || 0} questões
                             </span>
                             <button
                               onClick={() => handleEditPacote(pacote)}
-                              className="px-4 py-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 rounded-lg text-sm font-bold transition-all"
+                              className="px-4 py-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 rounded-lg text-sm font-bold transition-all active:scale-95"
                             >
                               ✏️ Editar
                             </button>
                             <button
                               onClick={() => setPacoteAtribuirModal(pacote)}
-                              className="px-4 py-2 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 rounded-lg text-sm font-bold transition-all"
+                              className="px-4 py-2 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 rounded-lg text-sm font-bold transition-all active:scale-95"
                             >
                               👥 Atribuir
                             </button>
