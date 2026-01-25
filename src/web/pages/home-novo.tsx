@@ -243,7 +243,7 @@ export default function HomeNovo() {
                 </div>
               </Link>
               
-              {/* Card Pacote Exclusivo OU Estude por Matérias */}
+              {/* Card Pacote Exclusivo OU Pacote Sendo Criado OU Estude por Matérias */}
               {userPackages && userPackages.length > 0 ? (
                 <Link href={`/pacote/${userPackages[0].id}`}>
                   <div className="glass-card rounded-3xl p-8 md:p-10 cursor-pointer group hover:scale-[1.02] transition-all duration-300 bg-gradient-to-br from-purple-500/20 to-pink-500/10 border-2 border-purple-500/30 hover:border-purple-500/60 shadow-2xl shadow-purple-500/20">
@@ -269,6 +269,45 @@ export default function HomeNovo() {
                     </div>
                   </div>
                 </Link>
+              ) : activePedido && (activePedido.status === 'aguardando_montagem' || activePedido.status === 'em_andamento') ? (
+                /* Card: Seu pacote está sendo criado */
+                <div className="glass-card rounded-3xl p-8 md:p-10 bg-gradient-to-br from-amber-500/20 to-yellow-500/10 border-2 border-amber-500/30 shadow-2xl shadow-amber-500/20 relative overflow-hidden">
+                  {/* Animated background */}
+                  <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                    <div className="absolute top-0 left-0 w-40 h-40 bg-amber-500/20 rounded-full blur-3xl animate-pulse" />
+                    <div className="absolute bottom-0 right-0 w-40 h-40 bg-yellow-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+                  </div>
+                  
+                  <div className="relative flex flex-col items-center justify-center gap-4 text-center">
+                    <div className="w-24 h-24 rounded-full bg-gradient-to-br from-amber-500 to-yellow-500 flex items-center justify-center shadow-xl shadow-amber-500/40 animate-pulse">
+                      <span className="text-5xl">🛠️</span>
+                    </div>
+                    <h2 className="text-3xl md:text-4xl font-black text-white">
+                      🛠️ SEU PACOTE ESTÁ SENDO CRIADO
+                    </h2>
+                    <p className="text-gray-300 text-lg max-w-md">
+                      Estamos preparando suas questões personalizadas. Você será notificado quando estiver pronto!
+                    </p>
+                    
+                    {/* Status badge */}
+                    <div className="flex items-center gap-3 px-6 py-3 bg-amber-500/20 border border-amber-500/40 rounded-xl">
+                      <div className="w-3 h-3 bg-amber-400 rounded-full animate-pulse" />
+                      <span className="text-amber-300 font-bold">
+                        {activePedido.status === 'aguardando_montagem' ? 'Aguardando montagem' : 'Em andamento'}
+                      </span>
+                    </div>
+                    
+                    {/* Info do pedido */}
+                    <div className="mt-2 text-sm text-gray-400 space-y-1">
+                      {activePedido.concurso && <p>📋 Concurso: <span className="text-white">{activePedido.concurso}</span></p>}
+                      {activePedido.cargo && <p>💼 Cargo: <span className="text-white">{activePedido.cargo}</span></p>}
+                    </div>
+                    
+                    <p className="text-amber-400/80 text-sm mt-2">
+                      ⏱️ Prazo estimado: até 7 dias úteis
+                    </p>
+                  </div>
+                </div>
               ) : (
                 <div 
                   onClick={() => isFree ? setLocation('/planos') : setLocation('/escolher-materia')}

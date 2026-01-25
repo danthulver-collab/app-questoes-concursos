@@ -28,6 +28,7 @@ import {
   getAllAreas,
   getAllCarreiras,
   getCarreirasByArea,
+  getMateriasByArea,
   addArea,
   updateArea,
   deleteArea,
