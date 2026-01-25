@@ -1158,7 +1158,8 @@ function AdminPage() {
       concurso: "",
       ano: new Date().getFullYear(),
       orgao: "",
-      disciplina: ""
+      disciplina: "",
+      plano: "all" // Padrão: todos os planos
     };
     setEditingQuestion(newQuestion);
     setIsNewQuestion(true);
