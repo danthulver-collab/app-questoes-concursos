@@ -233,6 +233,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const hardcodedUsers = [
         { username: "admin", password: "admin123", email: "admin@local.com", nome: "Administrador" },
         { username: "usuario", password: "senha123", email: "usuario@local.com", nome: "Usuário Teste" },
+        { username: "aluno", password: "aluno123", email: "aluno@teste.com", nome: "Aluno Teste", plano: "individual" },
       ];
 
       const hardcodedUser = hardcodedUsers.find(
