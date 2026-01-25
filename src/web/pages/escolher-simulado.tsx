@@ -191,8 +191,34 @@ export default function EscolherSimulado() {
   const selectedArea = areas.find(a => a.id === selectedAreaId);
   const selectedCarreira = carreiras.find(c => c.id === selectedCarreiraId);
 
-  // Matérias que são Plus (bloquear para Free)
-  const MATERIAS_PLUS = ["direito-administrativo", "direito-constitucional", "direito-civil", "direito-penal", "direito-tributario", "contabilidade", "administracao"];
+  // Calcular dias desde cadastro para liberação gradual
+  const getUserDaysSinceCadastro = () => {
+    try {
+      const cadastro = localStorage.getItem(`user_cadastro_${userId}`);
+      if (!cadastro) {
+        // Se não existe, criar registro de cadastro
+        localStorage.setItem(`user_cadastro_${userId}`, new Date().toISOString());
+        return 0;
+      }
+      const diffMs = Date.now() - new Date(cadastro).getTime();
+      const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+      return diffDays;
+    } catch {
+      return 0;
+    }
+  };
+  
+  const daysSinceCadastro = getUserDaysSinceCadastro();
+  
+  // Matérias liberadas gradualmente (7 dias)
+  const MATERIAS_7_DIAS = ["direito-tributario", "contabilidade", "administracao"];
+  const isMateriaLocked = (materiaId: string) => {
+    if (isPlusUser) return false; // Plus vê tudo
+    if (MATERIAS_7_DIAS.includes(materiaId)) {
+      return daysSinceCadastro < 7; // Bloqueia se < 7 dias
+    }
+    return false; // Outras matérias liberadas
+  };
 
   // Carregar questões do Supabase ao montar
   useEffect(() => {
@@ -508,8 +534,8 @@ export default function EscolherSimulado() {
                   {materias.map((materia, index) => {
                     const areaQuestoes = QUESTOES_POR_AREA[selectedAreaId] || {};
                     const numQuestoes = (areaQuestoes[materia.id] || []).length;
-                    const isMateriaPlusOnly = MATERIAS_PLUS.includes(materia.id);
-                    const isLocked = isMateriaPlusOnly && !isPlusUser;
+                    const isLocked = isMateriaLocked(materia.id);
+                    const diasRestantes = isLocked ? 7 - daysSinceCadastro : 0;
                     
                     return (
                       <button
@@ -574,7 +600,7 @@ export default function EscolherSimulado() {
                                 ✨ Apenas Plus
                               </div>
                               <p className="text-xs text-amber-400/80">
-                                🔓 Assine Plus para acesso imediato
+                                🔓 Libera em {diasRestantes} {diasRestantes === 1 ? 'dia' : 'dias'} ou assine Plus
                               </p>
                             </div>
                           ) : numQuestoes > 0 ? (

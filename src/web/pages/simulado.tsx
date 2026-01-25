@@ -297,10 +297,20 @@ Responda de forma clara, didática e objetiva, focando em ajudar o aluno a enten
               </div>
 
               {respostas[currentIndex] && (() => {
-                const correctLetter = typeof questao.correctAnswer === 'number' 
-                  ? ['A', 'B', 'C', 'D'][questao.correctAnswer] 
-                  : questao.correctAnswer;
-                const acertou = respostas[currentIndex] === correctLetter;
+                const correctIndex = typeof questao.correctAnswer === 'number' 
+                  ? questao.correctAnswer 
+                  : (questao.correct_answer || 0);
+                const correctLetter = ['A', 'B', 'C', 'D'][correctIndex];
+                const respostaUsuario = respostas[currentIndex];
+                const acertou = respostaUsuario === correctLetter;
+                
+                console.log('📊 FEEDBACK:', {
+                  correctIndex,
+                  correctLetter,
+                  respostaUsuario,
+                  acertou,
+                  questao: questao.title
+                });
                 
                 return (
                   <div className="mt-6">
@@ -339,7 +349,7 @@ Responda de forma clara, didática e objetiva, focando em ajudar o aluno a enten
                               </div>
                             </div>
                             <div className="text-gray-200 text-base leading-relaxed">
-                              {questao.explanation || 'Esta questão aborda um conceito fundamental. A alternativa correta apresenta a definição mais precisa de acordo com a doutrina majoritária e jurisprudência consolidada.'}
+                              {questao.audio_comentario || questao.explanation || 'Esta questão aborda um conceito fundamental. A alternativa correta apresenta a definição mais precisa de acordo com a doutrina majoritária e jurisprudência consolidada.'}
                             </div>
                           </div>
                           
@@ -347,7 +357,7 @@ Responda de forma clara, didática e objetiva, focando em ajudar o aluno a enten
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-5">
                             <button
                               onClick={() => {
-                                const text = questao.explanation || "Comentário não disponível";
+                                const text = questao.audio_comentario || questao.explanation || "Comentário não disponível";
                                 if ('speechSynthesis' in window) {
                                   speechSynthesis.cancel();
                                   const utterance = new SpeechSynthesisUtterance(text);
