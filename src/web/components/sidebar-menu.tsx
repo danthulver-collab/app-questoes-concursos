@@ -1,116 +1,112 @@
 import { Link, useLocation } from 'wouter';
 import { useAuth } from '../lib/auth-context-supabase';
-import { getUserPlan } from '../lib/access-control';
+import { getUserPlan, getRemainingQuestions } from '../lib/access-control';
 
 export function SidebarMenu() {
   const [location] = useLocation();
   const { user } = useAuth();
   const userId = user?.email || user?.username || '';
   const userPlan = getUserPlan(userId);
+  const remaining = getRemainingQuestions(userId);
   const isFree = !userPlan || userPlan === 'free' || userPlan === 'gratuito';
   
   const menuItems = [
-    { 
-      label: 'Início', 
-      icon: '🏠', 
-      path: '/dashboard',
-      active: location === '/dashboard'
-    },
-    { 
-      label: 'Estatísticas', 
-      icon: '📊', 
-      path: '/dashboard',
-      active: location.includes('/stats')
-    },
-    { 
-      label: 'Configurações', 
-      icon: '⚙️', 
-      path: '/configuracoes',
-      active: location === '/configuracoes'
-    },
+    { label: 'Início', icon: '🏠', path: '/' },
+    { label: 'Estatísticas', icon: '📊', path: '/dashboard' },
+    { label: 'Configurações', icon: '⚙️', path: '/configuracoes' },
   ];
 
   return (
-    <nav className="fixed left-4 top-1/2 -translate-y-1/2 z-50 hidden md:block">
-      <div className="flex flex-col gap-3 bg-[#1a1f2e]/80 backdrop-blur-md p-3 rounded-2xl border border-white/10 shadow-2xl">
-        {menuItems.map((item, index) => (
-          <Link key={item.label} href={item.path}>
-            <button
-              style={{ animationDelay: `${index * 100}ms` }}
-              className={`
-                group relative flex items-center gap-3 px-4 py-3 rounded-xl
-                transition-all duration-300 ease-out
-                animate-fade-in w-full
-                ${item.active
-                  ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/30 scale-105'
-                  : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white hover:scale-105'
-                }
-              `}
-            >
-              <div className={`absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full ${item.active ? '' : 'group-hover:animate-shimmer'} rounded-xl`}></div>
-              
-              <span className="text-2xl transition-transform duration-300 group-hover:scale-110 relative z-10">
-                {item.icon}
-              </span>
-              
-              <span className={`text-sm font-semibold whitespace-nowrap relative z-10 transition-all duration-300 ${
-                item.active ? 'opacity-100' : 'opacity-0 group-hover:opacity-100 w-0 group-hover:w-auto overflow-hidden'
-              }`}>
-                {item.label}
-              </span>
-              
-              {item.active && (
-                <div className="absolute right-1 top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-white rounded-full animate-pulse"></div>
-              )}
-            </button>
-          </Link>
-        ))}
+    <nav className="fixed left-4 top-4 z-50 hidden md:block w-56">
+      <div className="bg-[#1a1f2e]/90 backdrop-blur-md rounded-2xl border border-white/10 shadow-2xl overflow-hidden">
+        {/* Logo no topo */}
+        <Link href="/">
+          <div className="p-4 border-b border-white/10 hover:bg-white/5 transition-all cursor-pointer">
+            <img src="/logo.png" alt="Só Questões" className="h-8 w-auto" />
+          </div>
+        </Link>
         
-        {/* Botão Upgrade Plus - só grátis */}
-        {isFree && (
-          <Link href="/planos">
-            <button className="group relative flex items-center gap-3 px-4 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/50 hover:scale-110 active:scale-95 transition-all w-full">
-              <span className="text-2xl">⭐</span>
-              <span className="text-sm font-semibold whitespace-nowrap opacity-0 group-hover:opacity-100 w-0 group-hover:w-auto overflow-hidden transition-all duration-300">
-                Upgrade
-              </span>
-              <div className="absolute -right-1 -top-1 w-3 h-3 bg-yellow-400 rounded-full animate-ping"></div>
-            </button>
-          </Link>
-        )}
+        {/* Card do Usuário */}
+        <div className="p-4 border-b border-white/10">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-lg font-bold">
+              {user?.username?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'U'}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-white font-semibold text-sm truncate">
+                {user?.username || user?.email?.split('@')[0] || 'Usuário'}
+              </p>
+              <p className="text-gray-400 text-xs truncate">{user?.email}</p>
+            </div>
+          </div>
+          <div className="px-3 py-1.5 bg-white/5 rounded-lg text-center">
+            <p className={`text-xs font-bold ${
+              userPlan === 'plus' ? 'text-amber-400' : 
+              userPlan === 'individual' ? 'text-orange-400' : 
+              'text-emerald-400'
+            }`}>
+              {userPlan === 'plus' ? '⭐ Plano Plus' : 
+               userPlan === 'individual' ? '📦 Plano Individual' : 
+               '🆓 Plano Grátis'}
+            </p>
+          </div>
+          {isFree && remaining !== null && (
+            <div className="mt-2 px-3 py-1.5 bg-orange-500/20 border border-orange-500/30 rounded-lg text-center">
+              <p className="text-orange-400 text-xs font-bold">
+                {remaining} questões restantes
+              </p>
+            </div>
+          )}
+        </div>
         
-        {/* Botão WhatsApp */}
-        <a
-          href="https://wa.me/5521980645070?text=Olá!%20Vim%20do%20site%20Só%20Questões"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="group relative flex items-center gap-3 px-4 py-3 rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg shadow-green-500/50 hover:scale-110 active:scale-95 transition-all w-full"
-        >
-          <span className="text-2xl animate-bounce">💬</span>
-          <span className="text-sm font-semibold whitespace-nowrap opacity-0 group-hover:opacity-100 w-0 group-hover:w-auto overflow-hidden transition-all duration-300">
-            Suporte
-          </span>
-          <div className="absolute -right-1 -top-1 w-3 h-3 bg-red-500 rounded-full animate-ping"></div>
-          <div className="absolute -right-1 -top-1 w-3 h-3 bg-red-500 rounded-full"></div>
-        </a>
+        {/* Menu Items */}
+        <div className="p-3 space-y-2">
+          {menuItems.map((item) => {
+            const isActive = location === item.path;
+            return (
+              <Link key={item.label} href={item.path}>
+                <button
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+                    isActive
+                      ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg'
+                      : 'text-gray-400 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  <span className="text-xl">{item.icon}</span>
+                  <span className="font-medium text-sm">{item.label}</span>
+                </button>
+              </Link>
+            );
+          })}
+        </div>
+        
+        {/* Botões extras */}
+        <div className="p-3 space-y-2 border-t border-white/10">
+          {/* Upgrade - só grátis */}
+          {isFree && (
+            <Link href="/planos">
+              <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:scale-105 transition-all shadow-lg relative">
+                <span className="text-xl">⭐</span>
+                <span className="font-medium text-sm">Upgrade</span>
+                <div className="absolute -right-1 -top-1 w-3 h-3 bg-yellow-400 rounded-full animate-ping"></div>
+              </button>
+            </Link>
+          )}
+          
+          {/* WhatsApp */}
+          <a
+            href="https://wa.me/5521980645070?text=Olá!%20Vim%20do%20site%20Só%20Questões"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 text-white hover:scale-105 transition-all shadow-lg relative"
+          >
+            <span className="text-xl animate-bounce">💬</span>
+            <span className="font-medium text-sm">Suporte</span>
+            <div className="absolute -right-1 -top-1 w-3 h-3 bg-red-500 rounded-full animate-ping"></div>
+            <div className="absolute -right-1 -top-1 w-3 h-3 bg-red-500 rounded-full"></div>
+          </a>
+        </div>
       </div>
-
-      <style>{`
-        @keyframes fade-in {
-          from { opacity: 0; transform: translateX(-20px); }
-          to { opacity: 1; transform: translateX(0); }
-        }
-        @keyframes shimmer {
-          to { transform: translateX(200%); }
-        }
-        .animate-fade-in {
-          animation: fade-in 0.5s ease-out forwards;
-          opacity: 0;
-        }
-        .animate-shimmer {
-          animation: shimmer 1s ease-in-out;
-        }
-      `}</style>
     </nav>
   );
 }
