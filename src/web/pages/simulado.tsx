@@ -161,8 +161,13 @@ Responda de forma clara, didática e objetiva, focando em ajudar o aluno a enten
     simulado.questoes.forEach((q: any, i: number) => {
       const correctIndex = typeof q.correctAnswer === 'number' ? q.correctAnswer : (q.correct_answer || 0);
       const correctLetter = ['A', 'B', 'C', 'D'][correctIndex];
-      if (respostas[i] === correctLetter) acertos++;
+      const respostaUsuario = respostas[i]; // Letra: A, B, C ou D
+      
+      console.log(`Questão ${i+1}: Resposta=${respostaUsuario}, Correta=${correctLetter}, Acertou=${respostaUsuario === correctLetter}`);
+      
+      if (respostaUsuario === correctLetter) acertos++;
     });
+    console.log(`Total de acertos: ${acertos} de ${simulado.questoes.length}`);
     return acertos;
   };
 
