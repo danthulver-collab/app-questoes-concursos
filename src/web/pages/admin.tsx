@@ -2399,13 +2399,27 @@ function AdminPage() {
                     {quizData.pacotes.map((pacote, i) => (
                       <div key={pacote.id} className="bg-white/5 rounded-xl p-4 hover:bg-white/10 transition-all">
                         <div className="flex items-center justify-between">
-                          <div>
+                          <div className="flex-1">
                             <h4 className="text-white font-bold">{pacote.nome}</h4>
                             <p className="text-sm text-gray-400">{pacote.concurso} - {pacote.disciplinas?.join(', ')}</p>
                           </div>
-                          <span className="px-3 py-1 bg-purple-500/20 text-purple-400 rounded-full text-xs">
-                            {pacote.questions?.length || 0} questões
-                          </span>
+                          <div className="flex items-center gap-3">
+                            <span className="px-3 py-1 bg-purple-500/20 text-purple-400 rounded-full text-xs">
+                              {pacote.questions?.length || 0} questões
+                            </span>
+                            <button
+                              onClick={() => handleEditPacote(pacote)}
+                              className="px-4 py-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 rounded-lg text-sm font-bold transition-all"
+                            >
+                              ✏️ Editar
+                            </button>
+                            <button
+                              onClick={() => setPacoteAtribuirModal(pacote)}
+                              className="px-4 py-2 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 rounded-lg text-sm font-bold transition-all"
+                            >
+                              👥 Atribuir
+                            </button>
+                          </div>
                         </div>
                       </div>
                     ))}
