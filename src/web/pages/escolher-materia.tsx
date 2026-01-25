@@ -1,18 +1,35 @@
 import { AppLayout } from "../components/app-layout";
-import { Link } from "wouter";
-import { getQuizData } from "../lib/quiz-store";
+import { useState } from "react";
+import { useLocation } from "wouter";
+import { getAllAreas, getCarreirasByArea, type Area, type Carreira } from "../lib/quiz-store";
 
 export default function EscolherMateria() {
-  const quizData = getQuizData();
-  
-  const materias = [
-    { nome: 'Português', icon: '📖', color: 'blue', questoes: quizData.questions.filter(q => q.disciplina === 'Português').length },
-    { nome: 'Matemática', icon: '🔢', color: 'green', questoes: quizData.questions.filter(q => q.disciplina === 'Matemática').length },
-    { nome: 'Direito Constitucional', icon: '⚖️', color: 'purple', questoes: quizData.questions.filter(q => q.disciplina === 'Direito Constitucional').length },
-    { nome: 'Direito Administrativo', icon: '🏛️', color: 'red', questoes: quizData.questions.filter(q => q.disciplina === 'Direito Administrativo').length },
-    { nome: 'Informática', icon: '💻', color: 'cyan', questoes: quizData.questions.filter(q => q.disciplina === 'Informática').length },
-    { nome: 'Raciocínio Lógico', icon: '🧩', color: 'orange', questoes: quizData.questions.filter(q => q.disciplina === 'Raciocínio Lógico').length },
-  ];
+  const [, setLocation] = useLocation();
+  const [selectedAreaId, setSelectedAreaId] = useState<string>("");
+  const [selectedCarreiraId, setSelectedCarreiraId] = useState<string>("");
+
+  const areas = getAllAreas();
+  const carreiras = selectedAreaId ? getCarreirasByArea(selectedAreaId) : [];
+  const selectedArea = areas.find(a => a.id === selectedAreaId);
+  const selectedCarreira = carreiras.find(c => c.id === selectedCarreiraId);
+
+  const handleAreaSelect = (areaId: string) => {
+    setSelectedAreaId(areaId);
+    setSelectedCarreiraId("");
+  };
+
+  const handleCarreiraSelect = (carreiraId: string) => {
+    setSelectedCarreiraId(carreiraId);
+  };
+
+  const handleStartQuestions = () => {
+    if (!selectedAreaId || !selectedCarreiraId) return;
+    
+    // Salvar seleção e redirecionar para questões
+    localStorage.setItem("selected_area", selectedAreaId);
+    localStorage.setItem("selected_carreira", selectedCarreiraId);
+    setLocation("/questoes");
+  };
 
   return (
     <AppLayout>
@@ -21,55 +38,141 @@ export default function EscolherMateria() {
           {/* Header */}
           <div className="mb-8">
             <h1 className="text-4xl font-bold text-white mb-2 flex items-center gap-3">
-              📚 Simulados
+              🎯 Comece as Questões Aqui
             </h1>
             <p className="text-gray-400 text-lg">
-              Teste seus conhecimentos com simulados completos
+              Escolha sua área e carreira para começar a praticar
             </p>
           </div>
 
-          {/* Grid de Matérias */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {materias.map((materia, index) => (
-              <div key={index} className="glass-card rounded-2xl p-6 border border-white/10 hover:border-emerald-500/50 transition-all hover:scale-105">
-                <div className="flex items-center gap-4 mb-4">
-                  <div className={`w-14 h-14 rounded-xl bg-${materia.color}-500/20 flex items-center justify-center text-2xl`}>
-                    {materia.icon}
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-bold text-white text-lg mb-1">{materia.nome}</h3>
-                    <p className="text-sm text-gray-400">{materia.questoes} questões</p>
-                  </div>
-                  <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </div>
-                
+          {/* Step 1: Escolher Área */}
+          {!selectedAreaId && (
+            <div className="space-y-4">
+              <h2 className="text-2xl font-bold text-white mb-4">Escolha sua Área</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {areas.map((area) => (
+                  <button
+                    key={area.id}
+                    onClick={() => handleAreaSelect(area.id)}
+                    className="glass-card rounded-2xl p-6 border border-white/10 hover:border-orange-500/50 transition-all hover:scale-105 text-left"
+                  >
+                    <div className="flex items-start gap-4">
+                      <div className="text-4xl">{area.icone}</div>
+                      <div className="flex-1">
+                        <h3 className="font-bold text-white text-lg mb-2">{area.nome}</h3>
+                        <p className="text-sm text-gray-400 mb-3">{area.descricao}</p>
+                        <div className="text-xs text-gray-500">
+                          {area.carreiras.length} carreiras • {area.materias.length} matérias
+                        </div>
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Step 2: Escolher Carreira */}
+          {selectedAreaId && !selectedCarreiraId && (
+            <div className="space-y-4">
+              <div className="flex items-center gap-4 mb-6">
                 <button
-                  onClick={() => {
-                    // Salvar matéria selecionada e questões no localStorage
-                    const questoesMateria = quizData.questions.filter(q => q.disciplina === materia.nome);
-                    localStorage.setItem('simulado_atual', JSON.stringify({
-                      materia: materia.nome,
-                      banca: 'Geral',
-                      questoes: questoesMateria.slice(0, 20) // 20 questões por simulado
-                    }));
-                    window.location.href = '/simulado';
-                  }}
-                  className="w-full py-3 bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-400 hover:to-green-400 rounded-xl text-white font-bold transition-all active:scale-95"
+                  onClick={() => setSelectedAreaId("")}
+                  className="flex items-center gap-2 text-gray-400 hover:text-white transition-all"
                 >
-                  Fazer Simulado
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                  Voltar
+                </button>
+                <div className="inline-flex items-center gap-2 px-4 py-2 bg-orange-500/10 border border-orange-500/30 rounded-full">
+                  <span className="text-2xl">{selectedArea?.icone}</span>
+                  <span className="text-orange-400 font-semibold">{selectedArea?.nome}</span>
+                </div>
+              </div>
+
+              <h2 className="text-2xl font-bold text-white mb-4">Escolha sua Carreira</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {carreiras.map((carreira) => (
+                  <button
+                    key={carreira.id}
+                    onClick={() => handleCarreiraSelect(carreira.id)}
+                    className="glass-card rounded-2xl p-6 border border-white/10 hover:border-orange-500/50 transition-all hover:scale-105 text-left"
+                  >
+                    <h3 className="font-bold text-white text-lg mb-3">{carreira.nome}</h3>
+                    <div className="space-y-2">
+                      <div className="text-sm text-gray-400 font-semibold">Cargos:</div>
+                      <div className="flex flex-wrap gap-2">
+                        {carreira.cargos.map((cargo, idx) => (
+                          <span
+                            key={idx}
+                            className="inline-block px-2 py-1 bg-orange-500/20 text-orange-400 text-xs rounded-lg"
+                          >
+                            {cargo}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Step 3: Confirmar e Iniciar */}
+          {selectedAreaId && selectedCarreiraId && (
+            <div className="space-y-6">
+              <div className="flex items-center gap-4 mb-6">
+                <button
+                  onClick={() => setSelectedCarreiraId("")}
+                  className="flex items-center gap-2 text-gray-400 hover:text-white transition-all"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                  Voltar
                 </button>
               </div>
-            ))}
-          </div>
 
-          {/* Botão Voltar */}
-          <Link href="/">
-            <button className="mt-8 px-6 py-3 bg-white/10 hover:bg-white/20 rounded-xl text-gray-300 font-medium transition-all">
-              ← Voltar
-            </button>
-          </Link>
+              <div className="glass-card rounded-2xl p-8 border-2 border-orange-500/30">
+                <h2 className="text-2xl font-bold text-white mb-6">Resumo da sua escolha</h2>
+                
+                <div className="space-y-4 mb-8">
+                  <div className="flex items-center gap-3">
+                    <span className="text-3xl">{selectedArea?.icone}</span>
+                    <div>
+                      <div className="text-sm text-gray-400">Área</div>
+                      <div className="text-lg font-bold text-white">{selectedArea?.nome}</div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-3">
+                    <span className="text-3xl">💼</span>
+                    <div>
+                      <div className="text-sm text-gray-400">Carreira</div>
+                      <div className="text-lg font-bold text-white">{selectedCarreira?.nome}</div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <span className="text-3xl">📚</span>
+                    <div>
+                      <div className="text-sm text-gray-400">Matérias disponíveis</div>
+                      <div className="text-lg font-bold text-white">{selectedArea?.materias.length} matérias</div>
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  onClick={handleStartQuestions}
+                  className="w-full py-4 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl font-bold text-lg hover:scale-105 transition-transform flex items-center justify-center gap-3"
+                >
+                  <span>🚀</span>
+                  Começar Questões
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </AppLayout>
