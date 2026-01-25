@@ -3881,18 +3881,52 @@ function AdminPage() {
                   </div>
                 </div>
                 
-                {/* Lista de questões do pacote */}
-                <div className="space-y-3 max-h-96 overflow-y-auto">
+                {/* Lista de questões do pacote - CADA UMA COM BOTÃO SALVAR */}
+                <div className="space-y-4 max-h-96 overflow-y-auto">
                   {editingPacote.questionsIds && editingPacote.questionsIds.length > 0 ? (
                     editingPacote.questionsIds.map((qId, idx) => {
                       const questao = quizData.questions.find(q => q.id === qId);
                       if (!questao) return null;
                       
                       return (
-                        <div key={qId} className="bg-white/5 rounded-xl p-4">
-                          <div className="flex items-start gap-3">
-                            <span className="text-purple-400 font-bold">{idx + 1}.</span>
-                            <div className="flex-1">
+                        <div key={qId} className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border-2 border-purple-500/30 rounded-2xl p-5">
+                          <div className="flex items-center justify-between mb-4">
+                            <span className="text-purple-400 font-bold text-lg">Questão {idx + 1}</span>
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => {
+                                  // Salvar questão no banco
+                                  const newData = { ...quizData };
+                                  setQuizData(newData);
+                                  saveQuizData(newData);
+                                  showSaveMessage('Questão salva!');
+                                }}
+                                className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-sm font-bold"
+                              >
+                                💾 Salvar Questão
+                              </button>
+                              <button
+                                onClick={() => {
+                                  if (confirm('Excluir esta questão?')) {
+                                    const newQuestions = quizData.questions.filter(q => q.id !== qId);
+                                    setQuizData({ ...quizData, questions: newQuestions });
+                                    setEditingPacote({
+                                      ...editingPacote,
+                                      questionsIds: editingPacote.questionsIds.filter(id => id !== qId)
+                                    });
+                                  }
+                                }}
+                                className="px-3 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg text-sm"
+                              >
+                                🗑️
+                              </button>
+                            </div>
+                          </div>
+                          
+                          <div className="space-y-3">
+                            {/* Pergunta */}
+                            <div>
+                              <label className="text-xs text-gray-400 mb-1 block">Pergunta:</label>
                               <input
                                 type="text"
                                 value={questao.title}
@@ -3903,26 +3937,29 @@ function AdminPage() {
                                   setQuizData({ ...quizData, questions: updated });
                                 }}
                                 placeholder="Digite a pergunta..."
-                                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm mb-3"
+                                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white"
                               />
-                              
-                              {/* Alternativas */}
-                              <div className="space-y-2 mb-3">
+                            </div>
+                            
+                            {/* Alternativas */}
+                            <div>
+                              <label className="text-xs text-gray-400 mb-2 block">Alternativas (marque a correta):</label>
+                              <div className="space-y-2">
                                 {['A', 'B', 'C', 'D'].map((letra, i) => (
-                                  <div key={letra} className="flex items-center gap-2">
+                                  <div key={letra} className="flex items-center gap-2 bg-white/5 rounded-lg p-3">
                                     <input
                                       type="radio"
                                       name={`correct-${qId}`}
                                       checked={questao.correctAnswer === i}
                                       onChange={() => {
                                         const updated = quizData.questions.map(q => 
-                                          q.id === qId ? { ...q, correctAnswer: i } : q
+                                          q.id === qId ? { ...q, correctAnswer: i as 0 | 1 | 2 | 3 } : q
                                         );
                                         setQuizData({ ...quizData, questions: updated });
                                       }}
-                                      className="accent-emerald-500"
+                                      className="w-5 h-5 accent-emerald-500"
                                     />
-                                    <span className="text-gray-400 text-sm font-bold">{letra})</span>
+                                    <span className="text-white font-bold text-lg">{letra})</span>
                                     <input
                                       type="text"
                                       value={questao.options[i]}
@@ -3935,13 +3972,16 @@ function AdminPage() {
                                         setQuizData({ ...quizData, questions: updated });
                                       }}
                                       placeholder={`Alternativa ${letra}`}
-                                      className="flex-1 px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm"
+                                      className="flex-1 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white"
                                     />
                                   </div>
                                 ))}
                               </div>
-                              
-                              {/* Comentário */}
+                            </div>
+                            
+                            {/* Comentário */}
+                            <div>
+                              <label className="text-xs text-gray-400 mb-1 block">Comentário (aparece após resposta):</label>
                               <textarea
                                 value={questao.explanation}
                                 onChange={e => {
@@ -3950,33 +3990,19 @@ function AdminPage() {
                                   );
                                   setQuizData({ ...quizData, questions: updated });
                                 }}
-                                placeholder="Comentário da questão..."
-                                rows={2}
-                                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm resize-none"
+                                placeholder="Explique a resposta correta..."
+                                rows={3}
+                                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white resize-none"
                               />
                             </div>
-                            <button
-                              onClick={() => {
-                                // Remover questão
-                                const newQuestions = quizData.questions.filter(q => q.id !== qId);
-                                setQuizData({ ...quizData, questions: newQuestions });
-                                setEditingPacote({
-                                  ...editingPacote,
-                                  questionsIds: editingPacote.questionsIds.filter(id => id !== qId)
-                                });
-                              }}
-                              className="text-red-400 hover:bg-red-500/20 p-2 rounded-lg"
-                            >
-                              🗑️
-                            </button>
                           </div>
                         </div>
                       );
                     })
                   ) : (
-                    <div className="text-center py-8 bg-white/5 rounded-xl">
+                    <div className="text-center py-8 bg-white/5 rounded-xl border border-white/10">
                       <p className="text-gray-400">Nenhuma questão adicionada</p>
-                      <p className="text-sm text-gray-500 mt-1">Clique em "+ Adicionar Questão"</p>
+                      <p className="text-sm text-gray-500 mt-1">Selecione uma matéria acima</p>
                     </div>
                   )}
                 </div>

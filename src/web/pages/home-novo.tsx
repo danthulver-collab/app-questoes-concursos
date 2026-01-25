@@ -35,6 +35,12 @@ export default function HomeNovo() {
   
   // Buscar pacotes atribuídos ao usuário (Individual)
   const userPackages = getUserPackagesDetails(userId);
+  
+  // Debug
+  useEffect(() => {
+    console.log('👤 Usuário:', userId);
+    console.log('📦 Pacotes encontrados:', userPackages);
+  }, [userId, userPackages]);
 
   // Pega dados reais do quiz
   const quizData = getQuizData();
