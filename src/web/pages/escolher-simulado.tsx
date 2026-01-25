@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { AppLayout } from "../components/app-layout";
 import { useLocation } from "wouter";
-import { getAllAreas, getCarreirasByArea, getMateriasByArea, getQuizData, type Area, type Carreira, type Disciplina } from "../lib/quiz-store";
+import { getAllAreas, getCarreirasByArea, getMateriasByArea, getQuizData, saveQuizData } from "../lib/quiz-store";
 
-// Questões organizadas por Área e Matéria
-const QUESTOES_POR_AREA: Record<string, Record<string, any[]>> = {
-  // ÁREA ADMINISTRATIVA
+// Storage key para questões editáveis
+const QUESTOES_STORAGE_KEY = "questoes_por_area_v1";
+
+// Questões padrão organizadas por Área e Matéria
+const QUESTOES_PADRAO: Record<string, Record<string, any[]>> = {
   "area-administrativa": {
     "portugues": [
       { id: "adm-port-1", title: "Concordância Verbal", options: ["O sujeito concorda com o verbo em número e pessoa", "O verbo sempre fica no singular", "A concordância é opcional", "Não existe regra"], correctAnswer: 0, explanation: "A concordância verbal é a relação entre o sujeito e o verbo, que devem concordar em número e pessoa." },
@@ -33,8 +35,6 @@ const QUESTOES_POR_AREA: Record<string, Record<string, any[]>> = {
       { id: "adm-dc-1", title: "Direitos Fundamentais", options: ["São cláusulas pétreas", "Podem ser abolidos por emenda", "Não estão na Constituição", "São apenas 5 direitos"], correctAnswer: 0, explanation: "Os direitos e garantias individuais são cláusulas pétreas (Art. 60, §4º, CF)." },
     ],
   },
-  
-  // ÁREA EDUCAÇÃO
   "area-educacao": {
     "portugues": [
       { id: "edu-port-1", title: "Interpretação de Texto", options: ["Identificar a ideia central é fundamental", "Ignorar o contexto", "Ler apenas o título", "Pular parágrafos"], correctAnswer: 0, explanation: "A interpretação correta exige identificar a ideia central e o contexto." },
@@ -49,8 +49,6 @@ const QUESTOES_POR_AREA: Record<string, Record<string, any[]>> = {
       { id: "edu-eti-1", title: "Ética Profissional Docente", options: ["Respeitar a diversidade é fundamental", "Discriminar alunos é permitido", "Favorecer alguns estudantes", "Ignorar necessidades especiais"], correctAnswer: 0, explanation: "O professor deve respeitar a diversidade e tratar todos com equidade." },
     ],
   },
-  
-  // ÁREA SAÚDE
   "area-saude": {
     "portugues": [
       { id: "sau-port-1", title: "Comunicação em Saúde", options: ["Clareza é essencial na comunicação com pacientes", "Usar termos técnicos sempre", "Ignorar dúvidas do paciente", "Falar rapidamente"], correctAnswer: 0, explanation: "A comunicação clara melhora a relação profissional-paciente e os resultados." },
@@ -61,8 +59,6 @@ const QUESTOES_POR_AREA: Record<string, Record<string, any[]>> = {
       { id: "sau-eti-3", title: "Lei 8.080/90", options: ["Dispõe sobre organização do SUS", "Criou planos de saúde", "Extinguiu o SUS", "Trata de educação"], correctAnswer: 0, explanation: "A Lei 8.080/90 é a Lei Orgânica da Saúde que regulamenta o SUS." },
     ],
   },
-  
-  // ÁREA SEGURANÇA
   "area-seguranca": {
     "portugues": [
       { id: "seg-port-1", title: "Redação Oficial", options: ["Impessoalidade é característica", "Usar gírias é permitido", "Informalidade total", "Sem padrão definido"], correctAnswer: 0, explanation: "A redação oficial deve ser impessoal, clara e objetiva." },
@@ -76,8 +72,6 @@ const QUESTOES_POR_AREA: Record<string, Record<string, any[]>> = {
       { id: "seg-dc-1", title: "Segurança Pública", options: ["É dever do Estado e responsabilidade de todos", "É apenas dever do cidadão", "Não está na Constituição", "É privatizada"], correctAnswer: 0, explanation: "Art. 144 da CF: A segurança pública é dever do Estado e responsabilidade de todos." },
     ],
   },
-  
-  // ÁREA JURÍDICA
   "area-juridica": {
     "direito-constitucional": [
       { id: "jur-dc-1", title: "Controle de Constitucionalidade", options: ["STF é o guardião da Constituição", "Qualquer juiz pode declarar inconstitucional com efeitos gerais", "Não existe no Brasil", "Apenas o Congresso controla"], correctAnswer: 0, explanation: "O STF é o órgão máximo de controle de constitucionalidade (Art. 102, CF)." },
@@ -97,8 +91,6 @@ const QUESTOES_POR_AREA: Record<string, Record<string, any[]>> = {
       { id: "jur-port-1", title: "Linguagem Jurídica", options: ["Precisão técnica é fundamental", "Usar linguagem coloquial", "Evitar termos técnicos", "Sem padrão"], correctAnswer: 0, explanation: "A linguagem jurídica exige precisão técnica e clareza." },
     ],
   },
-  
-  // ÁREA FISCAL/TRIBUTÁRIA
   "area-fiscal": {
     "direito-tributario": [
       { id: "fis-dt-1", title: "Espécies Tributárias", options: ["Impostos, taxas, contribuições de melhoria, empréstimos compulsórios e contribuições especiais", "Apenas impostos", "Somente taxas", "Não existem espécies"], correctAnswer: 0, explanation: "São 5 espécies tributárias segundo a teoria pentapartite adotada pelo STF." },
@@ -113,8 +105,6 @@ const QUESTOES_POR_AREA: Record<string, Record<string, any[]>> = {
       { id: "fis-adm-1", title: "AFO - Princípios Orçamentários", options: ["Anualidade, universalidade, unidade", "Apenas anualidade", "Não existem princípios", "Somente unidade"], correctAnswer: 0, explanation: "Os princípios orçamentários orientam a elaboração e execução do orçamento público." },
     ],
   },
-  
-  // ÁREA TI
   "area-ti": {
     "informatica": [
       { id: "ti-inf-1", title: "Lógica de Programação", options: ["Algoritmo é sequência de passos para resolver problema", "Código sem lógica funciona", "Algoritmo é linguagem", "Não existe lógica"], correctAnswer: 0, explanation: "Algoritmo é uma sequência finita de instruções para resolver um problema." },
@@ -124,8 +114,6 @@ const QUESTOES_POR_AREA: Record<string, Record<string, any[]>> = {
       { id: "ti-inf-5", title: "Sistemas Operacionais", options: ["Gerencia recursos de hardware e software", "Apenas abre programas", "Não faz nada", "É um aplicativo"], correctAnswer: 0, explanation: "O SO gerencia memória, processos, arquivos e dispositivos." },
     ],
   },
-  
-  // ÁREA CONTROLE/GESTÃO
   "area-controle": {
     "administracao": [
       { id: "con-adm-1", title: "Controle Interno", options: ["Visa assegurar eficiência e conformidade", "É opcional", "Não existe no setor público", "Apenas para empresas"], correctAnswer: 0, explanation: "O controle interno é obrigatório na administração pública (Art. 74, CF)." },
@@ -138,8 +126,6 @@ const QUESTOES_POR_AREA: Record<string, Record<string, any[]>> = {
       { id: "con-cont-1", title: "Contabilidade Pública", options: ["Segue normas específicas (NBCASP)", "Igual à privada", "Não existe", "Sem normas"], correctAnswer: 0, explanation: "A contabilidade pública tem normas próprias editadas pelo CFC." },
     ],
   },
-  
-  // ÁREA BANCÁRIA
   "area-bancaria": {
     "portugues": [
       { id: "ban-port-1", title: "Comunicação Empresarial", options: ["Clareza e objetividade são essenciais", "Usar jargões sempre", "Textos longos são melhores", "Informalidade total"], correctAnswer: 0, explanation: "A comunicação bancária deve ser clara, objetiva e profissional." },
@@ -155,8 +141,6 @@ const QUESTOES_POR_AREA: Record<string, Record<string, any[]>> = {
       { id: "ban-atu-1", title: "Sistema Financeiro Nacional", options: ["Banco Central regula o sistema", "Não há regulação", "Bancos se auto regulam", "Governo não participa"], correctAnswer: 0, explanation: "O BACEN é responsável por regular e fiscalizar o sistema financeiro." },
     ],
   },
-  
-  // ÁREA TÉCNICA/ENGENHARIA
   "area-tecnica": {
     "administracao": [
       { id: "tec-adm-1", title: "Gestão de Projetos", options: ["Planejamento, execução, monitoramento e encerramento", "Apenas execução", "Não precisa planejar", "Sem fases definidas"], correctAnswer: 0, explanation: "As fases do gerenciamento de projetos segundo o PMBOK." },
@@ -167,12 +151,27 @@ const QUESTOES_POR_AREA: Record<string, Record<string, any[]>> = {
   },
 };
 
+// Função para carregar questões (localStorage ou padrão)
+export const getQuestoesPorArea = (): Record<string, Record<string, any[]>> => {
+  try {
+    const stored = localStorage.getItem(QUESTOES_STORAGE_KEY);
+    if (stored) {
+      return JSON.parse(stored);
+    }
+  } catch {}
+  return QUESTOES_PADRAO;
+};
+
+// Função para salvar questões (usado pelo admin)
+export const saveQuestoesPorArea = (questoes: Record<string, Record<string, any[]>>) => {
+  localStorage.setItem(QUESTOES_STORAGE_KEY, JSON.stringify(questoes));
+};
+
 export default function EscolherSimulado() {
   const [, setLocation] = useLocation();
   const [step, setStep] = useState<"area" | "carreira" | "materia">("area");
   const [selectedAreaId, setSelectedAreaId] = useState<string>("");
   const [selectedCarreiraId, setSelectedCarreiraId] = useState<string>("");
-  const [selectedMateriaId, setSelectedMateriaId] = useState<string>("");
 
   const areas = getAllAreas();
   const carreiras = selectedAreaId ? getCarreirasByArea(selectedAreaId) : [];
@@ -180,7 +179,8 @@ export default function EscolherSimulado() {
   
   const selectedArea = areas.find(a => a.id === selectedAreaId);
   const selectedCarreira = carreiras.find(c => c.id === selectedCarreiraId);
-  const selectedMateria = materias.find(m => m.id === selectedMateriaId);
+
+  const QUESTOES_POR_AREA = getQuestoesPorArea();
 
   const handleAreaSelect = (areaId: string) => {
     setSelectedAreaId(areaId);
@@ -193,12 +193,8 @@ export default function EscolherSimulado() {
   };
 
   const handleMateriaSelect = (materiaId: string) => {
-    setSelectedMateriaId(materiaId);
-    
-    // Buscar questões da área e matéria
     const areaQuestoes = QUESTOES_POR_AREA[selectedAreaId] || {};
     const questoes = areaQuestoes[materiaId] || [];
-    
     const materia = materias.find(m => m.id === materiaId);
     
     localStorage.setItem('simulado_atual', JSON.stringify({
@@ -217,7 +213,6 @@ export default function EscolherSimulado() {
   const goBack = () => {
     if (step === "materia") {
       setStep("carreira");
-      setSelectedMateriaId("");
     } else if (step === "carreira") {
       setStep("area");
       setSelectedCarreiraId("");
@@ -225,96 +220,118 @@ export default function EscolherSimulado() {
     }
   };
 
+  const icons: Record<string, string> = {
+    "portugues": "📖", "matematica": "🔢", "informatica": "💻", "administracao": "📊",
+    "direito-administrativo": "🏛️", "direito-constitucional": "⚖️", "direito-penal": "🔒",
+    "direito-civil": "📜", "direito-tributario": "💰", "legislacao": "📋", "etica": "🤝",
+    "contabilidade": "📒", "atualidades": "🌍", "raciocinio-logico": "🧠"
+  };
+
   return (
     <AppLayout>
       <div className="min-h-screen bg-[#070b14] relative overflow-hidden">
         {/* Background Effects */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-orange-500/20 rounded-full blur-[120px] animate-pulse" />
-          <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-amber-500/20 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: "1s" }} />
-          <div className="absolute top-1/2 left-1/2 w-[400px] h-[400px] bg-purple-500/10 rounded-full blur-[80px] animate-pulse" style={{ animationDelay: "2s" }} />
+          <div className="absolute top-0 left-1/4 w-[800px] h-[800px] bg-gradient-to-r from-orange-500/30 to-red-500/20 rounded-full blur-[150px] animate-pulse" />
+          <div className="absolute bottom-0 right-1/4 w-[700px] h-[700px] bg-gradient-to-r from-amber-500/25 to-yellow-500/20 rounded-full blur-[130px] animate-pulse" style={{ animationDelay: "1s" }} />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-r from-purple-500/15 to-pink-500/15 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: "2s" }} />
         </div>
         
         {/* Floating particles */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          {[...Array(20)].map((_, i) => (
+          {[...Array(30)].map((_, i) => (
             <div
               key={i}
-              className="absolute w-2 h-2 bg-orange-400/30 rounded-full animate-float"
+              className="absolute rounded-full animate-float"
               style={{
+                width: `${4 + Math.random() * 8}px`,
+                height: `${4 + Math.random() * 8}px`,
+                background: `rgba(${200 + Math.random() * 55}, ${100 + Math.random() * 100}, 50, ${0.2 + Math.random() * 0.3})`,
                 left: `${Math.random() * 100}%`,
                 top: `${Math.random() * 100}%`,
                 animationDelay: `${Math.random() * 5}s`,
-                animationDuration: `${5 + Math.random() * 10}s`
+                animationDuration: `${8 + Math.random() * 12}s`
               }}
             />
           ))}
         </div>
 
-        <div className="relative z-10 p-6">
-          <div className="max-w-6xl mx-auto">
+        <div className="relative z-10 p-4 md:p-8">
+          <div className="max-w-7xl mx-auto">
             
             {/* STEP 1: ÁREA */}
             {step === "area" && (
               <div className="animate-fade-in">
-                {/* Hero Header */}
-                <div className="text-center mb-12">
-                  <div className="inline-block mb-6">
+                {/* MEGA Hero Header */}
+                <div className="text-center mb-16">
+                  <div className="inline-block mb-8">
                     <div className="relative">
-                      <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-amber-500 rounded-full blur-xl opacity-50 animate-pulse" />
-                      <div className="relative w-24 h-24 bg-gradient-to-r from-orange-500 to-amber-500 rounded-full flex items-center justify-center text-5xl shadow-2xl">
+                      <div className="absolute inset-0 bg-gradient-to-r from-orange-500 via-red-500 to-amber-500 rounded-full blur-2xl opacity-60 animate-pulse scale-150" />
+                      <div className="absolute inset-0 bg-gradient-to-r from-orange-400 to-amber-400 rounded-full blur-xl opacity-40 animate-pulse scale-125" style={{ animationDelay: "0.5s" }} />
+                      <div className="relative w-32 h-32 md:w-40 md:h-40 bg-gradient-to-br from-orange-500 via-red-500 to-amber-500 rounded-full flex items-center justify-center text-6xl md:text-7xl shadow-2xl shadow-orange-500/50 border-4 border-white/20">
                         🎯
                       </div>
                     </div>
                   </div>
-                  <h1 className="text-5xl md:text-6xl font-black mb-4 bg-gradient-to-r from-orange-400 via-amber-400 to-yellow-400 bg-clip-text text-transparent">
+                  <h1 className="text-5xl md:text-7xl font-black mb-6 bg-gradient-to-r from-orange-400 via-red-400 to-amber-400 bg-clip-text text-transparent drop-shadow-lg">
                     Escolha sua Área
                   </h1>
-                  <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-                    Selecione a área do concurso que você está estudando
+                  <p className="text-xl md:text-2xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
+                    Selecione a área do concurso que você está estudando para começar sua jornada de preparação
                   </p>
                   
-                  {/* Progress Bar */}
-                  <div className="flex items-center justify-center gap-2 mt-8">
-                    <div className="w-12 h-2 bg-gradient-to-r from-orange-500 to-amber-500 rounded-full" />
-                    <div className="w-12 h-2 bg-white/20 rounded-full" />
-                    <div className="w-12 h-2 bg-white/20 rounded-full" />
+                  {/* Progress Bar Grande */}
+                  <div className="flex items-center justify-center gap-3 mt-10">
+                    <div className="w-20 h-3 bg-gradient-to-r from-orange-500 to-red-500 rounded-full shadow-lg shadow-orange-500/50" />
+                    <div className="w-20 h-3 bg-white/10 rounded-full" />
+                    <div className="w-20 h-3 bg-white/10 rounded-full" />
                   </div>
+                  <p className="text-sm text-gray-500 mt-3">Passo 1 de 3</p>
                 </div>
 
-                {/* Areas Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Areas Grid - Cards GIGANTES */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                   {areas.map((area, index) => (
                     <button
                       key={area.id}
                       onClick={() => handleAreaSelect(area.id)}
-                      className="group relative glass-card rounded-3xl p-8 border-2 border-white/10 hover:border-orange-500 transition-all duration-500 hover:scale-[1.02] text-left overflow-hidden"
+                      className="group relative rounded-[2rem] p-10 border-2 border-white/10 hover:border-orange-500 transition-all duration-700 hover:scale-[1.03] text-left overflow-hidden bg-gradient-to-br from-white/5 to-white/0 backdrop-blur-sm"
                       style={{ animationDelay: `${index * 0.1}s` }}
                     >
-                      {/* Hover gradient */}
-                      <div className="absolute inset-0 bg-gradient-to-br from-orange-500/0 to-amber-500/0 group-hover:from-orange-500/10 group-hover:to-amber-500/10 transition-all duration-500" />
+                      {/* Hover gradient effect */}
+                      <div className="absolute inset-0 bg-gradient-to-br from-orange-500/0 via-red-500/0 to-amber-500/0 group-hover:from-orange-500/20 group-hover:via-red-500/10 group-hover:to-amber-500/20 transition-all duration-700 rounded-[2rem]" />
                       
-                      <div className="relative flex items-start gap-6">
-                        <div className="text-6xl group-hover:scale-125 transition-transform duration-500 group-hover:rotate-12">
-                          {area.icone}
+                      {/* Glow effect */}
+                      <div className="absolute -inset-1 bg-gradient-to-r from-orange-500 to-amber-500 rounded-[2rem] opacity-0 group-hover:opacity-30 blur-xl transition-all duration-700" />
+                      
+                      <div className="relative flex items-start gap-8">
+                        <div className="relative">
+                          <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-amber-500 rounded-3xl blur-xl opacity-0 group-hover:opacity-50 transition-all duration-500" />
+                          <div className="relative text-7xl md:text-8xl group-hover:scale-125 group-hover:rotate-12 transition-all duration-500 drop-shadow-2xl">
+                            {area.icone}
+                          </div>
                         </div>
                         <div className="flex-1">
-                          <h3 className="font-black text-white text-2xl mb-2 group-hover:text-orange-400 transition-colors">
+                          <h3 className="font-black text-white text-3xl md:text-4xl mb-3 group-hover:text-orange-400 transition-colors duration-300">
                             {area.nome}
                           </h3>
-                          <p className="text-gray-400 mb-4">{area.descricao}</p>
-                          <div className="flex gap-4 text-sm">
-                            <span className="px-3 py-1 bg-orange-500/20 text-orange-400 rounded-full">
+                          <p className="text-gray-400 text-lg mb-6 leading-relaxed">{area.descricao}</p>
+                          <div className="flex gap-4">
+                            <span className="px-5 py-2.5 bg-gradient-to-r from-orange-500/30 to-red-500/30 text-orange-300 rounded-xl font-bold text-lg border border-orange-500/30">
                               {area.carreiras.length} carreiras
                             </span>
-                            <span className="px-3 py-1 bg-amber-500/20 text-amber-400 rounded-full">
+                            <span className="px-5 py-2.5 bg-gradient-to-r from-amber-500/30 to-yellow-500/30 text-amber-300 rounded-xl font-bold text-lg border border-amber-500/30">
                               {area.materias.length} matérias
                             </span>
                           </div>
                         </div>
-                        <svg className="w-8 h-8 text-white/30 group-hover:text-orange-400 group-hover:translate-x-2 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                        </svg>
+                        <div className="flex items-center">
+                          <div className="w-16 h-16 rounded-full bg-gradient-to-r from-orange-500/20 to-amber-500/20 flex items-center justify-center group-hover:bg-gradient-to-r group-hover:from-orange-500 group-hover:to-amber-500 transition-all duration-500">
+                            <svg className="w-8 h-8 text-white/50 group-hover:text-white group-hover:translate-x-1 transition-all duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" />
+                            </svg>
+                          </div>
+                        </div>
                       </div>
                     </button>
                   ))}
@@ -325,68 +342,72 @@ export default function EscolherSimulado() {
             {/* STEP 2: CARREIRA */}
             {step === "carreira" && (
               <div className="animate-fade-in">
-                {/* Back Button */}
+                {/* Back Button Grande */}
                 <button
                   onClick={goBack}
-                  className="flex items-center gap-2 text-gray-400 hover:text-white transition-all mb-8 group"
+                  className="flex items-center gap-3 text-gray-400 hover:text-white transition-all mb-10 group px-6 py-3 rounded-xl hover:bg-white/5"
                 >
-                  <svg className="w-5 h-5 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                  </svg>
-                  Voltar para Áreas
+                  <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-orange-500/20 transition-all">
+                    <svg className="w-5 h-5 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                  </div>
+                  <span className="text-lg font-medium">Voltar para Áreas</span>
                 </button>
 
                 {/* Hero Header */}
-                <div className="text-center mb-12">
-                  <div className="inline-flex items-center gap-3 mb-6 px-6 py-3 bg-gradient-to-r from-orange-500/20 to-amber-500/20 border border-orange-500/30 rounded-full">
-                    <span className="text-4xl">{selectedArea?.icone}</span>
-                    <span className="text-xl font-bold text-orange-400">{selectedArea?.nome}</span>
+                <div className="text-center mb-16">
+                  <div className="inline-flex items-center gap-4 mb-8 px-8 py-4 bg-gradient-to-r from-orange-500/20 via-red-500/20 to-amber-500/20 border-2 border-orange-500/40 rounded-full shadow-xl shadow-orange-500/20">
+                    <span className="text-5xl">{selectedArea?.icone}</span>
+                    <span className="text-2xl font-black text-orange-400">{selectedArea?.nome}</span>
                   </div>
-                  <h1 className="text-5xl md:text-6xl font-black mb-4 bg-gradient-to-r from-orange-400 via-amber-400 to-yellow-400 bg-clip-text text-transparent">
+                  <h1 className="text-5xl md:text-7xl font-black mb-6 bg-gradient-to-r from-orange-400 via-red-400 to-amber-400 bg-clip-text text-transparent">
                     Escolha sua Carreira
                   </h1>
-                  <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-                    Selecione o cargo/carreira que você deseja
+                  <p className="text-xl md:text-2xl text-gray-300 max-w-3xl mx-auto">
+                    Selecione o cargo que você deseja conquistar
                   </p>
                   
                   {/* Progress Bar */}
-                  <div className="flex items-center justify-center gap-2 mt-8">
-                    <div className="w-12 h-2 bg-gradient-to-r from-orange-500 to-amber-500 rounded-full" />
-                    <div className="w-12 h-2 bg-gradient-to-r from-orange-500 to-amber-500 rounded-full" />
-                    <div className="w-12 h-2 bg-white/20 rounded-full" />
+                  <div className="flex items-center justify-center gap-3 mt-10">
+                    <div className="w-20 h-3 bg-gradient-to-r from-orange-500 to-red-500 rounded-full" />
+                    <div className="w-20 h-3 bg-gradient-to-r from-orange-500 to-red-500 rounded-full shadow-lg shadow-orange-500/50" />
+                    <div className="w-20 h-3 bg-white/10 rounded-full" />
                   </div>
+                  <p className="text-sm text-gray-500 mt-3">Passo 2 de 3</p>
                 </div>
 
                 {/* Carreiras Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                   {carreiras.map((carreira, index) => (
                     <button
                       key={carreira.id}
                       onClick={() => handleCarreiraSelect(carreira.id)}
-                      className="group relative glass-card rounded-3xl p-8 border-2 border-white/10 hover:border-orange-500 transition-all duration-500 hover:scale-[1.02] text-left overflow-hidden"
+                      className="group relative rounded-[2rem] p-10 border-2 border-white/10 hover:border-orange-500 transition-all duration-700 hover:scale-[1.03] text-left overflow-hidden bg-gradient-to-br from-white/5 to-white/0"
                       style={{ animationDelay: `${index * 0.1}s` }}
                     >
-                      <div className="absolute inset-0 bg-gradient-to-br from-orange-500/0 to-amber-500/0 group-hover:from-orange-500/10 group-hover:to-amber-500/10 transition-all duration-500" />
+                      <div className="absolute inset-0 bg-gradient-to-br from-orange-500/0 to-amber-500/0 group-hover:from-orange-500/20 group-hover:to-amber-500/20 transition-all duration-700 rounded-[2rem]" />
+                      <div className="absolute -inset-1 bg-gradient-to-r from-orange-500 to-amber-500 rounded-[2rem] opacity-0 group-hover:opacity-30 blur-xl transition-all duration-700" />
                       
                       <div className="relative">
-                        <div className="flex items-center gap-4 mb-4">
-                          <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-amber-500 rounded-2xl flex items-center justify-center text-3xl shadow-xl group-hover:scale-110 transition-transform">
+                        <div className="flex items-center gap-6 mb-6">
+                          <div className="w-20 h-20 bg-gradient-to-br from-orange-500 to-amber-500 rounded-2xl flex items-center justify-center text-4xl shadow-xl shadow-orange-500/30 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500">
                             💼
                           </div>
                           <div>
-                            <h3 className="font-black text-white text-2xl group-hover:text-orange-400 transition-colors">
+                            <h3 className="font-black text-white text-3xl group-hover:text-orange-400 transition-colors">
                               {carreira.nome}
                             </h3>
                           </div>
                         </div>
                         
-                        <div className="space-y-3">
-                          <div className="text-sm text-gray-400 font-semibold">Cargos disponíveis:</div>
-                          <div className="flex flex-wrap gap-2">
+                        <div className="space-y-4">
+                          <div className="text-lg text-gray-400 font-semibold">Cargos disponíveis:</div>
+                          <div className="flex flex-wrap gap-3">
                             {carreira.cargos.map((cargo, idx) => (
                               <span
                                 key={idx}
-                                className="inline-block px-3 py-1.5 bg-gradient-to-r from-orange-500/20 to-amber-500/20 text-orange-400 text-sm rounded-xl border border-orange-500/30"
+                                className="inline-block px-4 py-2.5 bg-gradient-to-r from-orange-500/20 to-amber-500/20 text-orange-300 text-base rounded-xl border border-orange-500/30 font-medium"
                               >
                                 {cargo}
                               </span>
@@ -406,41 +427,44 @@ export default function EscolherSimulado() {
                 {/* Back Button */}
                 <button
                   onClick={goBack}
-                  className="flex items-center gap-2 text-gray-400 hover:text-white transition-all mb-8 group"
+                  className="flex items-center gap-3 text-gray-400 hover:text-white transition-all mb-10 group px-6 py-3 rounded-xl hover:bg-white/5"
                 >
-                  <svg className="w-5 h-5 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                  </svg>
-                  Voltar para Carreiras
+                  <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-orange-500/20 transition-all">
+                    <svg className="w-5 h-5 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                  </div>
+                  <span className="text-lg font-medium">Voltar para Carreiras</span>
                 </button>
 
                 {/* Hero Header */}
-                <div className="text-center mb-12">
-                  <div className="flex items-center justify-center gap-3 mb-6">
-                    <div className="px-4 py-2 bg-orange-500/20 border border-orange-500/30 rounded-full">
-                      <span className="text-2xl mr-2">{selectedArea?.icone}</span>
-                      <span className="text-orange-400 font-semibold">{selectedArea?.nome}</span>
+                <div className="text-center mb-16">
+                  <div className="flex items-center justify-center gap-4 mb-8 flex-wrap">
+                    <div className="px-6 py-3 bg-orange-500/20 border-2 border-orange-500/40 rounded-full">
+                      <span className="text-3xl mr-2">{selectedArea?.icone}</span>
+                      <span className="text-lg font-bold text-orange-400">{selectedArea?.nome}</span>
                     </div>
-                    <span className="text-gray-500">→</span>
-                    <div className="px-4 py-2 bg-amber-500/20 border border-amber-500/30 rounded-full">
-                      <span className="text-2xl mr-2">💼</span>
-                      <span className="text-amber-400 font-semibold">{selectedCarreira?.nome}</span>
+                    <span className="text-3xl text-gray-600">→</span>
+                    <div className="px-6 py-3 bg-amber-500/20 border-2 border-amber-500/40 rounded-full">
+                      <span className="text-3xl mr-2">💼</span>
+                      <span className="text-lg font-bold text-amber-400">{selectedCarreira?.nome}</span>
                     </div>
                   </div>
                   
-                  <h1 className="text-5xl md:text-6xl font-black mb-4 bg-gradient-to-r from-orange-400 via-amber-400 to-yellow-400 bg-clip-text text-transparent">
+                  <h1 className="text-5xl md:text-7xl font-black mb-6 bg-gradient-to-r from-orange-400 via-red-400 to-amber-400 bg-clip-text text-transparent">
                     Escolha a Matéria
                   </h1>
-                  <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-                    Selecione a disciplina para começar as questões
+                  <p className="text-xl md:text-2xl text-gray-300 max-w-3xl mx-auto">
+                    Selecione a disciplina para começar o simulado
                   </p>
                   
                   {/* Progress Bar */}
-                  <div className="flex items-center justify-center gap-2 mt-8">
-                    <div className="w-12 h-2 bg-gradient-to-r from-orange-500 to-amber-500 rounded-full" />
-                    <div className="w-12 h-2 bg-gradient-to-r from-orange-500 to-amber-500 rounded-full" />
-                    <div className="w-12 h-2 bg-gradient-to-r from-orange-500 to-amber-500 rounded-full" />
+                  <div className="flex items-center justify-center gap-3 mt-10">
+                    <div className="w-20 h-3 bg-gradient-to-r from-orange-500 to-red-500 rounded-full" />
+                    <div className="w-20 h-3 bg-gradient-to-r from-orange-500 to-red-500 rounded-full" />
+                    <div className="w-20 h-3 bg-gradient-to-r from-orange-500 to-red-500 rounded-full shadow-lg shadow-orange-500/50" />
                   </div>
+                  <p className="text-sm text-gray-500 mt-3">Passo 3 de 3</p>
                 </div>
 
                 {/* Matérias Grid */}
@@ -449,62 +473,59 @@ export default function EscolherSimulado() {
                     const areaQuestoes = QUESTOES_POR_AREA[selectedAreaId] || {};
                     const numQuestoes = (areaQuestoes[materia.id] || []).length;
                     
-                    const icons: Record<string, string> = {
-                      "portugues": "📖",
-                      "matematica": "🔢",
-                      "informatica": "💻",
-                      "administracao": "📊",
-                      "direito-administrativo": "🏛️",
-                      "direito-constitucional": "⚖️",
-                      "direito-penal": "🔒",
-                      "direito-civil": "📜",
-                      "direito-tributario": "💰",
-                      "legislacao": "📋",
-                      "etica": "🤝",
-                      "contabilidade": "📒",
-                      "atualidades": "🌍"
-                    };
-                    
                     return (
                       <button
                         key={materia.id}
-                        onClick={() => handleMateriaSelect(materia.id)}
+                        onClick={() => numQuestoes > 0 && handleMateriaSelect(materia.id)}
                         disabled={numQuestoes === 0}
-                        className={`group relative glass-card rounded-3xl p-6 border-2 transition-all duration-500 text-left overflow-hidden ${
+                        className={`group relative rounded-3xl p-8 border-2 transition-all duration-500 text-left overflow-hidden ${
                           numQuestoes > 0 
-                            ? "border-white/10 hover:border-orange-500 hover:scale-[1.02]" 
-                            : "border-white/5 opacity-50 cursor-not-allowed"
+                            ? "border-white/10 hover:border-orange-500 hover:scale-[1.03] bg-gradient-to-br from-white/5 to-white/0 cursor-pointer" 
+                            : "border-white/5 opacity-40 cursor-not-allowed bg-white/5"
                         }`}
-                        style={{ animationDelay: `${index * 0.1}s` }}
+                        style={{ animationDelay: `${index * 0.05}s` }}
                       >
-                        <div className="absolute inset-0 bg-gradient-to-br from-orange-500/0 to-amber-500/0 group-hover:from-orange-500/10 group-hover:to-amber-500/10 transition-all duration-500" />
+                        {numQuestoes > 0 && (
+                          <>
+                            <div className="absolute inset-0 bg-gradient-to-br from-orange-500/0 to-amber-500/0 group-hover:from-orange-500/20 group-hover:to-amber-500/20 transition-all duration-500 rounded-3xl" />
+                            <div className="absolute -inset-1 bg-gradient-to-r from-orange-500 to-amber-500 rounded-3xl opacity-0 group-hover:opacity-20 blur-xl transition-all duration-500" />
+                          </>
+                        )}
                         
                         <div className="relative">
-                          <div className="flex items-center gap-4 mb-4">
-                            <div className="w-14 h-14 bg-gradient-to-br from-orange-500/20 to-amber-500/20 rounded-xl flex items-center justify-center text-3xl group-hover:scale-110 transition-transform">
+                          <div className="flex items-center gap-5 mb-5">
+                            <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-3xl shadow-lg transition-all duration-500 ${
+                              numQuestoes > 0 
+                                ? "bg-gradient-to-br from-orange-500/30 to-amber-500/30 group-hover:scale-110 group-hover:rotate-6" 
+                                : "bg-white/10"
+                            }`}>
                               {icons[materia.id] || "📚"}
                             </div>
                             <div className="flex-1">
-                              <h3 className="font-bold text-white text-lg group-hover:text-orange-400 transition-colors">
+                              <h3 className={`font-bold text-xl transition-colors ${
+                                numQuestoes > 0 ? "text-white group-hover:text-orange-400" : "text-gray-500"
+                              }`}>
                                 {materia.nome}
                               </h3>
-                              <p className="text-sm text-gray-500">
-                                {numQuestoes} questões disponíveis
+                              <p className="text-sm text-gray-500 mt-1">
+                                {numQuestoes} questões
                               </p>
                             </div>
                           </div>
                           
                           {numQuestoes > 0 ? (
                             <div className="flex items-center justify-between">
-                              <span className="px-3 py-1 bg-emerald-500/20 text-emerald-400 text-xs rounded-full">
+                              <span className="px-4 py-2 bg-emerald-500/20 text-emerald-400 text-sm rounded-xl font-semibold border border-emerald-500/30">
                                 ✓ Disponível
                               </span>
-                              <svg className="w-5 h-5 text-white/30 group-hover:text-orange-400 group-hover:translate-x-1 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                              </svg>
+                              <div className="w-12 h-12 rounded-full bg-orange-500/20 flex items-center justify-center group-hover:bg-gradient-to-r group-hover:from-orange-500 group-hover:to-amber-500 transition-all duration-300">
+                                <svg className="w-5 h-5 text-orange-400 group-hover:text-white group-hover:translate-x-1 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                </svg>
+                              </div>
                             </div>
                           ) : (
-                            <span className="px-3 py-1 bg-gray-500/20 text-gray-500 text-xs rounded-full">
+                            <span className="px-4 py-2 bg-gray-500/20 text-gray-500 text-sm rounded-xl font-medium">
                               Em breve
                             </span>
                           )}
@@ -518,21 +539,20 @@ export default function EscolherSimulado() {
           </div>
         </div>
         
-        {/* CSS for animations */}
         <style>{`
           @keyframes fade-in {
-            from { opacity: 0; transform: translateY(20px); }
+            from { opacity: 0; transform: translateY(30px); }
             to { opacity: 1; transform: translateY(0); }
           }
           @keyframes float {
             0%, 100% { transform: translateY(0) rotate(0deg); }
-            50% { transform: translateY(-20px) rotate(5deg); }
+            50% { transform: translateY(-30px) rotate(10deg); }
           }
           .animate-fade-in {
-            animation: fade-in 0.6s ease-out;
+            animation: fade-in 0.8s ease-out;
           }
           .animate-float {
-            animation: float 6s ease-in-out infinite;
+            animation: float 8s ease-in-out infinite;
           }
         `}</style>
       </div>

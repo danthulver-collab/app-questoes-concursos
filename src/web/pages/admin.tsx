@@ -99,6 +99,288 @@ interface PlatformConfig {
   logoUrl: string;
 }
 
+// Import questões functions
+import { getQuestoesPorArea, saveQuestoesPorArea } from "./escolher-simulado";
+
+// Componente para editar questões por área
+function QuestoesAreasEditor({ showSaveMessage }: { showSaveMessage: (msg?: string) => void }) {
+  const [selectedArea, setSelectedArea] = useState<string>("");
+  const [selectedMateria, setSelectedMateria] = useState<string>("");
+  const [questoes, setQuestoes] = useState<Record<string, Record<string, any[]>>>(getQuestoesPorArea());
+  const [editingQuestion, setEditingQuestion] = useState<any | null>(null);
+  const [isAddingNew, setIsAddingNew] = useState(false);
+  
+  const areas = getAllAreas();
+  const materias = selectedArea ? getMateriasByArea(selectedArea) : [];
+  const selectedAreaObj = areas.find(a => a.id === selectedArea);
+  
+  const currentQuestoes = (questoes[selectedArea]?.[selectedMateria] || []);
+
+  const handleSaveQuestion = (question: any) => {
+    const newQuestoes = { ...questoes };
+    if (!newQuestoes[selectedArea]) newQuestoes[selectedArea] = {};
+    if (!newQuestoes[selectedArea][selectedMateria]) newQuestoes[selectedArea][selectedMateria] = [];
+    
+    const idx = newQuestoes[selectedArea][selectedMateria].findIndex((q: any) => q.id === question.id);
+    if (idx >= 0) {
+      newQuestoes[selectedArea][selectedMateria][idx] = question;
+    } else {
+      newQuestoes[selectedArea][selectedMateria].push(question);
+    }
+    
+    setQuestoes(newQuestoes);
+    saveQuestoesPorArea(newQuestoes);
+    setEditingQuestion(null);
+    setIsAddingNew(false);
+    showSaveMessage("Questão salva!");
+  };
+
+  const handleDeleteQuestion = (id: string) => {
+    if (!confirm("Excluir esta questão?")) return;
+    
+    const newQuestoes = { ...questoes };
+    newQuestoes[selectedArea][selectedMateria] = newQuestoes[selectedArea][selectedMateria].filter((q: any) => q.id !== id);
+    setQuestoes(newQuestoes);
+    saveQuestoesPorArea(newQuestoes);
+    showSaveMessage("Questão excluída!");
+  };
+
+  const handleAddNew = () => {
+    setIsAddingNew(true);
+    setEditingQuestion({
+      id: `${selectedArea}-${selectedMateria}-${Date.now()}`,
+      title: "",
+      options: ["", "", "", ""],
+      correctAnswer: 0,
+      explanation: ""
+    });
+  };
+
+  return (
+    <div className="max-w-6xl mx-auto space-y-6 animate-slide-in-up">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-extrabold mb-2">📝 Editar Questões por Área</h1>
+          <p className="text-gray-500">Gerencie todas as questões organizadas por área e matéria</p>
+        </div>
+        <button
+          onClick={() => setSelectedArea("")}
+          className="px-4 py-2 bg-white/10 rounded-xl hover:bg-white/20 transition-all"
+        >
+          ← Voltar
+        </button>
+      </div>
+
+      {/* Seletor de Área */}
+      {!selectedArea && (
+        <div className="grid md:grid-cols-2 gap-4">
+          {areas.map(area => (
+            <button
+              key={area.id}
+              onClick={() => setSelectedArea(area.id)}
+              className="p-6 glass-card rounded-xl border-2 border-white/10 hover:border-orange-500 transition-all text-left"
+            >
+              <div className="flex items-center gap-4">
+                <span className="text-4xl">{area.icone}</span>
+                <div>
+                  <h3 className="text-xl font-bold">{area.nome}</h3>
+                  <p className="text-gray-400 text-sm">{area.materias.length} matérias</p>
+                </div>
+              </div>
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Seletor de Matéria */}
+      {selectedArea && !selectedMateria && (
+        <div className="space-y-4">
+          <div className="flex items-center gap-3 mb-6">
+            <span className="text-3xl">{selectedAreaObj?.icone}</span>
+            <h2 className="text-2xl font-bold">{selectedAreaObj?.nome}</h2>
+            <button onClick={() => setSelectedArea("")} className="ml-auto text-gray-400 hover:text-white">
+              ← Trocar Área
+            </button>
+          </div>
+          
+          <div className="grid md:grid-cols-3 gap-4">
+            {materias.map(materia => {
+              const numQ = (questoes[selectedArea]?.[materia.id] || []).length;
+              return (
+                <button
+                  key={materia.id}
+                  onClick={() => setSelectedMateria(materia.id)}
+                  className="p-6 glass-card rounded-xl border-2 border-white/10 hover:border-orange-500 transition-all text-left"
+                >
+                  <h3 className="text-lg font-bold">{materia.nome}</h3>
+                  <p className="text-orange-400 text-sm mt-2">{numQ} questões</p>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Lista de Questões */}
+      {selectedArea && selectedMateria && !editingQuestion && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">{selectedAreaObj?.icone}</span>
+              <h2 className="text-xl font-bold">{materias.find(m => m.id === selectedMateria)?.nome}</h2>
+              <span className="px-3 py-1 bg-orange-500/20 text-orange-400 rounded-full text-sm">
+                {currentQuestoes.length} questões
+              </span>
+            </div>
+            <div className="flex gap-3">
+              <button onClick={() => setSelectedMateria("")} className="px-4 py-2 bg-white/10 rounded-xl hover:bg-white/20 transition-all">
+                ← Voltar
+              </button>
+              <button
+                onClick={handleAddNew}
+                className="px-6 py-2 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl font-bold hover:scale-105 transition-transform"
+              >
+                + Nova Questão
+              </button>
+            </div>
+          </div>
+
+          {currentQuestoes.length === 0 ? (
+            <div className="text-center py-12 text-gray-400">
+              <p className="text-xl mb-4">Nenhuma questão cadastrada</p>
+              <button
+                onClick={handleAddNew}
+                className="px-6 py-3 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl font-bold"
+              >
+                Criar Primeira Questão
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {currentQuestoes.map((q: any, idx: number) => (
+                <div key={q.id} className="glass-card rounded-xl p-6 border border-white/10">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-orange-400 font-bold">#{idx + 1}</span>
+                        <h3 className="font-bold text-lg">{q.title}</h3>
+                      </div>
+                      <div className="space-y-1 text-sm text-gray-400">
+                        {q.options.map((opt: string, i: number) => (
+                          <div key={i} className={`flex items-center gap-2 ${i === q.correctAnswer ? "text-emerald-400" : ""}`}>
+                            <span>{["A", "B", "C", "D"][i]})</span>
+                            <span>{opt}</span>
+                            {i === q.correctAnswer && <span className="text-emerald-400">✓</span>}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setEditingQuestion(q)}
+                        className="px-4 py-2 bg-blue-500/20 text-blue-400 rounded-lg hover:bg-blue-500/30 transition-all"
+                      >
+                        ✏️ Editar
+                      </button>
+                      <button
+                        onClick={() => handleDeleteQuestion(q.id)}
+                        className="px-4 py-2 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 transition-all"
+                      >
+                        🗑️
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Editor de Questão */}
+      {editingQuestion && (
+        <div className="glass-card rounded-2xl p-8 border-2 border-orange-500/30">
+          <h2 className="text-2xl font-bold mb-6">{isAddingNew ? "➕ Nova Questão" : "✏️ Editar Questão"}</h2>
+          
+          <div className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Título/Enunciado da Questão</label>
+              <input
+                type="text"
+                value={editingQuestion.title}
+                onChange={e => setEditingQuestion({ ...editingQuestion, title: e.target.value })}
+                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white"
+                placeholder="Ex: Concordância Verbal"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Alternativas</label>
+              <div className="space-y-3">
+                {editingQuestion.options.map((opt: string, i: number) => (
+                  <div key={i} className="flex items-center gap-3">
+                    <span className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${
+                      i === editingQuestion.correctAnswer ? "bg-emerald-500 text-white" : "bg-white/10"
+                    }`}>
+                      {["A", "B", "C", "D"][i]}
+                    </span>
+                    <input
+                      type="text"
+                      value={opt}
+                      onChange={e => {
+                        const newOpts = [...editingQuestion.options];
+                        newOpts[i] = e.target.value;
+                        setEditingQuestion({ ...editingQuestion, options: newOpts });
+                      }}
+                      className="flex-1 px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white"
+                      placeholder={`Alternativa ${["A", "B", "C", "D"][i]}`}
+                    />
+                    <button
+                      onClick={() => setEditingQuestion({ ...editingQuestion, correctAnswer: i })}
+                      className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                        i === editingQuestion.correctAnswer
+                          ? "bg-emerald-500 text-white"
+                          : "bg-white/10 text-gray-400 hover:bg-white/20"
+                      }`}
+                    >
+                      {i === editingQuestion.correctAnswer ? "✓ Correta" : "Marcar"}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Explicação</label>
+              <textarea
+                value={editingQuestion.explanation}
+                onChange={e => setEditingQuestion({ ...editingQuestion, explanation: e.target.value })}
+                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white h-24"
+                placeholder="Explicação da resposta correta..."
+              />
+            </div>
+
+            <div className="flex gap-4">
+              <button
+                onClick={() => { setEditingQuestion(null); setIsAddingNew(false); }}
+                className="flex-1 py-3 bg-white/10 rounded-xl font-bold hover:bg-white/20 transition-all"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => handleSaveQuestion(editingQuestion)}
+                className="flex-1 py-3 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl font-bold hover:scale-[1.02] transition-transform"
+              >
+                💾 Salvar Questão
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 const DEFAULT_CONFIG: PlatformConfig = {
   platformName: "Questões de Concursos",
   primaryColor: "#f97316",
@@ -2851,7 +3133,29 @@ function AdminPage() {
                   <div className="text-sm text-gray-500">Carreiras Cadastradas</div>
                 </div>
               </div>
+
+              {/* Editar Questões por Área */}
+              <div className="glass-card rounded-2xl p-6">
+                <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                  <span>✏️</span> Editar Questões por Área
+                </h2>
+                <p className="text-gray-400 mb-4">
+                  Acesse a seção dedicada para editar todas as questões de cada área e matéria.
+                </p>
+                <button
+                  onClick={() => setActiveSection("questoes-areas" as any)}
+                  className="w-full py-4 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl font-bold text-lg hover:scale-[1.02] transition-transform flex items-center justify-center gap-3"
+                >
+                  <span>📝</span>
+                  Gerenciar Questões por Área
+                </button>
+              </div>
             </div>
+          )}
+
+          {/* QUESTÕES POR ÁREA - EDIÇÃO */}
+          {activeSection === ("questoes-areas" as any) && (
+            <QuestoesAreasEditor showSaveMessage={showSaveMessage} />
           )}
 
           {/* ESTATISTICAS SECTION */}
