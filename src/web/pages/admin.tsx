@@ -102,6 +102,7 @@ interface PlatformConfig {
 
 // Import questões functions
 import { getQuestoesPorArea, saveQuestoesPorArea } from "./escolher-simulado";
+import { saveQuestaoSupabase, deleteQuestaoSupabase, getQuestoesFromSupabase } from "../lib/supabase-questoes";
 
 // Componente para editar questões por área
 function QuestoesAreasEditor({ showSaveMessage }: { showSaveMessage: (msg?: string) => void }) {
@@ -110,6 +111,7 @@ function QuestoesAreasEditor({ showSaveMessage }: { showSaveMessage: (msg?: stri
   const [questoes, setQuestoes] = useState<Record<string, Record<string, any[]>>>(getQuestoesPorArea());
   const [editingQuestion, setEditingQuestion] = useState<any | null>(null);
   const [isAddingNew, setIsAddingNew] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   
   const areas = getAllAreas();
   const materias = selectedArea ? getMateriasByArea(selectedArea) : [];
@@ -117,7 +119,44 @@ function QuestoesAreasEditor({ showSaveMessage }: { showSaveMessage: (msg?: stri
   
   const currentQuestoes = (questoes[selectedArea]?.[selectedMateria] || []);
 
-  const handleSaveQuestion = (question: any) => {
+  // Carregar questões do Supabase ao montar
+  useEffect(() => {
+    const loadFromSupabase = async () => {
+      try {
+        const supabaseQuestoes = await getQuestoesFromSupabase();
+        if (Object.keys(supabaseQuestoes).length > 0) {
+          // Merge com questões locais/padrão
+          const merged = { ...getQuestoesPorArea() };
+          Object.keys(supabaseQuestoes).forEach(areaId => {
+            if (!merged[areaId]) merged[areaId] = {};
+            Object.keys(supabaseQuestoes[areaId]).forEach(materiaId => {
+              merged[areaId][materiaId] = supabaseQuestoes[areaId][materiaId];
+            });
+          });
+          setQuestoes(merged);
+        }
+      } catch (e) {
+        console.error('Erro ao carregar questões do Supabase:', e);
+      }
+    };
+    loadFromSupabase();
+  }, []);
+
+  const handleSaveQuestion = async (question: any) => {
+    setIsSaving(true);
+    
+    // Salvar no Supabase
+    const saved = await saveQuestaoSupabase({
+      id: question.id,
+      area_id: selectedArea,
+      materia_id: selectedMateria,
+      title: question.title,
+      options: question.options,
+      correct_answer: question.correctAnswer,
+      explanation: question.explanation
+    });
+
+    // Também salvar localmente como backup
     const newQuestoes = { ...questoes };
     if (!newQuestoes[selectedArea]) newQuestoes[selectedArea] = {};
     if (!newQuestoes[selectedArea][selectedMateria]) newQuestoes[selectedArea][selectedMateria] = [];
@@ -133,12 +172,22 @@ function QuestoesAreasEditor({ showSaveMessage }: { showSaveMessage: (msg?: stri
     saveQuestoesPorArea(newQuestoes);
     setEditingQuestion(null);
     setIsAddingNew(false);
-    showSaveMessage("Questão salva!");
+    setIsSaving(false);
+    
+    if (saved) {
+      showSaveMessage("✅ Questão salva no Supabase!");
+    } else {
+      showSaveMessage("⚠️ Salvo localmente (erro no Supabase)");
+    }
   };
 
-  const handleDeleteQuestion = (id: string) => {
+  const handleDeleteQuestion = async (id: string) => {
     if (!confirm("Excluir esta questão?")) return;
     
+    // Deletar do Supabase
+    await deleteQuestaoSupabase(id);
+    
+    // Deletar localmente
     const newQuestoes = { ...questoes };
     newQuestoes[selectedArea][selectedMateria] = newQuestoes[selectedArea][selectedMateria].filter((q: any) => q.id !== id);
     setQuestoes(newQuestoes);
@@ -165,7 +214,7 @@ function QuestoesAreasEditor({ showSaveMessage }: { showSaveMessage: (msg?: stri
           <p className="text-gray-500">Gerencie todas as questões organizadas por área e matéria</p>
         </div>
         <button
-          onClick={() => setSelectedArea("")}
+          onClick={() => { setSelectedArea(""); setSelectedMateria(""); }}
           className="px-4 py-2 bg-white/10 rounded-xl hover:bg-white/20 transition-all"
         >
           ← Voltar
@@ -175,21 +224,24 @@ function QuestoesAreasEditor({ showSaveMessage }: { showSaveMessage: (msg?: stri
       {/* Seletor de Área */}
       {!selectedArea && (
         <div className="grid md:grid-cols-2 gap-4">
-          {areas.map(area => (
-            <button
-              key={area.id}
-              onClick={() => setSelectedArea(area.id)}
-              className="p-6 glass-card rounded-xl border-2 border-white/10 hover:border-orange-500 transition-all text-left"
-            >
-              <div className="flex items-center gap-4">
-                <span className="text-4xl">{area.icone}</span>
-                <div>
-                  <h3 className="text-xl font-bold">{area.nome}</h3>
-                  <p className="text-gray-400 text-sm">{area.materias.length} matérias</p>
+          {areas.map(area => {
+            const totalQuestoes = Object.values(questoes[area.id] || {}).flat().length;
+            return (
+              <button
+                key={area.id}
+                onClick={() => setSelectedArea(area.id)}
+                className="p-6 glass-card rounded-xl border-2 border-white/10 hover:border-orange-500 transition-all text-left"
+              >
+                <div className="flex items-center gap-4">
+                  <span className="text-4xl">{area.icone}</span>
+                  <div>
+                    <h3 className="text-xl font-bold">{area.nome}</h3>
+                    <p className="text-gray-400 text-sm">{area.materias.length} matérias • {totalQuestoes} questões</p>
+                  </div>
                 </div>
-              </div>
-            </button>
-          ))}
+              </button>
+            );
+          })}
         </div>
       )}
 
@@ -258,41 +310,52 @@ function QuestoesAreasEditor({ showSaveMessage }: { showSaveMessage: (msg?: stri
             </div>
           ) : (
             <div className="space-y-4">
-              {currentQuestoes.map((q: any, idx: number) => (
-                <div key={q.id} className="glass-card rounded-xl p-6 border border-white/10">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-orange-400 font-bold">#{idx + 1}</span>
-                        <h3 className="font-bold text-lg">{q.title}</h3>
+              {currentQuestoes.map((q: any, idx: number) => {
+                const opts = Array.isArray(q.options) ? q.options : [];
+                const correctIdx = typeof q.correctAnswer === 'number' ? q.correctAnswer : (q.correct_answer || 0);
+                return (
+                  <div key={q.id} className="glass-card rounded-xl p-6 border border-white/10">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-3">
+                          <span className="px-2 py-1 bg-orange-500/20 text-orange-400 rounded font-bold text-sm">#{idx + 1}</span>
+                          <h3 className="font-bold text-lg text-white">{q.title || 'Sem título'}</h3>
+                        </div>
+                        <div className="space-y-2">
+                          {opts.map((opt: string, i: number) => (
+                            <div key={i} className={`flex items-start gap-2 p-2 rounded-lg ${i === correctIdx ? "bg-emerald-500/20 border border-emerald-500/30" : "bg-white/5"}`}>
+                              <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${i === correctIdx ? "bg-emerald-500 text-white" : "bg-white/20 text-gray-400"}`}>
+                                {["A", "B", "C", "D"][i]}
+                              </span>
+                              <span className={`text-sm ${i === correctIdx ? "text-emerald-300 font-medium" : "text-gray-300"}`}>
+                                {opt || <span className="text-gray-500 italic">Vazio</span>}
+                              </span>
+                              {i === correctIdx && <span className="text-emerald-400 ml-auto flex-shrink-0">✓</span>}
+                            </div>
+                          ))}
+                        </div>
+                        {q.explanation && (
+                          <p className="mt-3 text-xs text-gray-500 italic">💡 {q.explanation}</p>
+                        )}
                       </div>
-                      <div className="space-y-1 text-sm text-gray-400">
-                        {q.options.map((opt: string, i: number) => (
-                          <div key={i} className={`flex items-center gap-2 ${i === q.correctAnswer ? "text-emerald-400" : ""}`}>
-                            <span>{["A", "B", "C", "D"][i]})</span>
-                            <span>{opt}</span>
-                            {i === q.correctAnswer && <span className="text-emerald-400">✓</span>}
-                          </div>
-                        ))}
+                      <div className="flex flex-col gap-2 flex-shrink-0">
+                        <button
+                          onClick={() => setEditingQuestion({ ...q, correctAnswer: correctIdx })}
+                          className="px-4 py-2 bg-blue-500/20 text-blue-400 rounded-lg hover:bg-blue-500/30 transition-all text-sm"
+                        >
+                          ✏️ Editar
+                        </button>
+                        <button
+                          onClick={() => handleDeleteQuestion(q.id)}
+                          className="px-4 py-2 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 transition-all text-sm"
+                        >
+                          🗑️ Excluir
+                        </button>
                       </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => setEditingQuestion(q)}
-                        className="px-4 py-2 bg-blue-500/20 text-blue-400 rounded-lg hover:bg-blue-500/30 transition-all"
-                      >
-                        ✏️ Editar
-                      </button>
-                      <button
-                        onClick={() => handleDeleteQuestion(q.id)}
-                        className="px-4 py-2 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 transition-all"
-                      >
-                        🗑️
-                      </button>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
@@ -305,74 +368,85 @@ function QuestoesAreasEditor({ showSaveMessage }: { showSaveMessage: (msg?: stri
           
           <div className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">Título/Enunciado da Questão</label>
-              <input
-                type="text"
-                value={editingQuestion.title}
+              <label className="block text-sm font-medium text-gray-300 mb-2">Título/Enunciado da Questão *</label>
+              <textarea
+                value={editingQuestion.title || ''}
                 onChange={e => setEditingQuestion({ ...editingQuestion, title: e.target.value })}
-                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white"
-                placeholder="Ex: Concordância Verbal"
+                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 min-h-[100px]"
+                placeholder="Digite o enunciado completo da questão..."
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">Alternativas</label>
+              <label className="block text-sm font-medium text-gray-300 mb-3">Alternativas * (clique para marcar a correta)</label>
               <div className="space-y-3">
-                {editingQuestion.options.map((opt: string, i: number) => (
-                  <div key={i} className="flex items-center gap-3">
-                    <span className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${
-                      i === editingQuestion.correctAnswer ? "bg-emerald-500 text-white" : "bg-white/10"
-                    }`}>
-                      {["A", "B", "C", "D"][i]}
-                    </span>
-                    <input
-                      type="text"
-                      value={opt}
-                      onChange={e => {
-                        const newOpts = [...editingQuestion.options];
-                        newOpts[i] = e.target.value;
-                        setEditingQuestion({ ...editingQuestion, options: newOpts });
-                      }}
-                      className="flex-1 px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white"
-                      placeholder={`Alternativa ${["A", "B", "C", "D"][i]}`}
-                    />
+                {(editingQuestion.options || ['', '', '', '']).map((opt: string, i: number) => (
+                  <div key={i} className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-all ${
+                    i === editingQuestion.correctAnswer 
+                      ? "border-emerald-500 bg-emerald-500/10" 
+                      : "border-white/10 bg-white/5"
+                  }`}>
                     <button
+                      type="button"
                       onClick={() => setEditingQuestion({ ...editingQuestion, correctAnswer: i })}
-                      className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                        i === editingQuestion.correctAnswer
-                          ? "bg-emerald-500 text-white"
+                      className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg flex-shrink-0 transition-all ${
+                        i === editingQuestion.correctAnswer 
+                          ? "bg-emerald-500 text-white" 
                           : "bg-white/10 text-gray-400 hover:bg-white/20"
                       }`}
                     >
-                      {i === editingQuestion.correctAnswer ? "✓ Correta" : "Marcar"}
+                      {["A", "B", "C", "D"][i]}
                     </button>
+                    <input
+                      type="text"
+                      value={opt || ''}
+                      onChange={e => {
+                        const newOpts = [...(editingQuestion.options || ['', '', '', ''])];
+                        newOpts[i] = e.target.value;
+                        setEditingQuestion({ ...editingQuestion, options: newOpts });
+                      }}
+                      className="flex-1 px-4 py-3 bg-transparent border-0 text-white placeholder-gray-500 focus:outline-none"
+                      placeholder={`Digite a alternativa ${["A", "B", "C", "D"][i]}...`}
+                    />
+                    {i === editingQuestion.correctAnswer && (
+                      <span className="text-emerald-400 font-bold flex-shrink-0">✓ Correta</span>
+                    )}
                   </div>
                 ))}
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">Explicação</label>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Explicação (opcional)</label>
               <textarea
-                value={editingQuestion.explanation}
+                value={editingQuestion.explanation || ''}
                 onChange={e => setEditingQuestion({ ...editingQuestion, explanation: e.target.value })}
-                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white h-24"
-                placeholder="Explicação da resposta correta..."
+                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 h-24"
+                placeholder="Explique por que a resposta correta está certa..."
               />
             </div>
 
-            <div className="flex gap-4">
+            <div className="flex gap-4 pt-4">
               <button
                 onClick={() => { setEditingQuestion(null); setIsAddingNew(false); }}
-                className="flex-1 py-3 bg-white/10 rounded-xl font-bold hover:bg-white/20 transition-all"
+                className="flex-1 py-4 bg-white/10 rounded-xl font-bold hover:bg-white/20 transition-all"
+                disabled={isSaving}
               >
                 Cancelar
               </button>
               <button
                 onClick={() => handleSaveQuestion(editingQuestion)}
-                className="flex-1 py-3 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl font-bold hover:scale-[1.02] transition-transform"
+                disabled={isSaving || !editingQuestion.title}
+                className="flex-1 py-4 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl font-bold hover:scale-[1.02] transition-transform disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                💾 Salvar Questão
+                {isSaving ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Salvando...
+                  </>
+                ) : (
+                  <>💾 Salvar no Supabase</>
+                )}
               </button>
             </div>
           </div>
