@@ -70,7 +70,7 @@ import { supabase } from "../lib/supabase";
 
 const OPTION_LABELS = ["A", "B", "C", "D"] as const;
 
-type AdminSection = "config" | "concursos" | "disciplinas" | "modulos" | "questoes" | "usuarios" | "acessos" | "estatisticas" | "importexport" | "pacotes" | "solicitacoes" | "opcoes";
+type AdminSection = "config" | "concursos" | "disciplinas" | "modulos" | "questoes" | "usuarios" | "acessos" | "estatisticas" | "importexport" | "pacotes" | "solicitacoes" | "opcoes" | "simulados";
 
 interface UserData {
   username: string;
@@ -1754,15 +1754,15 @@ function AdminPage() {
     { id: "config", icon: "⚙️", label: "Configurações" },
     { id: "solicitacoes", icon: "📋", label: "Solicitações", badge: pendingPackagesCount },
     { id: "pacotes", icon: "📦", label: "Pacotes de Concurso" },
+    { id: "simulados", icon: "📝", label: "Simulados" },
     { id: "concursos", icon: "🏆", label: "Concursos" },
     { id: "disciplinas", icon: "📚", label: "Disciplinas" },
     { id: "modulos", icon: "🗂️", label: "Módulos" },
-    { id: "questoes", icon: "📝", label: "Questões" },
+    { id: "questoes", icon: "📄", label: "Questões" },
     { id: "usuarios", icon: "👥", label: "Usuários" },
     { id: "acessos", icon: "🔐", label: "Gerenciar Acessos" },
     { id: "opcoes", icon: "🏷️", label: "Bancas e Órgãos" },
     { id: "estatisticas", icon: "📊", label: "Estatísticas" },
-    { id: "config", icon: "⚙️", label: "Configurações" },
     { id: "importexport", icon: "🔄", label: "Importar/Exportar" },
   ];
 
@@ -2449,6 +2449,97 @@ function AdminPage() {
                   <li>• Atribua o pacote ao aluno</li>
                   <li>• Mude status para <strong>Pronto</strong> quando terminar</li>
                 </ul>
+              </div>
+            </div>
+          )}
+          
+          {/* SIMULADOS SECTION */}
+          {activeSection === "simulados" && (
+            <div className="max-w-5xl mx-auto space-y-6 animate-slide-in-up">
+              <div>
+                <h1 className="text-3xl font-extrabold mb-2">📝 Gerenciar Simulados</h1>
+                <p className="text-gray-500">Edite questões dos simulados (Grátis e Plus)</p>
+              </div>
+              
+              {/* Filtros */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="glass-card rounded-xl p-4">
+                  <label className="text-sm text-gray-400 mb-2 block">Plano</label>
+                  <select className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white">
+                    <option value="all">Todos</option>
+                    <option value="free">Grátis</option>
+                    <option value="plus">Plus</option>
+                  </select>
+                </div>
+                <div className="glass-card rounded-xl p-4">
+                  <label className="text-sm text-gray-400 mb-2 block">Matéria</label>
+                  <select className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white">
+                    <option value="">Todas</option>
+                    {['Português', 'Matemática', 'Direito Constitucional', 'Direito Administrativo', 'Informática', 'Raciocínio Lógico'].map(m => (
+                      <option key={m} value={m}>{m}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              
+              {/* Lista de Questões dos Simulados */}
+              <div className="glass-card rounded-2xl p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-white font-semibold">Questões dos Simulados</h3>
+                  <button
+                    onClick={() => {
+                      const novaQuestao = {
+                        id: generateId(),
+                        title: "",
+                        options: ["", "", "", ""] as [string, string, string, string],
+                        correctAnswer: 0 as 0 | 1 | 2 | 3,
+                        explanation: "",
+                        disciplina: "Português",
+                        banca: "Geral",
+                        concurso: "Simulado",
+                        plano: "all" as "all" | "free" | "plus"
+                      };
+                      setEditingQuestion(novaQuestao);
+                      setIsNewQuestion(true);
+                    }}
+                    className="px-4 py-2 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 rounded-lg font-bold text-sm"
+                  >
+                    + Nova Questão
+                  </button>
+                </div>
+                
+                {/* Grid de questões */}
+                <div className="space-y-3">
+                  {quizData.questions.slice(0, 20).map((q, i) => (
+                    <div key={q.id} className="bg-white/5 rounded-xl p-4 hover:bg-white/10 transition-all">
+                      <div className="flex items-start gap-3">
+                        <span className="text-purple-400 font-bold text-sm">{i + 1}</span>
+                        <div className="flex-1">
+                          <p className="text-white font-medium mb-1">{q.title || 'Sem título'}</p>
+                          <div className="flex gap-2 text-xs">
+                            <span className="px-2 py-0.5 bg-blue-500/20 text-blue-400 rounded">{q.disciplina}</span>
+                            <span className="px-2 py-0.5 bg-orange-500/20 text-orange-400 rounded">{q.banca}</span>
+                            {q.plano && <span className="px-2 py-0.5 bg-purple-500/20 text-purple-400 rounded">{q.plano === 'plus' ? 'PLUS' : q.plano === 'free' ? 'GRÁTIS' : 'TODOS'}</span>}
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleEditQuestion(q)}
+                            className="px-3 py-1.5 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 rounded-lg text-sm"
+                          >
+                            ✏️ Editar
+                          </button>
+                          <button
+                            onClick={() => handleDeleteQuestion(q.id)}
+                            className="px-3 py-1.5 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg text-sm"
+                          >
+                            🗑️
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           )}
