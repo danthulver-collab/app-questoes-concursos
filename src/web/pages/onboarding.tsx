@@ -1118,8 +1118,6 @@ export default function OnboardingPage() {
                     </button>
                   </div>
                 </form>
-              </>
-            )}
           </div>
           )}
           
