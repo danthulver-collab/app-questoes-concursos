@@ -3733,6 +3733,22 @@ function AdminPage() {
                   ))}
                 </select>
               </div>
+              
+              {/* Seção Criar Questões */}
+              <div className="mt-8 pt-6 border-t border-white/10">
+                <h3 className="text-xl font-bold text-white mb-4">📝 Adicionar Questões ao Pacote</h3>
+                <p className="text-sm text-gray-400 mb-6">Clique em "Questões" no menu lateral para criar questões e depois volte aqui para adicionar ao pacote.</p>
+                
+                <div className="text-center p-8 bg-white/5 rounded-xl border border-white/10">
+                  <p className="text-gray-400 mb-4">💡 Como adicionar questões:</p>
+                  <ol className="text-left text-sm text-gray-300 space-y-2 max-w-md mx-auto">
+                    <li>1. Salve este pacote primeiro</li>
+                    <li>2. Vá em "📝 Questões" no menu</li>
+                    <li>3. Crie questões escolhendo as matérias deste pacote</li>
+                    <li>4. As questões com matérias deste pacote serão incluídas automaticamente</li>
+                  </ol>
+                </div>
+              </div>
             </div>
 
             <div className="sticky bottom-0 glass p-6 border-t border-white/10 flex gap-3">
