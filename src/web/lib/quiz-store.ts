@@ -39,6 +39,26 @@ export interface Modulo {
   questionsIds: string[];
 }
 
+export interface Area {
+  id: string;
+  nome: string;
+  descricao?: string;
+  icone?: string;
+  carreiras: string[];
+  materias: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Carreira {
+  id: string;
+  nome: string;
+  areaId: string;
+  cargos: string[];
+  materiasEspecificas?: string[];
+  descricao?: string;
+}
+
 export interface Pacote {
   id: string;
   nome: string;
@@ -52,6 +72,9 @@ export interface Pacote {
   premium?: boolean;
   alunoAtribuido?: string;
   questionsIds: string[];
+  areaId?: string;
+  carreiraId?: string;
+  cargo?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -63,6 +86,8 @@ export interface QuizData {
   disciplinas: Disciplina[];
   modulos: Modulo[];
   pacotes: Pacote[];
+  areas: Area[];
+  carreiras: Carreira[];
 }
 
 const DEFAULT_DISCIPLINAS: Disciplina[] = [
@@ -111,12 +136,166 @@ const DEFAULT_MODULOS: Modulo[] = [
 
 const DEFAULT_PACOTES: Pacote[] = [];
 
+// Dados iniciais de Áreas
+const DEFAULT_AREAS: Area[] = [
+  {
+    id: "area-administrativa",
+    nome: "Área Administrativa",
+    descricao: "Carreiras voltadas para gestão, organização e suporte administrativo",
+    icone: "📋",
+    carreiras: ["carr-aux-adm", "carr-agente-adm", "carr-tec-adm", "carr-analista-adm"],
+    materias: ["portugues", "matematica", "informatica", "administracao", "direito-administrativo", "direito-constitucional"],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  },
+  {
+    id: "area-educacao",
+    nome: "Educação",
+    descricao: "Carreiras voltadas para ensino e gestão educacional",
+    icone: "📚",
+    carreiras: ["carr-professor", "carr-pedagogo", "carr-orientador", "carr-supervisor"],
+    materias: ["portugues", "legislacao", "etica"],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  },
+  {
+    id: "area-saude",
+    nome: "Saúde",
+    descricao: "Carreiras da área da saúde pública e privada",
+    icone: "🏥",
+    carreiras: ["carr-enfermeiro", "carr-tec-enfermagem", "carr-agente-saude", "carr-psicologo", "carr-assistente-social"],
+    materias: ["portugues", "etica"],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  },
+  {
+    id: "area-seguranca",
+    nome: "Segurança Pública",
+    descricao: "Carreiras voltadas para segurança e ordem pública",
+    icone: "🚔",
+    carreiras: ["carr-policial-militar", "carr-policial-civil", "carr-guarda-municipal", "carr-policia-penal"],
+    materias: ["portugues", "direito-penal", "direito-constitucional"],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  },
+  {
+    id: "area-juridica",
+    nome: "Jurídica",
+    descricao: "Carreiras voltadas para o direito e judiciário",
+    icone: "⚖️",
+    carreiras: ["carr-tec-judiciario", "carr-analista-judiciario", "carr-procurador", "carr-defensor"],
+    materias: ["direito-constitucional", "direito-administrativo", "direito-civil", "direito-penal", "portugues"],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  },
+  {
+    id: "area-fiscal",
+    nome: "Fiscal / Tributária",
+    descricao: "Carreiras voltadas para fiscalização e tributação",
+    icone: "💰",
+    carreiras: ["carr-auditor-fiscal", "carr-fiscal-tributos", "carr-analista-tributario"],
+    materias: ["direito-tributario", "contabilidade", "administracao", "direito-constitucional", "direito-administrativo"],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  },
+  {
+    id: "area-ti",
+    nome: "Tecnologia da Informação",
+    descricao: "Carreiras voltadas para TI e tecnologia",
+    icone: "💻",
+    carreiras: ["carr-analista-sistemas", "carr-analista-ti", "carr-tec-informatica"],
+    materias: ["informatica"],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  },
+  {
+    id: "area-controle",
+    nome: "Controle / Gestão Pública",
+    descricao: "Carreiras voltadas para controle e auditoria pública",
+    icone: "🔍",
+    carreiras: ["carr-auditor-controle", "carr-controlador", "carr-analista-gestao"],
+    materias: ["administracao", "direito-administrativo", "direito-constitucional", "contabilidade"],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  },
+  {
+    id: "area-bancaria",
+    nome: "Bancária",
+    descricao: "Carreiras voltadas para instituições bancárias",
+    icone: "🏦",
+    carreiras: ["carr-tec-bancario", "carr-analista-bancario"],
+    materias: ["portugues", "matematica", "informatica", "atualidades"],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  },
+  {
+    id: "area-tecnica",
+    nome: "Técnica / Engenharia",
+    descricao: "Carreiras técnicas e de engenharia",
+    icone: "🏗️",
+    carreiras: ["carr-engenheiro", "carr-arquiteto", "carr-tec-edificacoes"],
+    materias: ["administracao", "direito-administrativo"],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  }
+];
+
+// Dados iniciais de Carreiras
+const DEFAULT_CARREIRAS: Carreira[] = [
+  { id: "carr-aux-adm", nome: "Auxiliar Administrativo", areaId: "area-administrativa", cargos: ["Auxiliar Administrativo"] },
+  { id: "carr-agente-adm", nome: "Agente Administrativo", areaId: "area-administrativa", cargos: ["Agente Administrativo"] },
+  { id: "carr-tec-adm", nome: "Técnico Administrativo", areaId: "area-administrativa", cargos: ["Técnico Administrativo"] },
+  { id: "carr-analista-adm", nome: "Analista Administrativo", areaId: "area-administrativa", cargos: ["Analista Administrativo"] },
+  
+  { id: "carr-professor", nome: "Professor", areaId: "area-educacao", cargos: ["Professor", "Professor I", "Professor II"] },
+  { id: "carr-pedagogo", nome: "Pedagogo", areaId: "area-educacao", cargos: ["Pedagogo"] },
+  { id: "carr-orientador", nome: "Orientador Educacional", areaId: "area-educacao", cargos: ["Orientador Educacional"] },
+  { id: "carr-supervisor", nome: "Supervisor Escolar", areaId: "area-educacao", cargos: ["Supervisor Escolar"] },
+  
+  { id: "carr-enfermeiro", nome: "Enfermeiro", areaId: "area-saude", cargos: ["Enfermeiro"] },
+  { id: "carr-tec-enfermagem", nome: "Técnico de Enfermagem", areaId: "area-saude", cargos: ["Técnico de Enfermagem"] },
+  { id: "carr-agente-saude", nome: "Agente de Saúde", areaId: "area-saude", cargos: ["Agente Comunitário de Saúde", "Agente de Saúde"] },
+  { id: "carr-psicologo", nome: "Psicólogo", areaId: "area-saude", cargos: ["Psicólogo"] },
+  { id: "carr-assistente-social", nome: "Assistente Social", areaId: "area-saude", cargos: ["Assistente Social"] },
+  
+  { id: "carr-policial-militar", nome: "Policial Militar", areaId: "area-seguranca", cargos: ["Soldado PM", "Cabo PM", "Sargento PM"] },
+  { id: "carr-policial-civil", nome: "Policial Civil", areaId: "area-seguranca", cargos: ["Investigador", "Escrivão", "Delegado"] },
+  { id: "carr-guarda-municipal", nome: "Guarda Municipal", areaId: "area-seguranca", cargos: ["Guarda Civil Municipal"] },
+  { id: "carr-policia-penal", nome: "Polícia Penal", areaId: "area-seguranca", cargos: ["Agente Penitenciário"] },
+  
+  { id: "carr-tec-judiciario", nome: "Técnico Judiciário", areaId: "area-juridica", cargos: ["Técnico Judiciário"] },
+  { id: "carr-analista-judiciario", nome: "Analista Judiciário", areaId: "area-juridica", cargos: ["Analista Judiciário"] },
+  { id: "carr-procurador", nome: "Procurador", areaId: "area-juridica", cargos: ["Procurador Municipal", "Procurador Estadual", "Procurador Federal"] },
+  { id: "carr-defensor", nome: "Defensor", areaId: "area-juridica", cargos: ["Defensor Público"] },
+  
+  { id: "carr-auditor-fiscal", nome: "Auditor Fiscal", areaId: "area-fiscal", cargos: ["Auditor Fiscal", "Auditor Fiscal da Receita"] },
+  { id: "carr-fiscal-tributos", nome: "Fiscal de Tributos", areaId: "area-fiscal", cargos: ["Fiscal de Tributos"] },
+  { id: "carr-analista-tributario", nome: "Analista Tributário", areaId: "area-fiscal", cargos: ["Analista Tributário"] },
+  
+  { id: "carr-analista-sistemas", nome: "Analista de Sistemas", areaId: "area-ti", cargos: ["Analista de Sistemas"] },
+  { id: "carr-analista-ti", nome: "Analista de TI", areaId: "area-ti", cargos: ["Analista de TI", "Analista de Suporte"] },
+  { id: "carr-tec-informatica", nome: "Técnico em Informática", areaId: "area-ti", cargos: ["Técnico em Informática"] },
+  
+  { id: "carr-auditor-controle", nome: "Auditor de Controle Interno", areaId: "area-controle", cargos: ["Auditor de Controle Interno"] },
+  { id: "carr-controlador", nome: "Controlador", areaId: "area-controle", cargos: ["Controlador Interno"] },
+  { id: "carr-analista-gestao", nome: "Analista de Gestão", areaId: "area-controle", cargos: ["Analista de Gestão Pública"] },
+  
+  { id: "carr-tec-bancario", nome: "Técnico Bancário", areaId: "area-bancaria", cargos: ["Escriturário", "Técnico Bancário"] },
+  { id: "carr-analista-bancario", nome: "Analista Bancário", areaId: "area-bancaria", cargos: ["Analista Bancário"] },
+  
+  { id: "carr-engenheiro", nome: "Engenheiro", areaId: "area-tecnica", cargos: ["Engenheiro Civil", "Engenheiro Elétrico", "Engenheiro Mecânico"] },
+  { id: "carr-arquiteto", nome: "Arquiteto", areaId: "area-tecnica", cargos: ["Arquiteto"] },
+  { id: "carr-tec-edificacoes", nome: "Técnico em Edificações", areaId: "area-tecnica", cargos: ["Técnico em Edificações"] }
+];
+
 const DEFAULT_QUIZ: QuizData = {
   theme: "Questões de Concursos",
   concursos: DEFAULT_CONCURSOS,
   disciplinas: DEFAULT_DISCIPLINAS,
   modulos: DEFAULT_MODULOS,
   pacotes: DEFAULT_PACOTES,
+  areas: DEFAULT_AREAS,
+  carreiras: DEFAULT_CARREIRAS,
   questions: EXTENSIVE_QUESTIONS
 };
 
@@ -137,6 +316,8 @@ export const getQuizData = (): QuizData => {
         disciplinas: data.disciplinas || DEFAULT_DISCIPLINAS,
         modulos: data.modulos || DEFAULT_MODULOS,
         pacotes: data.pacotes || DEFAULT_PACOTES,
+        areas: data.areas || DEFAULT_AREAS,
+        carreiras: data.carreiras || DEFAULT_CARREIRAS,
       };
     } catch {
       return DEFAULT_QUIZ;
@@ -341,4 +522,114 @@ export const countPacotesUsingBanca = (banca: string): number => {
 export const countPacotesUsingOrgao = (orgao: string): number => {
   const data = getQuizData();
   return data.pacotes.filter(p => p.orgao === orgao).length;
+};
+
+// ============ Áreas e Carreiras Management ============
+
+// Get all áreas
+export const getAllAreas = (): Area[] => {
+  const data = getQuizData();
+  return data.areas || DEFAULT_AREAS;
+};
+
+// Get área by id
+export const getAreaById = (id: string): Area | undefined => {
+  const areas = getAllAreas();
+  return areas.find(a => a.id === id);
+};
+
+// Get all carreiras
+export const getAllCarreiras = (): Carreira[] => {
+  const data = getQuizData();
+  return data.carreiras || DEFAULT_CARREIRAS;
+};
+
+// Get carreiras by area
+export const getCarreirasByArea = (areaId: string): Carreira[] => {
+  const carreiras = getAllCarreiras();
+  return carreiras.filter(c => c.areaId === areaId);
+};
+
+// Get carreira by id
+export const getCarreiraById = (id: string): Carreira | undefined => {
+  const carreiras = getAllCarreiras();
+  return carreiras.find(c => c.id === id);
+};
+
+// Get matérias by area
+export const getMateriasByArea = (areaId: string): Disciplina[] => {
+  const area = getAreaById(areaId);
+  if (!area) return [];
+  
+  const data = getQuizData();
+  return data.disciplinas.filter(d => area.materias.includes(d.id));
+};
+
+// Add new área
+export const addArea = (area: Omit<Area, 'id' | 'createdAt' | 'updatedAt'>): Area => {
+  const data = getQuizData();
+  const newArea: Area = {
+    ...area,
+    id: generateId(),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  };
+  data.areas.push(newArea);
+  saveQuizData(data);
+  return newArea;
+};
+
+// Update área
+export const updateArea = (id: string, updates: Partial<Omit<Area, 'id' | 'createdAt'>>): void => {
+  const data = getQuizData();
+  const index = data.areas.findIndex(a => a.id === id);
+  if (index !== -1) {
+    data.areas[index] = {
+      ...data.areas[index],
+      ...updates,
+      updatedAt: new Date().toISOString()
+    };
+    saveQuizData(data);
+  }
+};
+
+// Delete área
+export const deleteArea = (id: string): void => {
+  const data = getQuizData();
+  data.areas = data.areas.filter(a => a.id !== id);
+  // Also remove related carreiras
+  data.carreiras = data.carreiras.filter(c => c.areaId !== id);
+  saveQuizData(data);
+};
+
+// Add new carreira
+export const addCarreira = (carreira: Omit<Carreira, 'id'>): Carreira => {
+  const data = getQuizData();
+  const newCarreira: Carreira = {
+    ...carreira,
+    id: generateId()
+  };
+  data.carreiras.push(newCarreira);
+  saveQuizData(data);
+  return newCarreira;
+};
+
+// Update carreira
+export const updateCarreira = (id: string, updates: Partial<Omit<Carreira, 'id'>>): void => {
+  const data = getQuizData();
+  const index = data.carreiras.findIndex(c => c.id === id);
+  if (index !== -1) {
+    data.carreiras[index] = {
+      ...data.carreiras[index],
+      ...updates
+    };
+    saveQuizData(data);
+  }
+};
+
+// Delete carreira
+export const deleteCarreira = (id: string): void => {
+  const data = getQuizData();
+  data.carreiras = data.carreiras.filter(c => c.id !== id);
+  saveQuizData(data);
 };

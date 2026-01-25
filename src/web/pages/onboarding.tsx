@@ -1,14 +1,17 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "../lib/auth-context-supabase";
-import { getQuizData, type QuizData } from "../lib/quiz-store";
+import { getQuizData, type QuizData, getAllAreas, getCarreirasByArea, getCarreiraById, getAreaById, getMateriasByArea } from "../lib/quiz-store";
 import { setUserPlan, grantConcursoAccess, setUserPackageStatus, PLAN_LIMITS, type PlanType } from "../lib/access-control";
 import { savePackageRequest as savePackageRequestSupabase } from "../lib/supabase-package-requests";
 import { notifyPackageRequest, showBrowserNotification } from "../lib/notifications";
+import { AreaCarreiraSelector } from "../components/area-carreira-selector";
 
 export type { PlanType };
 
 interface OnboardingData {
+  areaId?: string;
+  carreiraId?: string;
   concursoObjetivo: string;
   cargoDesejado: string;
   bancaOrganizadora: string;
@@ -247,6 +250,10 @@ const PlanCard = ({ type, selected, onSelect, recommended }: PlanCardProps) => {
 // Types for package request flow
 interface PackageRequest {
   userId: string;
+  areaId?: string;
+  areaNome?: string;
+  carreiraId?: string;
+  carreiraNome?: string;
   concurso: string;
   cargo: string;
   banca: string;
@@ -347,8 +354,14 @@ export default function OnboardingPage() {
   const [quizData, setQuizData] = useState<QuizData | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [step, setStep] = useState<"choice" | 1 | 2>("choice");
+  const [step, setStep] = useState<"area" | "carreira" | "detalhes" | "plano">("area");
   const [flowType, setFlowType] = useState<"explore" | "custom" | null>(null);
+  
+  // New: Area and Carreira state
+  const [selectedAreaId, setSelectedAreaId] = useState<string>("");
+  const [selectedCarreiraId, setSelectedCarreiraId] = useState<string>("");
+  const [filteredCarreiras, setFilteredCarreiras] = useState<any[]>([]);
+  const [autoMaterias, setAutoMaterias] = useState<string[]>([]);
   
   // Separate state for multiselect materias and custom cargo
   const [selectedMaterias, setSelectedMaterias] = useState<string[]>([]);
@@ -388,6 +401,42 @@ export default function OnboardingPage() {
       setErrors(prev => ({ ...prev, [field]: "" }));
     }
   };
+
+  // Handle area selection
+  const handleAreaSelect = (areaId: string) => {
+    setSelectedAreaId(areaId);
+    setFormData(prev => ({ ...prev, areaId }));
+    
+    // Load carreiras for this area
+    const carreiras = getCarreirasByArea(areaId);
+    setFilteredCarreiras(carreiras);
+    
+    // Load auto matérias for this area
+    const materias = getMateriasByArea(areaId);
+    const materiasNomes = materias.map(m => m.nome);
+    setAutoMaterias(materiasNomes);
+    setSelectedMaterias(materiasNomes);
+    setFormData(prev => ({ ...prev, materias: materiasNomes.join(", ") }));
+    
+    // Go to next step
+    setStep("carreira");
+  };
+
+  // Handle carreira selection
+  const handleCarreiraSelect = (carreiraId: string) => {
+    setSelectedCarreiraId(carreiraId);
+    setFormData(prev => ({ ...prev, carreiraId }));
+    
+    const carreira = getCarreiraById(carreiraId);
+    if (carreira && carreira.cargos.length > 0) {
+      // Auto-select first cargo
+      setSelectedCargo(carreira.cargos[0]);
+      setFormData(prev => ({ ...prev, cargoDesejado: carreira.cargos[0] }));
+    }
+    
+    // Go to next step
+    setStep("detalhes");
+  };
   
   const toggleMateria = (materia: string) => {
     setSelectedMaterias(prev => {
@@ -424,7 +473,7 @@ export default function OnboardingPage() {
     }
   };
 
-  const validateStep1 = (): boolean => {
+  const validateDetalhes = (): boolean => {
     const newErrors: Record<string, string> = {};
     
     if (!formData.concursoObjetivo.trim()) {
@@ -446,9 +495,9 @@ export default function OnboardingPage() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleNextStep = () => {
-    if (validateStep1()) {
-      setStep(2);
+  const handleNextToPlano = () => {
+    if (validateDetalhes()) {
+      setStep("plano");
     }
   };
 
@@ -462,10 +511,17 @@ export default function OnboardingPage() {
     // Simulate a small delay for UX
     await new Promise(r => setTimeout(r, 500));
     
-    // If custom flow, create a package request
-    if (flowType === "custom" && (formData.plano === "individual" || formData.plano === "plus")) {
+    // Create a package request (always for paid plans)
+    if (formData.plano === "individual" || formData.plano === "plus") {
+      const area = selectedAreaId ? getAreaById(selectedAreaId) : null;
+      const carreira = selectedCarreiraId ? getCarreiraById(selectedCarreiraId) : null;
+      
       const request: PackageRequest = {
         userId: user.username,
+        areaId: selectedAreaId || undefined,
+        areaNome: area?.nome || undefined,
+        carreiraId: selectedCarreiraId || undefined,
+        carreiraNome: carreira?.nome || undefined,
         concurso: formData.concursoObjetivo,
         cargo: formData.cargoDesejado,
         banca: formData.bancaOrganizadora,
@@ -546,16 +602,31 @@ export default function OnboardingPage() {
             </div>
           </div>
           
-          {/* Progress indicator - only show for non-choice steps */}
-          {step !== "choice" && (
+          {/* Progress indicator */}
+          {(step === "area" || step === "carreira" || step === "detalhes" || step === "plano") && (
             <div className="flex items-center justify-center gap-3 mb-8">
-              <div className={`w-3 h-3 rounded-full transition-all ${step === 1 ? "bg-orange-500 w-8" : "bg-orange-500"}`} />
-              <div className={`w-3 h-3 rounded-full transition-all ${step === 2 ? "bg-orange-500 w-8" : "bg-white/20"}`} />
+              <div className={`w-3 h-3 rounded-full transition-all ${step === "area" || step === "carreira" ? "bg-orange-500 w-8" : "bg-orange-500"}`} />
+              <div className={`w-3 h-3 rounded-full transition-all ${step === "detalhes" ? "bg-orange-500 w-8" : step === "plano" ? "bg-orange-500" : "bg-white/20"}`} />
+              <div className={`w-3 h-3 rounded-full transition-all ${step === "plano" ? "bg-orange-500 w-8" : "bg-white/20"}`} />
             </div>
           )}
           
-          {/* Initial Choice Screen */}
-          {step === "choice" && (
+          {/* Area e Carreira Selection */}
+          {(step === "area" || step === "carreira") && (
+            <div className="glass-card rounded-3xl p-8 md:p-10 animate-slide-in-up">
+              <AreaCarreiraSelector
+                step={step}
+                selectedAreaId={selectedAreaId}
+                selectedCarreiraId={selectedCarreiraId}
+                onAreaSelect={handleAreaSelect}
+                onCarreiraSelect={handleCarreiraSelect}
+                onBack={step === "carreira" ? () => setStep("area") : undefined}
+              />
+            </div>
+          )}
+          
+          {/* Initial Choice Screen (removed - now starts with area) */}
+          {step === "choice_DISABLED" && (
             <div className="glass-card rounded-3xl p-8 md:p-10 animate-slide-in-up" style={{ animationDelay: "0.1s" }}>
               <div className="text-center mb-10">
                 <h1 className="text-3xl md:text-4xl font-black mb-4 bg-gradient-to-r from-orange-400 via-amber-400 to-yellow-400 bg-clip-text text-transparent">
@@ -644,11 +715,9 @@ export default function OnboardingPage() {
             </div>
           )}
           
-          {/* Main card */}
-          {step !== "choice" && (
+          {/* Detalhes Screen (previously step 1) */}
+          {step === "detalhes" && (
           <div className="glass-card rounded-3xl p-8 md:p-10 animate-slide-in-up" style={{ animationDelay: "0.1s" }}>
-            {step === 1 ? (
-              <>
                 {/* Logo no topo */}
                 <div className="flex justify-center mb-8">
                   <div className="relative">
@@ -671,7 +740,7 @@ export default function OnboardingPage() {
                   </p>
                 </div>
                 
-                <form onSubmit={e => { e.preventDefault(); handleNextStep(); }} className="space-y-6">
+                <form onSubmit={e => { e.preventDefault(); handleNextToPlano(); }} className="space-y-6">
                   {/* Concurso objetivo */}
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -967,9 +1036,12 @@ export default function OnboardingPage() {
                     </svg>
                   </button>
                 </form>
-              </>
-            ) : (
-              <>
+          </div>
+          )}
+          
+          {/* Plan Selection Screen */}
+          {step === "plano" && (
+          <div className="glass-card rounded-3xl p-8 md:p-10 animate-slide-in-up">
                 {/* Plan selection */}
                 <div className="text-center mb-10">
                   <h1 className="text-3xl md:text-4xl font-black mb-4 bg-gradient-to-r from-orange-400 via-amber-400 to-yellow-400 bg-clip-text text-transparent">
