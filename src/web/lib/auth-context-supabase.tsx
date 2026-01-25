@@ -257,6 +257,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           nome: hardcodedUser.nome,
         }));
         
+        // Adiciona na lista de usuários registrados para aparecer no admin
+        const registeredUsers = JSON.parse(localStorage.getItem('quiz_registered_users') || '[]');
+        if (!registeredUsers.find((u: any) => u.email === hardcodedUser.email)) {
+          registeredUsers.push({
+            email: hardcodedUser.email,
+            nome: hardcodedUser.nome,
+            username: hardcodedUser.username
+          });
+          localStorage.setItem('quiz_registered_users', JSON.stringify(registeredUsers));
+        }
+        
         return { success: true };
       }
 
