@@ -30,11 +30,11 @@ export function SidebarMenu() {
         <div className="p-4 border-b border-white/10">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-lg font-bold">
-              {user?.username?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'U'}
+              {user?.email?.[0]?.toUpperCase() || 'U'}
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-white font-semibold text-sm truncate">
-                {user?.username || user?.email?.split('@')[0] || 'Usuário'}
+                {user?.email || 'usuario@email.com'}
               </p>
               <p className="text-gray-400 text-xs">Seu email</p>
             </div>
