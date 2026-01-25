@@ -1767,6 +1767,14 @@ function AdminPage() {
   ];
 
   const users = getStoredUsers();
+  
+  // Adicionar usuário teste "aluno" sempre na lista
+  const allUsers = [
+    ...users,
+    { username: 'aluno', email: 'aluno@teste.com', provider: 'local' as const, createdAt: new Date().toISOString() }
+  ].filter((user, index, self) => 
+    index === self.findIndex(u => u.username === user.username)
+  );
 
   // Show access denied screen
   if (accessDenied) {
@@ -3819,8 +3827,8 @@ function AdminPage() {
                   className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:outline-none focus:border-purple-500/50 text-white"
                 >
                   <option value="" className="bg-gray-900">Não atribuir agora</option>
-                  {users.map(u => (
-                    <option key={u.username} value={u.username} className="bg-gray-900">{u.username}</option>
+                  {allUsers.map(u => (
+                    <option key={u.username} value={u.username} className="bg-gray-900">{u.username} ({u.email})</option>
                   ))}
                 </select>
               </div>
@@ -3829,35 +3837,48 @@ function AdminPage() {
               <div className="mt-8 pt-6 border-t border-white/10">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-xl font-bold text-white">📝 Questões do Pacote</h3>
-                  <button
-                    onClick={() => {
-                      // Adicionar nova questão ao pacote
-                      const novaQuestao = {
-                        id: generateId(),
-                        title: "",
-                        options: ["", "", "", ""],
-                        correctAnswer: 0,
-                        explanation: "",
-                        disciplina: editingPacote.disciplinas[0] || "",
-                        banca: editingPacote.banca,
-                        concurso: editingPacote.nome
-                      };
-                      
-                      if (!quizData) return;
-                      const newQuestions = [...quizData.questions, novaQuestao];
-                      const newData = { ...quizData, questions: newQuestions };
-                      setQuizData(newData);
-                      
-                      // Adiciona ID da questão ao pacote
-                      setEditingPacote({
-                        ...editingPacote,
-                        questionsIds: [...(editingPacote.questionsIds || []), novaQuestao.id]
-                      });
-                    }}
-                    className="px-4 py-2 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 rounded-lg text-sm font-bold transition-all"
-                  >
-                    + Adicionar Questão
-                  </button>
+                  <div className="flex items-center gap-3">
+                    {/* Selector de matéria */}
+                    <select
+                      className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm"
+                      onChange={e => {
+                        const materia = e.target.value;
+                        if (!materia) return;
+                        
+                        // Criar questão na matéria selecionada
+                        const novaQuestao = {
+                          id: generateId(),
+                          title: "",
+                          options: ["", "", "", ""],
+                          correctAnswer: 0,
+                          explanation: "",
+                          disciplina: materia,
+                          banca: editingPacote.banca,
+                          concurso: editingPacote.nome,
+                          plano: "all"
+                        };
+                        
+                        if (!quizData) return;
+                        const newQuestions = [...quizData.questions, novaQuestao];
+                        const newData = { ...quizData, questions: newQuestions };
+                        setQuizData(newData);
+                        
+                        // Adiciona ID ao pacote
+                        setEditingPacote({
+                          ...editingPacote,
+                          questionsIds: [...(editingPacote.questionsIds || []), novaQuestao.id]
+                        });
+                        
+                        // Reset select
+                        e.target.value = '';
+                      }}
+                    >
+                      <option value="">+ Adicionar Questão em...</option>
+                      {editingPacote.disciplinas.map(m => (
+                        <option key={m} value={m}>{m}</option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
                 
                 {/* Lista de questões do pacote */}
@@ -4122,7 +4143,7 @@ function AdminPage() {
             <div>
               <label className="block text-sm font-semibold text-gray-300 mb-2">Selecione os alunos</label>
               <div className="max-h-64 overflow-y-auto space-y-2 p-3 bg-white/5 rounded-xl border border-white/10">
-                {users.length > 0 ? users.map(u => (
+                {allUsers.length > 0 ? allUsers.map(u => (
                   <label
                     key={u.username}
                     className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all ${
