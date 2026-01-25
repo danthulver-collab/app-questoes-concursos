@@ -159,7 +159,9 @@ Responda de forma clara, didática e objetiva, focando em ajudar o aluno a enten
   const calcularAcertos = () => {
     let acertos = 0;
     simulado.questoes.forEach((q: any, i: number) => {
-      if (respostas[i] === q.correctAnswer) acertos++;
+      const correctIndex = typeof q.correctAnswer === 'number' ? q.correctAnswer : (q.correct_answer || 0);
+      const correctLetter = ['A', 'B', 'C', 'D'][correctIndex];
+      if (respostas[i] === correctLetter) acertos++;
     });
     return acertos;
   };
@@ -203,13 +205,13 @@ Responda de forma clara, didática e objetiva, focando em ajudar o aluno a enten
           </div>
           <div className="flex gap-4">
             <button
-              onClick={() => window.location.href = '/questoes/escolher'}
+              onClick={() => setLocation('/questoes/escolher')}
               className="flex-1 px-8 py-4 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl text-white font-bold hover:scale-105 transition-transform"
             >
               📚 Escolher Outra Matéria
             </button>
             <button
-              onClick={() => window.location.href = '/'}
+              onClick={() => setLocation('/')}
               className="px-8 py-4 bg-white/10 rounded-xl text-white font-bold hover:bg-white/20 transition-all"
             >
               🏠 Início
@@ -237,13 +239,15 @@ Responda de forma clara, didática e objetiva, focando em ajudar o aluno a enten
               <div className="space-y-3">
                 {['A', 'B', 'C', 'D'].map((opcao, index) => {
                   const respondeu = respostas[currentIndex];
-                  // Converter índice numérico para letra ou comparar diretamente
-                  const correctLetter = typeof questao.correctAnswer === 'number' 
-                    ? ['A', 'B', 'C', 'D'][questao.correctAnswer] 
-                    : questao.correctAnswer;
-                  const isCorrect = opcao === correctLetter;
+                  const correctIndex = typeof questao.correctAnswer === 'number' 
+                    ? questao.correctAnswer 
+                    : (questao.correct_answer || 0);
+                  const isCorrect = index === correctIndex;
                   const isSelected = respondeu === opcao;
                   const showResult = !!respondeu;
+                  
+                  // Pegar texto da opção
+                  const optionText = questao.options && questao.options[index] ? questao.options[index] : '';
                   
                   let buttonClass = 'bg-white/10 text-gray-300 hover:bg-white/20';
                   
@@ -269,7 +273,7 @@ Responda de forma clara, didática e objetiva, focando em ajudar o aluno a enten
                       <div className="flex items-center justify-between">
                         <div className="flex-1">
                           <span className="font-bold text-lg mr-3">{opcao})</span>
-                          <span className="text-base">{questao[`option${opcao}`]}</span>
+                          <span className="text-base">{optionText}</span>
                         </div>
                         {showResult && isCorrect && (
                           <span className="ml-3 px-3 py-1 bg-green-500 text-white text-sm font-bold rounded-lg flex items-center gap-1">
