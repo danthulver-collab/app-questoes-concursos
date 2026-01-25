@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AppLayout } from "../components/app-layout";
 import { useLocation } from "wouter";
 import { getAllAreas, getCarreirasByArea, getMateriasByArea, getQuizData, saveQuizData } from "../lib/quiz-store";
 import { useAuth } from "../lib/auth-context-supabase";
 import { getUserPlan, isSuperAdmin } from "../lib/access-control";
+import { getQuestoesFromSupabase } from "../lib/supabase-questoes";
 
 // Storage key para questões editáveis
 const QUESTOES_STORAGE_KEY = "questoes_por_area_v1";
@@ -175,6 +176,8 @@ export default function EscolherSimulado() {
   const [step, setStep] = useState<"area" | "carreira" | "materia">("area");
   const [selectedAreaId, setSelectedAreaId] = useState<string>("");
   const [selectedCarreiraId, setSelectedCarreiraId] = useState<string>("");
+  const [questoesSupabase, setQuestoesSupabase] = useState<Record<string, Record<string, any[]>>>({});
+  const [isLoading, setIsLoading] = useState(true);
 
   const userId = user?.email || user?.username || "";
   const userPlan = getUserPlan(userId) || "free";
@@ -188,10 +191,32 @@ export default function EscolherSimulado() {
   const selectedArea = areas.find(a => a.id === selectedAreaId);
   const selectedCarreira = carreiras.find(c => c.id === selectedCarreiraId);
 
-  const QUESTOES_POR_AREA = getQuestoesPorArea();
-  
   // Matérias que são Plus (bloquear para Free)
   const MATERIAS_PLUS = ["direito-administrativo", "direito-constitucional", "direito-civil", "direito-penal", "direito-tributario", "contabilidade", "administracao"];
+
+  // Carregar questões do Supabase ao montar
+  useEffect(() => {
+    const loadQuestoes = async () => {
+      setIsLoading(true);
+      try {
+        const supabase = await getQuestoesFromSupabase();
+        if (Object.keys(supabase).length > 0) {
+          setQuestoesSupabase(supabase);
+        } else {
+          // Fallback para questões locais
+          setQuestoesSupabase(getQuestoesPorArea());
+        }
+      } catch (e) {
+        console.error('Erro ao carregar questões:', e);
+        setQuestoesSupabase(getQuestoesPorArea());
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadQuestoes();
+  }, []);
+
+  const QUESTOES_POR_AREA = questoesSupabase;
 
   const handleAreaSelect = (areaId: string) => {
     setSelectedAreaId(areaId);
