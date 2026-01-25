@@ -214,7 +214,7 @@ export default function HomeNovo() {
               </div>
             </div>
 
-            {/* Cards: Comece as questões + Pedido em andamento */}
+            {/* Cards: 3 opções - Comece questões, Estude matérias, Pacote Exclusivo */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Big CTA Button - Comece as questões aqui */}
               <Link href="/questoes/escolher">
@@ -224,7 +224,7 @@ export default function HomeNovo() {
                       📚
                     </div>
                     <h2 className="text-3xl md:text-4xl font-black text-white group-hover:text-orange-400 transition-colors">
-                      📚 COMECE AS QUESTÕES AQUI 📚
+                      📚 COMECE AS QUESTÕES AQUI
                     </h2>
                     <p className="text-gray-400 text-lg">
                       Pratique com questões de concursos e melhore seu desempenho
@@ -237,38 +237,65 @@ export default function HomeNovo() {
                 </div>
               </Link>
               
-              {/* Card Estude por Matérias - SEMPRE VISÍVEL com cadeado para grátis */}
-              <div 
-                onClick={() => isFree ? setLocation('/planos') : setLocation('/escolher-materia')}
-                className="glass-card rounded-3xl p-8 md:p-10 cursor-pointer group hover:scale-[1.02] transition-all duration-300 bg-gradient-to-br from-emerald-500/20 to-green-500/10 border-2 border-emerald-500/30 hover:border-emerald-500/60 shadow-2xl shadow-emerald-500/20 relative"
-              >
-                {/* Cadeado para plano grátis */}
-                {isFree && (
-                  <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center gap-3 z-10 rounded-3xl">
-                    <div className="text-6xl animate-pulse">🔒</div>
-                    <span className="px-4 py-2 bg-amber-500 text-white text-sm font-bold rounded-full shadow-lg">
-                      PLANO PLUS
-                    </span>
-                    <p className="text-white text-sm">Clique para fazer upgrade</p>
+              {/* Card Pacote Exclusivo OU Estude por Matérias */}
+              {userPackages && userPackages.length > 0 ? (
+                <Link href={`/pacote/${userPackages[0].id}`}>
+                  <div className="glass-card rounded-3xl p-8 md:p-10 cursor-pointer group hover:scale-[1.02] transition-all duration-300 bg-gradient-to-br from-purple-500/20 to-pink-500/10 border-2 border-purple-500/30 hover:border-purple-500/60 shadow-2xl shadow-purple-500/20">
+                    <div className="flex flex-col items-center justify-center gap-4 text-center">
+                      <div className="w-20 h-20 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-4xl shadow-xl shadow-purple-500/40 group-hover:scale-110 transition-transform">
+                        📦
+                      </div>
+                      <h2 className="text-3xl md:text-4xl font-black text-white group-hover:text-purple-400 transition-colors">
+                        📦 SEU PACOTE EXCLUSIVO
+                      </h2>
+                      <p className="text-gray-400 text-lg">
+                        {userPackages[0].nome}
+                      </p>
+                      <div className="px-4 py-2 bg-purple-500/20 border border-purple-500/30 rounded-lg">
+                        <p className="text-purple-300 text-sm font-bold">
+                          {userPackages[0].questionsIds?.length || 0} questões personalizadas
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2 text-purple-400 font-semibold text-xl">
+                        <span>Começar Agora</span>
+                        <ArrowRight className="w-6 h-6 group-hover:translate-x-2 transition-transform" />
+                      </div>
+                    </div>
                   </div>
-                )}
-                
-                <div className="flex flex-col items-center justify-center gap-4 text-center">
-                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-emerald-500 to-green-500 flex items-center justify-center text-4xl shadow-xl shadow-emerald-500/40 group-hover:scale-110 transition-transform">
-                    📖
-                  </div>
-                  <h2 className="text-3xl md:text-4xl font-black text-white group-hover:text-emerald-400 transition-colors">
-                    📖 ESTUDE POR MATÉRIAS
-                  </h2>
-                  <p className="text-gray-400 text-lg">
-                    Escolha a matéria e faça simulados específicos
-                  </p>
-                  <div className="flex items-center gap-2 text-emerald-400 font-semibold text-xl">
-                    <span>Ver Matérias</span>
-                    <ArrowRight className="w-6 h-6 group-hover:translate-x-2 transition-transform" />
+                </Link>
+              ) : (
+                <div 
+                  onClick={() => isFree ? setLocation('/planos') : setLocation('/escolher-materia')}
+                  className="glass-card rounded-3xl p-8 md:p-10 cursor-pointer group hover:scale-[1.02] transition-all duration-300 bg-gradient-to-br from-emerald-500/20 to-green-500/10 border-2 border-emerald-500/30 hover:border-emerald-500/60 shadow-2xl shadow-emerald-500/20 relative"
+                >
+                  {/* Cadeado para plano grátis */}
+                  {isFree && (
+                    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center gap-3 z-10 rounded-3xl">
+                      <div className="text-6xl animate-pulse">🔒</div>
+                      <span className="px-4 py-2 bg-amber-500 text-white text-sm font-bold rounded-full shadow-lg">
+                        PLANO PLUS
+                      </span>
+                      <p className="text-white text-sm">Clique para fazer upgrade</p>
+                    </div>
+                  )}
+                  
+                  <div className="flex flex-col items-center justify-center gap-4 text-center">
+                    <div className="w-20 h-20 rounded-full bg-gradient-to-br from-emerald-500 to-green-500 flex items-center justify-center text-4xl shadow-xl shadow-emerald-500/40 group-hover:scale-110 transition-transform">
+                      📖
+                    </div>
+                    <h2 className="text-3xl md:text-4xl font-black text-white group-hover:text-emerald-400 transition-colors">
+                      📖 ESTUDE POR MATÉRIAS
+                    </h2>
+                    <p className="text-gray-400 text-lg">
+                      Escolha a matéria e faça simulados específicos
+                    </p>
+                    <div className="flex items-center gap-2 text-emerald-400 font-semibold text-xl">
+                      <span>Ver Matérias</span>
+                      <ArrowRight className="w-6 h-6 group-hover:translate-x-2 transition-transform" />
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </div>
