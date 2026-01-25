@@ -301,12 +301,12 @@ export default function EscolherSimulado() {
                 </div>
 
                 {/* Areas Grid - Cards GIGANTES */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div className="grid grid-cols-1 gap-6 md:gap-8">
                   {areas.map((area, index) => (
                     <button
                       key={area.id}
                       onClick={() => handleAreaSelect(area.id)}
-                      className="group relative rounded-[2rem] p-10 border-2 border-white/10 hover:border-orange-500 transition-all duration-700 hover:scale-[1.03] text-left overflow-hidden bg-gradient-to-br from-white/5 to-white/0 backdrop-blur-sm"
+                      className="group relative rounded-[2rem] p-6 md:p-10 border-2 border-white/10 hover:border-orange-500 transition-all duration-700 hover:scale-[1.03] text-left overflow-hidden bg-gradient-to-br from-white/5 to-white/0 backdrop-blur-sm"
                       style={{ animationDelay: `${index * 0.1}s` }}
                     >
                       {/* Hover gradient effect */}
@@ -315,28 +315,28 @@ export default function EscolherSimulado() {
                       {/* Glow effect */}
                       <div className="absolute -inset-1 bg-gradient-to-r from-orange-500 to-amber-500 rounded-[2rem] opacity-0 group-hover:opacity-30 blur-xl transition-all duration-700" />
                       
-                      <div className="relative flex items-start gap-8">
+                      <div className="relative flex flex-col md:flex-row items-start gap-4 md:gap-8">
                         <div className="relative">
                           <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-amber-500 rounded-3xl blur-xl opacity-0 group-hover:opacity-50 transition-all duration-500" />
-                          <div className="relative text-7xl md:text-8xl group-hover:scale-125 group-hover:rotate-12 transition-all duration-500 drop-shadow-2xl">
+                          <div className="relative text-6xl md:text-8xl group-hover:scale-125 group-hover:rotate-12 transition-all duration-500 drop-shadow-2xl">
                             {area.icone}
                           </div>
                         </div>
                         <div className="flex-1">
-                          <h3 className="font-black text-white text-3xl md:text-4xl mb-3 group-hover:text-orange-400 transition-colors duration-300">
+                          <h3 className="font-black text-white text-2xl md:text-4xl mb-2 md:mb-3 group-hover:text-orange-400 transition-colors duration-300">
                             {area.nome}
                           </h3>
-                          <p className="text-gray-400 text-lg mb-6 leading-relaxed">{area.descricao}</p>
-                          <div className="flex gap-4">
-                            <span className="px-5 py-2.5 bg-gradient-to-r from-orange-500/30 to-red-500/30 text-orange-300 rounded-xl font-bold text-lg border border-orange-500/30">
+                          <p className="text-gray-400 text-base md:text-lg mb-4 md:mb-6 leading-relaxed">{area.descricao}</p>
+                          <div className="flex flex-wrap gap-3 md:gap-4">
+                            <span className="px-3 py-2 md:px-5 md:py-2.5 bg-gradient-to-r from-orange-500/30 to-red-500/30 text-orange-300 rounded-xl font-bold text-sm md:text-lg border border-orange-500/30">
                               {area.carreiras.length} carreiras
                             </span>
-                            <span className="px-5 py-2.5 bg-gradient-to-r from-amber-500/30 to-yellow-500/30 text-amber-300 rounded-xl font-bold text-lg border border-amber-500/30">
+                            <span className="px-3 py-2 md:px-5 md:py-2.5 bg-gradient-to-r from-amber-500/30 to-yellow-500/30 text-amber-300 rounded-xl font-bold text-sm md:text-lg border border-amber-500/30">
                               {area.materias.length} matérias
                             </span>
                           </div>
                         </div>
-                        <div className="flex items-center">
+                        <div className="hidden md:flex items-center">
                           <div className="w-16 h-16 rounded-full bg-gradient-to-r from-orange-500/20 to-amber-500/20 flex items-center justify-center group-hover:bg-gradient-to-r group-hover:from-orange-500 group-hover:to-amber-500 transition-all duration-500">
                             <svg className="w-8 h-8 text-white/50 group-hover:text-white group-hover:translate-x-1 transition-all duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" />
@@ -549,7 +549,7 @@ export default function EscolherSimulado() {
                                 ✨ Apenas Plus
                               </div>
                               <p className="text-xs text-amber-400/80">
-                                🔓 Liberado em 7 dias no plano Grátis ou assine Plus para acesso imediato
+                                🔓 Assine Plus para acesso imediato
                               </p>
                             </div>
                           ) : numQuestoes > 0 ? (

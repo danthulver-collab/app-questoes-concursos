@@ -201,12 +201,20 @@ Responda de forma clara, didática e objetiva, focando em ajudar o aluno a enten
             <div className="text-6xl font-bold text-green-400 mb-2">{percentual}%</div>
             <p className="text-xl text-white">Você acertou {acertos} de {totalQuestoes} questões</p>
           </div>
-          <button
-            onClick={() => window.location.href = '/'}
-            className="px-8 py-4 bg-blue-600 rounded-xl text-white font-bold"
-          >
-            Voltar ao Início
-          </button>
+          <div className="flex gap-4">
+            <button
+              onClick={() => window.location.href = '/questoes/escolher'}
+              className="flex-1 px-8 py-4 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl text-white font-bold hover:scale-105 transition-transform"
+            >
+              📚 Escolher Outra Matéria
+            </button>
+            <button
+              onClick={() => window.location.href = '/'}
+              className="px-8 py-4 bg-white/10 rounded-xl text-white font-bold hover:bg-white/20 transition-all"
+            >
+              🏠 Início
+            </button>
+          </div>
         </div>
       </AppLayout>
     );
