@@ -3734,19 +3734,139 @@ function AdminPage() {
                 </select>
               </div>
               
-              {/* Seção Criar Questões */}
+              {/* Seção Criar Questões DENTRO DO PACOTE */}
               <div className="mt-8 pt-6 border-t border-white/10">
-                <h3 className="text-xl font-bold text-white mb-4">📝 Adicionar Questões ao Pacote</h3>
-                <p className="text-sm text-gray-400 mb-6">Clique em "Questões" no menu lateral para criar questões e depois volte aqui para adicionar ao pacote.</p>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-xl font-bold text-white">📝 Questões do Pacote</h3>
+                  <button
+                    onClick={() => {
+                      // Adicionar nova questão ao pacote
+                      const novaQuestao = {
+                        id: generateId(),
+                        title: "",
+                        options: ["", "", "", ""],
+                        correctAnswer: 0,
+                        explanation: "",
+                        disciplina: editingPacote.disciplinas[0] || "",
+                        banca: editingPacote.banca,
+                        concurso: editingPacote.nome
+                      };
+                      
+                      if (!quizData) return;
+                      const newQuestions = [...quizData.questions, novaQuestao];
+                      const newData = { ...quizData, questions: newQuestions };
+                      setQuizData(newData);
+                      
+                      // Adiciona ID da questão ao pacote
+                      setEditingPacote({
+                        ...editingPacote,
+                        questionsIds: [...(editingPacote.questionsIds || []), novaQuestao.id]
+                      });
+                    }}
+                    className="px-4 py-2 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 rounded-lg text-sm font-bold transition-all"
+                  >
+                    + Adicionar Questão
+                  </button>
+                </div>
                 
-                <div className="text-center p-8 bg-white/5 rounded-xl border border-white/10">
-                  <p className="text-gray-400 mb-4">💡 Como adicionar questões:</p>
-                  <ol className="text-left text-sm text-gray-300 space-y-2 max-w-md mx-auto">
-                    <li>1. Salve este pacote primeiro</li>
-                    <li>2. Vá em "📝 Questões" no menu</li>
-                    <li>3. Crie questões escolhendo as matérias deste pacote</li>
-                    <li>4. As questões com matérias deste pacote serão incluídas automaticamente</li>
-                  </ol>
+                {/* Lista de questões do pacote */}
+                <div className="space-y-3 max-h-96 overflow-y-auto">
+                  {editingPacote.questionsIds && editingPacote.questionsIds.length > 0 ? (
+                    editingPacote.questionsIds.map((qId, idx) => {
+                      const questao = quizData.questions.find(q => q.id === qId);
+                      if (!questao) return null;
+                      
+                      return (
+                        <div key={qId} className="bg-white/5 rounded-xl p-4">
+                          <div className="flex items-start gap-3">
+                            <span className="text-purple-400 font-bold">{idx + 1}.</span>
+                            <div className="flex-1">
+                              <input
+                                type="text"
+                                value={questao.title}
+                                onChange={e => {
+                                  const updated = quizData.questions.map(q => 
+                                    q.id === qId ? { ...q, title: e.target.value } : q
+                                  );
+                                  setQuizData({ ...quizData, questions: updated });
+                                }}
+                                placeholder="Digite a pergunta..."
+                                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm mb-3"
+                              />
+                              
+                              {/* Alternativas */}
+                              <div className="space-y-2 mb-3">
+                                {['A', 'B', 'C', 'D'].map((letra, i) => (
+                                  <div key={letra} className="flex items-center gap-2">
+                                    <input
+                                      type="radio"
+                                      name={`correct-${qId}`}
+                                      checked={questao.correctAnswer === i}
+                                      onChange={() => {
+                                        const updated = quizData.questions.map(q => 
+                                          q.id === qId ? { ...q, correctAnswer: i } : q
+                                        );
+                                        setQuizData({ ...quizData, questions: updated });
+                                      }}
+                                      className="accent-emerald-500"
+                                    />
+                                    <span className="text-gray-400 text-sm font-bold">{letra})</span>
+                                    <input
+                                      type="text"
+                                      value={questao.options[i]}
+                                      onChange={e => {
+                                        const newOptions = [...questao.options];
+                                        newOptions[i] = e.target.value;
+                                        const updated = quizData.questions.map(q => 
+                                          q.id === qId ? { ...q, options: newOptions as any } : q
+                                        );
+                                        setQuizData({ ...quizData, questions: updated });
+                                      }}
+                                      placeholder={`Alternativa ${letra}`}
+                                      className="flex-1 px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm"
+                                    />
+                                  </div>
+                                ))}
+                              </div>
+                              
+                              {/* Comentário */}
+                              <textarea
+                                value={questao.explanation}
+                                onChange={e => {
+                                  const updated = quizData.questions.map(q => 
+                                    q.id === qId ? { ...q, explanation: e.target.value } : q
+                                  );
+                                  setQuizData({ ...quizData, questions: updated });
+                                }}
+                                placeholder="Comentário da questão..."
+                                rows={2}
+                                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm resize-none"
+                              />
+                            </div>
+                            <button
+                              onClick={() => {
+                                // Remover questão
+                                const newQuestions = quizData.questions.filter(q => q.id !== qId);
+                                setQuizData({ ...quizData, questions: newQuestions });
+                                setEditingPacote({
+                                  ...editingPacote,
+                                  questionsIds: editingPacote.questionsIds.filter(id => id !== qId)
+                                });
+                              }}
+                              className="text-red-400 hover:bg-red-500/20 p-2 rounded-lg"
+                            >
+                              🗑️
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <div className="text-center py-8 bg-white/5 rounded-xl">
+                      <p className="text-gray-400">Nenhuma questão adicionada</p>
+                      <p className="text-sm text-gray-500 mt-1">Clique em "+ Adicionar Questão"</p>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
