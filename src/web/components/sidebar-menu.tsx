@@ -36,7 +36,7 @@ export function SidebarMenu() {
               <p className="text-white font-semibold text-sm truncate">
                 {user?.username || user?.email?.split('@')[0] || 'Usuário'}
               </p>
-              <p className="text-gray-400 text-xs truncate">{user?.email}</p>
+              <p className="text-gray-400 text-xs">Seu email</p>
             </div>
           </div>
           <div className="px-3 py-1.5 bg-white/5 rounded-lg text-center">
