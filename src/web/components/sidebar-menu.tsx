@@ -1,13 +1,19 @@
+import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'wouter';
 import { useAuth } from '../lib/auth-context-supabase';
 import { getUserPlan, getRemainingQuestions, isSuperAdmin } from '../lib/access-control';
+import { supabase } from '../lib/supabase';
 import { LogOut } from 'lucide-react';
 
 export function SidebarMenu() {
   const [location] = useLocation();
   const { user, logout } = useAuth();
   const userId = user?.email || user?.username || '';
-  const userPlan = getUserPlan(userId);
+  
+  // 🔥 Buscar plano do Supabase dinamicamente
+  const [supabasePlan, setSupabasePlan] = useState<string | null>(null);
+  const userPlan = supabasePlan || getUserPlan(userId) || 'free';
+  
   const remaining = getRemainingQuestions(userId);
   // Verificar admin de múltiplas formas
   const isAdmin = isSuperAdmin(userId) || 
@@ -15,6 +21,31 @@ export function SidebarMenu() {
     user?.email?.toLowerCase() === 'admin' ||
     userId.toLowerCase() === 'admin';
   const isFree = !isAdmin && (!userPlan || userPlan === 'free' || userPlan === 'gratuito');
+  
+  // 🔥 Buscar plano do Supabase
+  useEffect(() => {
+    if (!user?.email) return;
+    
+    const fetchPlan = async () => {
+      try {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('plan')
+          .eq('email', user.email)
+          .single();
+        
+        if (profile?.plan) {
+          setSupabasePlan(profile.plan);
+        }
+      } catch (e) {
+        console.error('Erro ao buscar plano:', e);
+      }
+    };
+    
+    fetchPlan();
+    const interval = setInterval(fetchPlan, 3000);
+    return () => clearInterval(interval);
+  }, [user?.email]);
   
   const menuItems = [
     { label: 'Início', icon: '🏠', path: '/' },

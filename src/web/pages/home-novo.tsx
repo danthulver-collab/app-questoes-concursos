@@ -31,16 +31,18 @@ export default function HomeNovo() {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
   const userId = user?.email || user?.username || "";
-  const userPlan = getUserPlan(userId) || "free";
-  const isAdmin = isSuperAdmin(user?.email) || isSuperAdmin(user?.username);
-  const isPlusUser = userPlan === 'plus' || isAdmin;
-  const isFree = !isPlusUser;
-  const remaining = getRemainingQuestions(userId);
-  const activeConcursos = getActiveConcursos(userId);
   const [activePedido, setActivePedido] = useState<any>(null);
   
   // 🔥 Estado para profile do Supabase (Produtos Exclusivos)
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
+  
+  // 🔥 Usar plano do Supabase se disponível, senão do localStorage
+  const userPlan = profileData?.plan || getUserPlan(userId) || "free";
+  const isAdmin = isSuperAdmin(user?.email) || isSuperAdmin(user?.username);
+  const isPlusUser = userPlan === 'plus' || isAdmin;
+  const isFree = userPlan === 'free' && !isAdmin;
+  const remaining = getRemainingQuestions(userId);
+  const activeConcursos = getActiveConcursos(userId);
   
   // Buscar pacotes atribuídos ao usuário (Individual)
   const userPackages = getUserPackagesDetails(userId);
