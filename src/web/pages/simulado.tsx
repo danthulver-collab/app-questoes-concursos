@@ -253,8 +253,10 @@ Responda de forma clara, didática e objetiva, focando em ajudar o aluno a enten
                   const isSelected = respondeu === opcao;
                   const showResult = !!respondeu;
                   
-                  // Pegar texto da opção
-                  const optionText = questao.options && questao.options[index] ? questao.options[index] : '';
+                  // Pegar texto da opção (suporta ambos formatos)
+                  const optionText = questao.options && questao.options[index] 
+                    ? questao.options[index] 
+                    : questao[`option${opcao}` as keyof typeof questao] || '';
                   
                   let buttonClass = 'bg-white/10 text-gray-300 hover:bg-white/20';
                   
@@ -337,9 +339,9 @@ Responda de forma clara, didática e objetiva, focando em ajudar o aluno a enten
                       </div>
                       
                       {/* Comentários diferenciados por plano */}
-                      {isPlusUser ? (
+                      {(isPlusUser || userPlan === 'individual') ? (
                         <>
-                          {/* PLANO PLUS - Comentário completo e elaborado */}
+                          {/* PLANO PLUS/INDIVIDUAL - Comentário completo e elaborado */}
                           <div className="mt-5 p-5 bg-gradient-to-br from-purple-500/10 to-blue-500/10 rounded-2xl border border-purple-500/30">
                             <div className="flex items-center gap-3 mb-4">
                               <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-blue-500 rounded-xl flex items-center justify-center">
@@ -347,7 +349,9 @@ Responda de forma clara, didática e objetiva, focando em ajudar o aluno a enten
                               </div>
                               <div>
                                 <span className="font-bold text-white text-lg">Comentário do Professor</span>
-                                <span className="ml-2 px-2 py-0.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] font-bold rounded-full">PLUS</span>
+                                <span className="ml-2 px-2 py-0.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] font-bold rounded-full">
+                                  {userPlan === 'individual' ? 'INDIVIDUAL' : 'PLUS'}
+                                </span>
                               </div>
                             </div>
                             <div className="text-gray-200 text-base leading-relaxed">
