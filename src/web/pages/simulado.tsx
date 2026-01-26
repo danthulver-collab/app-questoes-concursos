@@ -27,13 +27,13 @@ export default function SimuladoPage() {
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
   const [currentUtterance, setCurrentUtterance] = useState<SpeechSynthesisUtterance | null>(null);
   
-  // Verificar plano para comentários - incluindo admin
+  // Verificar plano para comentários - incluindo admin e individual
   const userId = user?.email || user?.username || '';
   const isAdmin = isSuperAdmin(user?.email) || isSuperAdmin(user?.username) || user?.email === 'danthulver@gmail.com';
   const isPlusUser = isUserPlus(userId) || isAdmin;
   const userPlan = getUserPlan(userId);
   const isFreePlan = userPlan === 'free' || userPlan === 'gratuito' || !userPlan;
-  const podeVerComentarios = isPlusUser || user?.username === 'admin';
+  const podeVerComentarios = isPlusUser || userPlan === 'individual' || user?.username === 'admin';
   const remaining = getRemainingQuestions(userId);
 
   useEffect(() => {
