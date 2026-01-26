@@ -101,7 +101,7 @@ interface PlatformConfig {
 }
 
 // Componente para gerenciar áreas hierarquicamente
-function GerenciarAreasHierarquico({ showSaveMessage }: { showSaveMessage: (msg?: string) => void }) {
+function GerenciarAreasHierarquico({ showSaveMessage, onGoToQuestoes }: { showSaveMessage: (msg?: string) => void; onGoToQuestoes: () => void }) {
   const [selectedAreaId, setSelectedAreaId] = useState<string>("");
   const [selectedCarreiraId, setSelectedCarreiraId] = useState<string>("");
   const [refreshKey, setRefreshKey] = useState(0);
@@ -382,7 +382,7 @@ function GerenciarAreasHierarquico({ showSaveMessage }: { showSaveMessage: (msg?
               <p className="text-gray-400">Adicionar, editar e deletar questões desta área</p>
             </div>
             <button
-              onClick={() => setActiveSection("questoes-areas" as any)}
+              onClick={onGoToQuestoes}
               className="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl font-bold hover:scale-105 transition-transform"
             >
               Ir para Questões →
@@ -3573,7 +3573,10 @@ function AdminPage() {
 
           {/* AREAS E CARREIRAS SECTION */}
           {activeSection === "areas" && (
-            <GerenciarAreasHierarquico showSaveMessage={showSaveMessage} />
+            <GerenciarAreasHierarquico 
+              showSaveMessage={showSaveMessage} 
+              onGoToQuestoes={() => setActiveSection("questoes-areas" as any)}
+            />
           )}
 
           {activeSection === "areas_OLD_DISABLED" && (
