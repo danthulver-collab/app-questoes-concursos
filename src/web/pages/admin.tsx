@@ -3116,20 +3116,46 @@ function AdminPage() {
                           </p>
                         </div>
                         
-                        {/* Botão Elaborar Questões - Para Plano Individual */}
-                        {request.plano === 'individual' && (
-                          <div className="mt-4 pt-4 border-t border-white/10">
-                            <Link href={`/admin/elaborar-pacote/${request.id || request.userId}`}>
-                              <button className="w-full py-4 bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-400 hover:to-indigo-400 rounded-xl text-white font-bold text-lg shadow-xl shadow-purple-500/30 transition-all active:scale-95 hover:scale-105 flex items-center justify-center gap-3">
-                                <span className="text-2xl">📝</span>
-                                <span>Elaborar Questões</span>
-                              </button>
-                            </Link>
-                            <p className="text-xs text-gray-500 mt-2 text-center">
-                              Visualize os dados do pedido e gerencie as questões do pacote
-                            </p>
+                        {/* Informações do Pedido */}
+                        <div className="mt-4 pt-4 border-t border-white/10 grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                          <div className="bg-white/5 rounded-lg p-3">
+                            <p className="text-gray-500 text-xs">Concurso</p>
+                            <p className="text-white font-medium truncate">{request.concurso || 'N/A'}</p>
                           </div>
-                        )}
+                          <div className="bg-white/5 rounded-lg p-3">
+                            <p className="text-gray-500 text-xs">Cargo</p>
+                            <p className="text-white font-medium truncate">{request.cargo || 'N/A'}</p>
+                          </div>
+                          <div className="bg-white/5 rounded-lg p-3">
+                            <p className="text-gray-500 text-xs">Plano</p>
+                            <p className="text-white font-medium">{request.plano === 'individual' ? '📦 Individual' : '⭐ Plus'}</p>
+                          </div>
+                          <div className="bg-white/5 rounded-lg p-3">
+                            <p className="text-gray-500 text-xs">Matérias</p>
+                            <p className="text-white font-medium">{request.materias?.length || 0} selecionadas</p>
+                          </div>
+                        </div>
+                        
+                        {/* Botão Elaborar Questões - Para todos os pedidos */}
+                        <div className="mt-4 pt-4 border-t border-white/10">
+                          <button
+                            onClick={() => {
+                              const requestId = request.id || request.userId;
+                              if (requestId) {
+                                window.location.href = `/admin/elaborar-pacote/${requestId}`;
+                              } else {
+                                alert('Erro: ID da solicitação não encontrado');
+                              }
+                            }}
+                            className="w-full py-4 bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-400 hover:to-indigo-400 rounded-xl text-white font-bold text-lg shadow-xl shadow-purple-500/30 transition-all active:scale-95 hover:scale-105 flex items-center justify-center gap-3"
+                          >
+                            <span className="text-2xl">📝</span>
+                            <span>Elaborar Questões</span>
+                          </button>
+                          <p className="text-xs text-gray-500 mt-2 text-center">
+                            Abrir página completa para criar pacote e questões
+                          </p>
+                        </div>
 
                         {/* Botão Confirmar Pagamento Plus */}
                         {request.status === 'em_andamento' && request.plano === 'plus' && (
