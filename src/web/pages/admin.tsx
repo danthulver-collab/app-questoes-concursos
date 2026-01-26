@@ -5545,10 +5545,92 @@ function AdminPage() {
                 </div>
               </div>
 
+              {/* Matérias Solicitadas */}
+              <div>
+                <h3 className="text-lg font-bold text-white mb-3">📚 Matérias</h3>
+                <div className="flex flex-wrap gap-2 mb-3">
+                  {elaborarMaterias.map((materia, i) => (
+                    <span key={i} className="inline-flex items-center gap-2 px-3 py-2 bg-purple-500/20 text-purple-400 rounded-lg text-sm font-medium">
+                      {materia}
+                      <button
+                        onClick={() => setElaborarMaterias(elaborarMaterias.filter((_, idx) => idx !== i))}
+                        className="w-4 h-4 flex items-center justify-center rounded-full bg-red-500/30 hover:bg-red-500/50 text-red-400 text-xs"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                </div>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={elaborarNovaMateria}
+                    onChange={(e) => setElaborarNovaMateria(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && elaborarNovaMateria.trim()) {
+                        setElaborarMaterias([...elaborarMaterias, elaborarNovaMateria.trim()]);
+                        setElaborarNovaMateria("");
+                      }
+                    }}
+                    className="flex-1 px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white"
+                    placeholder="Adicionar matéria..."
+                  />
+                  <button
+                    onClick={() => {
+                      if (elaborarNovaMateria.trim()) {
+                        setElaborarMaterias([...elaborarMaterias, elaborarNovaMateria.trim()]);
+                        setElaborarNovaMateria("");
+                      }
+                    }}
+                    className="px-4 py-2 bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 rounded-lg"
+                  >
+                    + Adicionar
+                  </button>
+                </div>
+              </div>
+
               {/* Botão Criar Pacote */}
               <button
-                onClick={() => {
-                  alert("Funcionalidade de criar pacote em desenvolvimento");
+                onClick={async () => {
+                  if (!quizData || !elaborandoPacote) return;
+                  
+                  // Criar novo pacote
+                  const novoPacote: Pacote = {
+                    id: `pacote_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                    nome: elaborandoPacote.concurso || "Pacote Individual",
+                    banca: elaborandoPacote.banca || "",
+                    orgao: elaborandoPacote.cargo || "",
+                    ano: new Date().getFullYear(),
+                    disciplinas: elaborarMaterias,
+                    numQuestoes: elaborandoPacote.numQuestoes || 100,
+                    descricao: elaborandoPacote.extras || "",
+                    questionsIds: [],
+                    premium: false,
+                    alunoAtribuido: elaborandoPacote.userId || elaborandoPacote.email,
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                  };
+                  
+                  const newData = { ...quizData, pacotes: [...quizData.pacotes, novoPacote] };
+                  await saveQuizData(newData);
+                  setQuizData(newData);
+                  
+                  // Atualizar status da solicitação para "em_andamento"
+                  if (elaborandoPacote.id) {
+                    await supabase
+                      .from('plan_requests')
+                      .update({ status: 'em_andamento' })
+                      .eq('id', elaborandoPacote.id);
+                  }
+                  
+                  await loadPackageRequests();
+                  
+                  alert(`✅ Pacote "${novoPacote.nome}" criado com sucesso!\n\nAgora você pode adicionar questões.`);
+                  
+                  // Resetar estado e fechar
+                  setElaborandoPacote(null);
+                  setElaborarMaterias([]);
+                  setActiveSection("pacotes"); // Ir para seção de pacotes
                 }}
                 className="w-full py-4 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-400 hover:to-emerald-400 rounded-xl text-white font-bold text-lg shadow-xl"
               >
