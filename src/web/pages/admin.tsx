@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 import { 
   getQuizData, 
   saveQuizData, 
@@ -3119,13 +3119,12 @@ function AdminPage() {
                         {/* Botão Elaborar Questões - Para Plano Individual */}
                         {request.plano === 'individual' && (
                           <div className="mt-4 pt-4 border-t border-white/10">
-                            <a
-                              href={`/admin/elaborar-pacote/${request.id}`}
-                              className="w-full py-4 bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-400 hover:to-indigo-400 rounded-xl text-white font-bold text-lg shadow-xl shadow-purple-500/30 transition-all active:scale-95 hover:scale-105 flex items-center justify-center gap-3"
-                            >
-                              <span className="text-2xl">📝</span>
-                              <span>Elaborar Questões</span>
-                            </a>
+                            <Link href={`/admin/elaborar-pacote/${request.id}`}>
+                              <button className="w-full py-4 bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-400 hover:to-indigo-400 rounded-xl text-white font-bold text-lg shadow-xl shadow-purple-500/30 transition-all active:scale-95 hover:scale-105 flex items-center justify-center gap-3">
+                                <span className="text-2xl">📝</span>
+                                <span>Elaborar Questões</span>
+                              </button>
+                            </Link>
                             <p className="text-xs text-gray-500 mt-2 text-center">
                               Visualize os dados do pedido e gerencie as questões do pacote
                             </p>
@@ -4888,12 +4887,11 @@ function AdminPage() {
                   <div className="flex items-center gap-3">
                     {/* Botão Elaborar Questões - Abre página completa */}
                     {!isNewPacote && (
-                      <a
-                        href={`/admin/elaborar-pacote/${editingPacote.id}`}
-                        className="px-4 py-2 bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-400 hover:to-indigo-400 text-white rounded-lg text-sm font-bold shadow-lg shadow-purple-500/30 transition-all hover:scale-105"
-                      >
-                        📝 Elaborar Questões
-                      </a>
+                      <Link href={`/admin/elaborar-pacote/${editingPacote.id}`}>
+                        <button className="px-4 py-2 bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-400 hover:to-indigo-400 text-white rounded-lg text-sm font-bold shadow-lg shadow-purple-500/30 transition-all hover:scale-105">
+                          📝 Elaborar Questões
+                        </button>
+                      </Link>
                     )}
                     {/* Selector de matéria */}
                     <select
