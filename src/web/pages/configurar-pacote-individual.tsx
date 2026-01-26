@@ -114,8 +114,10 @@ export default function ConfigurarPacoteIndividual() {
         return;
       }
 
-      // Mostrar modal de sucesso
-      setShowSuccessModal(true);
+      console.log('✅ Pedido salvo:', data);
+      
+      // 🔥 Redirecionar para assinatura do Mercado Pago
+      window.location.href = "https://www.mercadopago.com.br/subscriptions/checkout?preapproval_plan_id=30f86054568c40ceb375ac19c82259a7";
     } catch (e: any) {
       alert('Erro: ' + e.message);
     } finally {
