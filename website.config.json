@@ -1,0 +1,15 @@
+{
+  "id": "2jtwf2mt79rtc5fgs73becfhbh9hzveb",
+  "name": "Só questões",
+  "description": "Plataforma de estudos para concursos públicos com IA integrada",
+  "url": "https://app-questoes-concursos.vercel.app",
+  "ogImage": "/og-image.png",
+  "favicon": "/vite.svg",
+  "twitter": {
+    "card": "summary_large_image",
+    "site": "@runable"
+  },
+  "themeColor": "#000000",
+  "previewPort": 5173,
+  "previewUrl": "http://5173-i16qegrgkqfn0spve0v8l.e2b.app"
+}

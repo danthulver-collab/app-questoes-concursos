@@ -1,0 +1,251 @@
+export interface Question {
+  id: string;
+  text: string;
+  subject: string;
+  topic: string;
+  examBoard: string;
+  year: number;
+  difficulty: 'facil' | 'medio' | 'dificil';
+  options: { letter: string; text: string }[];
+  correctAnswer: string;
+  explanation: string;
+}
+
+export const SUBJECTS = [
+  'Português',
+  'Matemática',
+  'Direito Constitucional',
+  'Direito Administrativo',
+  'Raciocínio Lógico',
+  'Informática',
+  'Atualidades',
+];
+
+export const EXAM_BOARDS = ['CESPE/CEBRASPE', 'FCC', 'FGV', 'VUNESP', 'IBFC', 'CESGRANRIO'];
+
+export const YEARS = [2024, 2023, 2022, 2021, 2020, 2019];
+
+export const DIFFICULTIES = [
+  { value: 'facil', label: 'Fácil' },
+  { value: 'medio', label: 'Médio' },
+  { value: 'dificil', label: 'Difícil' },
+];
+
+export const sampleQuestions: Question[] = [
+  {
+    id: '1',
+    text: 'De acordo com a Constituição Federal de 1988, são fundamentos da República Federativa do Brasil, EXCETO:',
+    subject: 'Direito Constitucional',
+    topic: 'Princípios Fundamentais',
+    examBoard: 'CESPE/CEBRASPE',
+    year: 2023,
+    difficulty: 'medio',
+    options: [
+      { letter: 'A', text: 'A soberania' },
+      { letter: 'B', text: 'A cidadania' },
+      { letter: 'C', text: 'A dignidade da pessoa humana' },
+      { letter: 'D', text: 'A prevalência dos direitos humanos' },
+      { letter: 'E', text: 'O pluralismo político' },
+    ],
+    correctAnswer: 'D',
+    explanation: 'A prevalência dos direitos humanos é um princípio que rege as relações internacionais (art. 4º, II), e não um fundamento da República (art. 1º). Os fundamentos são: soberania, cidadania, dignidade da pessoa humana, valores sociais do trabalho e da livre iniciativa, e pluralismo político.',
+  },
+  {
+    id: '2',
+    text: 'Assinale a alternativa que apresenta a forma correta de concordância verbal:',
+    subject: 'Português',
+    topic: 'Concordância Verbal',
+    examBoard: 'FCC',
+    year: 2024,
+    difficulty: 'facil',
+    options: [
+      { letter: 'A', text: 'Fazem cinco anos que não o vejo.' },
+      { letter: 'B', text: 'Houveram muitos acidentes naquela estrada.' },
+      { letter: 'C', text: 'Existem problemas a serem resolvidos.' },
+      { letter: 'D', text: 'Vão haver mudanças no cronograma.' },
+      { letter: 'E', text: 'Faltam menos de um mês para as provas.' },
+    ],
+    correctAnswer: 'C',
+    explanation: 'O verbo "existir" concorda com seu sujeito "problemas". Os verbos "fazer" (tempo) e "haver" (existir) são impessoais e ficam no singular. "Faltar" deve concordar com "menos de um mês" (singular).',
+  },
+  {
+    id: '3',
+    text: 'Se um produto teve seu preço aumentado em 20% e, em seguida, recebeu um desconto de 20%, qual foi a variação percentual total do preço?',
+    subject: 'Matemática',
+    topic: 'Porcentagem',
+    examBoard: 'FGV',
+    year: 2023,
+    difficulty: 'medio',
+    options: [
+      { letter: 'A', text: '0%' },
+      { letter: 'B', text: '-4%' },
+      { letter: 'C', text: '+4%' },
+      { letter: 'D', text: '-2%' },
+      { letter: 'E', text: '+2%' },
+    ],
+    correctAnswer: 'B',
+    explanation: 'Considerando preço inicial 100: após aumento de 20% = 120. Após desconto de 20% sobre 120 = 120 × 0,80 = 96. Variação: (96 - 100)/100 = -4%.',
+  },
+  {
+    id: '4',
+    text: 'No contexto da Lei nº 8.112/90, a vacância do cargo público decorrerá de:',
+    subject: 'Direito Administrativo',
+    topic: 'Servidores Públicos',
+    examBoard: 'CESPE/CEBRASPE',
+    year: 2022,
+    difficulty: 'dificil',
+    options: [
+      { letter: 'A', text: 'Aprovação em concurso público' },
+      { letter: 'B', text: 'Nomeação para cargo em comissão' },
+      { letter: 'C', text: 'Readaptação' },
+      { letter: 'D', text: 'Reversão' },
+      { letter: 'E', text: 'Recondução' },
+    ],
+    correctAnswer: 'C',
+    explanation: 'De acordo com o art. 33 da Lei 8.112/90, a vacância do cargo público decorrerá de: exoneração, demissão, promoção, readaptação, aposentadoria, posse em outro cargo inacumulável e falecimento.',
+  },
+  {
+    id: '5',
+    text: 'Se a proposição "Todos os advogados são estudiosos" é falsa, então é necessariamente verdadeiro que:',
+    subject: 'Raciocínio Lógico',
+    topic: 'Lógica Proposicional',
+    examBoard: 'FCC',
+    year: 2024,
+    difficulty: 'dificil',
+    options: [
+      { letter: 'A', text: 'Nenhum advogado é estudioso' },
+      { letter: 'B', text: 'Algum advogado não é estudioso' },
+      { letter: 'C', text: 'Todos os estudiosos são advogados' },
+      { letter: 'D', text: 'Alguns estudiosos não são advogados' },
+      { letter: 'E', text: 'Nenhum estudioso é advogado' },
+    ],
+    correctAnswer: 'B',
+    explanation: 'A negação de "Todos A são B" é "Algum A não é B". Se "Todos os advogados são estudiosos" é falsa, sua negação "Algum advogado não é estudioso" é verdadeira.',
+  },
+  {
+    id: '6',
+    text: 'No Microsoft Excel, qual função é utilizada para buscar um valor em uma tabela na vertical?',
+    subject: 'Informática',
+    topic: 'Excel',
+    examBoard: 'VUNESP',
+    year: 2023,
+    difficulty: 'facil',
+    options: [
+      { letter: 'A', text: 'HLOOKUP' },
+      { letter: 'B', text: 'VLOOKUP' },
+      { letter: 'C', text: 'LOOKUP' },
+      { letter: 'D', text: 'SEARCH' },
+      { letter: 'E', text: 'FIND' },
+    ],
+    correctAnswer: 'B',
+    explanation: 'VLOOKUP (Vertical Lookup) busca valores em uma coluna e retorna um valor na mesma linha de outra coluna. HLOOKUP faz busca horizontal.',
+  },
+  {
+    id: '7',
+    text: 'Qual é o órgão do Poder Judiciário responsável pelo controle da atuação administrativa e financeira do Poder Judiciário?',
+    subject: 'Direito Constitucional',
+    topic: 'Poder Judiciário',
+    examBoard: 'IBFC',
+    year: 2022,
+    difficulty: 'medio',
+    options: [
+      { letter: 'A', text: 'Supremo Tribunal Federal' },
+      { letter: 'B', text: 'Superior Tribunal de Justiça' },
+      { letter: 'C', text: 'Conselho Nacional de Justiça' },
+      { letter: 'D', text: 'Tribunal Superior do Trabalho' },
+      { letter: 'E', text: 'Ministério Público Federal' },
+    ],
+    correctAnswer: 'C',
+    explanation: 'O CNJ (Conselho Nacional de Justiça) foi criado pela EC 45/2004 e tem como função o controle da atuação administrativa e financeira do Poder Judiciário, conforme art. 103-B da CF/88.',
+  },
+  {
+    id: '8',
+    text: 'Um capital de R$ 10.000,00 aplicado a juros simples de 2% ao mês renderá, ao final de 1 ano, o montante de:',
+    subject: 'Matemática',
+    topic: 'Juros Simples',
+    examBoard: 'CESGRANRIO',
+    year: 2021,
+    difficulty: 'facil',
+    options: [
+      { letter: 'A', text: 'R$ 10.200,00' },
+      { letter: 'B', text: 'R$ 12.000,00' },
+      { letter: 'C', text: 'R$ 12.400,00' },
+      { letter: 'D', text: 'R$ 12.682,42' },
+      { letter: 'E', text: 'R$ 14.000,00' },
+    ],
+    correctAnswer: 'C',
+    explanation: 'Juros Simples: J = C × i × t = 10.000 × 0,02 × 12 = R$ 2.400,00. Montante: M = C + J = 10.000 + 2.400 = R$ 12.400,00.',
+  },
+  {
+    id: '9',
+    text: 'Em relação aos atos administrativos, a autoexecutoriedade significa que:',
+    subject: 'Direito Administrativo',
+    topic: 'Atos Administrativos',
+    examBoard: 'FGV',
+    year: 2024,
+    difficulty: 'medio',
+    options: [
+      { letter: 'A', text: 'O ato produz efeitos desde a sua publicação' },
+      { letter: 'B', text: 'A Administração pode executar suas decisões sem ordem judicial' },
+      { letter: 'C', text: 'O ato vincula terceiros além da Administração' },
+      { letter: 'D', text: 'O ato pode ser revogado a qualquer tempo' },
+      { letter: 'E', text: 'O ato é presumido verdadeiro' },
+    ],
+    correctAnswer: 'B',
+    explanation: 'Autoexecutoriedade é o atributo pelo qual a Administração Pública pode executar diretamente suas decisões, usando meios coercitivos próprios, sem necessidade de autorização judicial.',
+  },
+  {
+    id: '10',
+    text: 'Identifique a alternativa em que a crase está empregada CORRETAMENTE:',
+    subject: 'Português',
+    topic: 'Crase',
+    examBoard: 'CESPE/CEBRASPE',
+    year: 2023,
+    difficulty: 'medio',
+    options: [
+      { letter: 'A', text: 'Chegamos à uma conclusão importante.' },
+      { letter: 'B', text: 'O documento foi enviado à Vossa Excelência.' },
+      { letter: 'C', text: 'Refiro-me à aquela situação específica.' },
+      { letter: 'D', text: 'A reunião será das 14h às 18h.' },
+      { letter: 'E', text: 'Ele saiu à pé para a escola.' },
+    ],
+    correctAnswer: 'D',
+    explanation: 'A crase é obrigatória na indicação de horas. Nas demais: A) não se usa crase antes de artigo indefinido; B) não se usa antes de pronomes de tratamento; C) usa-se "àquela"; E) "a pé" não leva crase.',
+  },
+  {
+    id: '11',
+    text: 'No Windows 11, qual atalho de teclado abre o Gerenciador de Tarefas?',
+    subject: 'Informática',
+    topic: 'Windows',
+    examBoard: 'FCC',
+    year: 2024,
+    difficulty: 'facil',
+    options: [
+      { letter: 'A', text: 'Ctrl + Alt + Del' },
+      { letter: 'B', text: 'Ctrl + Shift + Esc' },
+      { letter: 'C', text: 'Alt + F4' },
+      { letter: 'D', text: 'Windows + R' },
+      { letter: 'E', text: 'Ctrl + F' },
+    ],
+    correctAnswer: 'B',
+    explanation: 'Ctrl + Shift + Esc abre diretamente o Gerenciador de Tarefas. Ctrl + Alt + Del abre uma tela de opções que inclui o Gerenciador de Tarefas.',
+  },
+  {
+    id: '12',
+    text: 'Em uma sequência lógica, qual número completa a série: 2, 6, 18, 54, __?',
+    subject: 'Raciocínio Lógico',
+    topic: 'Sequências',
+    examBoard: 'VUNESP',
+    year: 2022,
+    difficulty: 'facil',
+    options: [
+      { letter: 'A', text: '108' },
+      { letter: 'B', text: '162' },
+      { letter: 'C', text: '216' },
+      { letter: 'D', text: '148' },
+      { letter: 'E', text: '180' },
+    ],
+    correctAnswer: 'B',
+    explanation: 'Trata-se de uma progressão geométrica de razão 3. Cada termo é o anterior multiplicado por 3: 2×3=6, 6×3=18, 18×3=54, 54×3=162.',
+  },
+];
