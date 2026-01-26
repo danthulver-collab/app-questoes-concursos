@@ -3283,10 +3283,13 @@ function AdminPage() {
                           const userEmail = request.email || '';
                           const requestId = request.id || request.userId;
                           
-                          // Verificar se já tem pacote criado
+                          // Verificar se já tem pacote criado (busca por múltiplos critérios)
                           const pacoteExistente = quizData.pacotes.find(p => 
                             p.alunoAtribuido === request.userId || 
-                            p.alunoAtribuido === request.email
+                            p.alunoAtribuido === request.email ||
+                            p.requestId === request.id ||
+                            p.requestId === requestId ||
+                            (p.nome && request.concurso && p.nome.toLowerCase().includes(request.concurso.toLowerCase()) && p.alunoAtribuido)
                           );
                           
                           return (

@@ -75,6 +75,7 @@ export interface Pacote {
   areaId?: string;
   carreiraId?: string;
   cargo?: string;
+  requestId?: string; // 🔥 ID da solicitação vinculada
   createdAt: string;
   updatedAt: string;
   expiresAt?: string; // Data de expiração (30 dias)

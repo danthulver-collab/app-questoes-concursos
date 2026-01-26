@@ -168,6 +168,7 @@ export default function ElaborarPacote() {
           questionsIds: [],
           premium: false,
           alunoAtribuido: emailAluno || request?.userId,
+          requestId: request?.id || params.id, // 🔥 Vincular ao request para facilitar busca
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString()
         };
