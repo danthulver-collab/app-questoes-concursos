@@ -86,16 +86,13 @@ app.post('/mercadopago', async (c) => {
         }
         
         // Atualizar plano no Supabase profiles
-        const expirationDate = new Date();
-        expirationDate.setDate(expirationDate.getDate() + 30); // +30 dias
-        
+        // 🔥 NÃO define plan_expires_at aqui - só quando admin liberar o pacote
         const { error: updateError } = await supabase
           .from('profiles')
           .update({ 
             plan: plano,
-            package_status: 'aguardando', // Aguardando elaboração do admin
-            plan_expires_at: expirationDate.toISOString(),
-            last_renewed_at: new Date().toISOString()
+            package_status: 'aguardando' // Aguardando elaboração do admin
+            // plan_expires_at: SEM DEFINIR - só conta quando liberar
           })
           .eq('email', payerEmail);
         

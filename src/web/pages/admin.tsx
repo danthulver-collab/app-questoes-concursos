@@ -3435,13 +3435,21 @@ function AdminPage() {
                                 {pacoteExistente && pacoteExistente.questionsIds && pacoteExistente.questionsIds.length > 0 && request.status !== 'pronto' && (
                                   <button
                                     onClick={async () => {
-                                      if (!confirm(`Liberar pacote para ${userName}?\n\nIsso irá:\n✅ Atualizar package_status para 'pronto' no Supabase\n✅ O aluno poderá acessar o pacote imediatamente`)) return;
+                                      if (!confirm(`Liberar pacote para ${userName}?\n\nIsso irá:\n✅ Ativar package_status = 'pronto'\n✅ Iniciar contagem de 30 dias\n✅ O aluno poderá acessar imediatamente`)) return;
                                       
                                       try {
-                                        // 1. Atualizar package_status no profiles
+                                        // 🔥 Definir data de expiração (30 dias a partir de AGORA)
+                                        const expirationDate = new Date();
+                                        expirationDate.setDate(expirationDate.getDate() + 30);
+                                        
+                                        // 1. Atualizar package_status e plan_expires_at no profiles
                                         const { error: profileError } = await supabase
                                           .from('profiles')
-                                          .update({ package_status: 'pronto' })
+                                          .update({ 
+                                            package_status: 'pronto',
+                                            plan_expires_at: expirationDate.toISOString(), // 🔥 Começa a contar AGORA
+                                            last_renewed_at: new Date().toISOString()
+                                          })
                                           .eq('email', request.email);
                                         
                                         if (profileError) {
