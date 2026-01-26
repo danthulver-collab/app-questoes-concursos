@@ -296,7 +296,26 @@ export default function PlanosPage() {
                     <span className="text-gray-300">{feature}</span>
                   </li>
                 ))}
+                <li className="flex items-center gap-2 text-sm">
+                  <span className="text-amber-400">✨</span>
+                  <span className="text-gray-300 font-bold">Planejamento de Estudos Avançado com IA</span>
+                </li>
               </ul>
+              
+              {/* Destaque Planejamento Plus */}
+              <div className="mb-6 p-4 bg-gradient-to-br from-amber-500/20 to-yellow-500/10 rounded-xl border border-amber-500/30">
+                <div className="font-bold text-amber-400 mb-2 flex items-center gap-2">
+                  <span>📊</span> Plano de Estudos Personalizado:
+                </div>
+                <ul className="space-y-1 text-xs text-gray-300">
+                  <li>• Cronograma semanal otimizado</li>
+                  <li>• Técnica Pomodoro integrada</li>
+                  <li>• Sistema de revisão espaçada (24h/7d/30d)</li>
+                  <li>• Análise de horários ideais</li>
+                  <li>• Metas semanais personalizadas</li>
+                  <li>• Gráficos de evolução por matéria</li>
+                </ul>
+              </div>
               
               <div className="space-y-2">
                 <button
