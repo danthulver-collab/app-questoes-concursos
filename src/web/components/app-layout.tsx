@@ -41,12 +41,14 @@ export function AppLayout({ children }: AppLayoutProps) {
     { icon: Settings, label: "Configurações", path: "/configuracoes", badge: null },
   ];
 
-  const planInfo = {
-    free: { name: "Grátis", color: "gray", icon: null },
-    trial: { name: "Trial", color: "blue", icon: Sparkles },
-    individual: { name: "Individual", color: "purple", icon: Crown },
-    plus: { name: "Plus", color: "amber", icon: Crown },
-  }[userPlan];
+  const planInfo = isAdmin 
+    ? { name: "Administrador", color: "purple", icon: Crown }
+    : {
+        free: { name: "Grátis", color: "gray", icon: null },
+        trial: { name: "Trial", color: "blue", icon: Sparkles },
+        individual: { name: "Individual", color: "purple", icon: Crown },
+        plus: { name: "Plus", color: "amber", icon: Crown },
+      }[userPlan];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex">
@@ -54,15 +56,11 @@ export function AppLayout({ children }: AppLayoutProps) {
       <aside className="hidden lg:flex lg:flex-col w-72 border-r border-white/10 bg-slate-900/50 backdrop-blur">
         {/* Logo */}
         <div className="p-6 border-b border-white/10">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center">
-              <BookOpen className="w-6 h-6 text-white" />
+          <Link href="/">
+            <div className="flex items-center gap-3 cursor-pointer hover:opacity-90 transition-all">
+              <img src="/logo.png" alt="Só Questões de Concursos" className="h-12 w-auto" />
             </div>
-            <div>
-              <h1 className="text-lg font-bold text-white">Só Questões</h1>
-              <p className="text-xs text-gray-400">de Concursos</p>
-            </div>
-          </div>
+          </Link>
         </div>
 
         {/* User Info & Plan */}
@@ -76,20 +74,36 @@ export function AppLayout({ children }: AppLayoutProps) {
                 <p className="text-sm font-semibold text-white truncate">
                   {user?.nome || user?.username}
                 </p>
-                <p className="text-xs text-gray-400 truncate">{user?.email}</p>
+                <p className="text-xs text-gray-400 truncate">{isAdmin ? 'Administrador' : (user?.email || 'Seu email')}</p>
               </div>
             </div>
             
             {/* Plan Badge */}
-            <div className={`flex items-center gap-2 px-3 py-2 rounded-lg bg-${planInfo.color}-500/10 border border-${planInfo.color}-500/20`}>
-              {planInfo.icon && <planInfo.icon className={`w-4 h-4 text-${planInfo.color}-400`} />}
-              <span className={`text-xs font-semibold text-${planInfo.color}-400`}>
-                Plano {planInfo.name}
-              </span>
+            <div className={`flex items-center gap-2 px-3 py-2 rounded-lg ${isAdmin ? 'bg-purple-500/10 border-purple-500/20' : `bg-${planInfo?.color || 'gray'}-500/10 border-${planInfo?.color || 'gray'}-500/20`} border`}>
+              {isAdmin ? (
+                <>
+                  <Crown className="w-4 h-4 text-purple-400" />
+                  <span className="text-xs font-semibold text-purple-400">👑 Administrador</span>
+                </>
+              ) : (
+                <>
+                  {planInfo?.icon && <planInfo.icon className={`w-4 h-4 text-${planInfo.color}-400`} />}
+                  <span className={`text-xs font-semibold text-${planInfo?.color || 'gray'}-400`}>
+                    Plano {planInfo?.name || 'Grátis'}
+                  </span>
+                </>
+              )}
             </div>
 
-            {/* Daily Limit (Free/Trial) */}
-            {(userPlan === "free" || userPlan === "trial") && remaining !== Infinity && (
+            {/* Admin: Unlimited Questions */}
+            {isAdmin ? (
+              <div className="mt-3 pt-3 border-t border-white/10">
+                <div className="flex items-center justify-center gap-2 px-3 py-2 bg-purple-500/20 border border-purple-500/30 rounded-lg">
+                  <span className="text-purple-400 font-bold">∞</span>
+                  <span className="text-xs font-semibold text-purple-400">questões ilimitadas</span>
+                </div>
+              </div>
+            ) : (userPlan === "free" || userPlan === "trial") && remaining !== Infinity ? (
               <div className="mt-3 pt-3 border-t border-white/10">
                 <div className="flex justify-between items-center mb-1">
                   <span className="text-xs text-gray-400">Questões hoje</span>
@@ -102,7 +116,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                   />
                 </div>
               </div>
-            )}
+            ) : null}
           </div>
         </div>
 
@@ -176,15 +190,9 @@ export function AppLayout({ children }: AppLayoutProps) {
         {/* Same content as desktop sidebar */}
         <div className="flex flex-col h-full">
           <div className="p-6 border-b border-white/10 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center">
-                <BookOpen className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-lg font-bold text-white">Só Questões</h1>
-                <p className="text-xs text-gray-400">de Concursos</p>
-              </div>
-            </div>
+            <Link href="/">
+              <img src="/logo.png" alt="Só Questões de Concursos" className="h-10 w-auto" />
+            </Link>
             <button onClick={() => setSidebarOpen(false)} className="text-gray-400 hover:text-white">
               <X className="w-6 h-6" />
             </button>
@@ -257,12 +265,9 @@ export function AppLayout({ children }: AppLayoutProps) {
             >
               <Menu className="w-6 h-6" />
             </button>
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center">
-                <BookOpen className="w-5 h-5 text-white" />
-              </div>
-              <h1 className="text-lg font-bold text-white">Só Questões</h1>
-            </div>
+            <Link href="/">
+              <img src="/logo.png" alt="Só Questões de Concursos" className="h-8 w-auto" />
+            </Link>
             <div className="w-6" />
           </div>
         </header>
