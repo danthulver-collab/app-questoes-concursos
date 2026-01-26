@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'wouter';
 import { useAuth } from '../lib/auth-context-supabase';
-import { getUserPlan, getRemainingQuestions } from '../lib/access-control';
+import { getUserPlan, getRemainingQuestions, isSuperAdmin } from '../lib/access-control';
 import { LogOut } from 'lucide-react';
 
 export function SidebarMenu() {
@@ -9,7 +9,8 @@ export function SidebarMenu() {
   const userId = user?.email || user?.username || '';
   const userPlan = getUserPlan(userId);
   const remaining = getRemainingQuestions(userId);
-  const isFree = !userPlan || userPlan === 'free' || userPlan === 'gratuito';
+  const isAdmin = isSuperAdmin(userId);
+  const isFree = !isAdmin && (!userPlan || userPlan === 'free' || userPlan === 'gratuito');
   
   const menuItems = [
     { label: 'Início', icon: '🏠', path: '/' },
@@ -37,27 +38,35 @@ export function SidebarMenu() {
               <p className="text-white font-semibold text-sm truncate">
                 {user?.email || 'usuario@email.com'}
               </p>
-              <p className="text-gray-400 text-xs">Seu email</p>
+              <p className="text-gray-400 text-xs">{isAdmin ? 'Administrador' : 'Seu email'}</p>
             </div>
           </div>
           <div className="px-3 py-1.5 bg-white/5 rounded-lg text-center">
             <p className={`text-xs font-bold ${
+              isAdmin ? 'text-purple-400' :
               userPlan === 'plus' ? 'text-amber-400' : 
               userPlan === 'individual' ? 'text-orange-400' : 
               'text-emerald-400'
             }`}>
-              {userPlan === 'plus' ? '⭐ Plano Plus' : 
+              {isAdmin ? '👑 Administrador' :
+               userPlan === 'plus' ? '⭐ Plano Plus' : 
                userPlan === 'individual' ? '📦 Plano Individual' : 
                '🆓 Plano Grátis'}
             </p>
           </div>
-          {isFree && remaining !== null && (
+          {isAdmin ? (
+            <div className="mt-2 px-3 py-1.5 bg-purple-500/20 border border-purple-500/30 rounded-lg text-center">
+              <p className="text-purple-400 text-xs font-bold">
+                ∞ questões ilimitadas
+              </p>
+            </div>
+          ) : isFree && remaining !== null ? (
             <div className="mt-2 px-3 py-1.5 bg-orange-500/20 border border-orange-500/30 rounded-lg text-center">
               <p className="text-orange-400 text-xs font-bold">
                 {remaining} questões restantes
               </p>
             </div>
-          )}
+          ) : null}
         </div>
         
         {/* Menu Items */}
