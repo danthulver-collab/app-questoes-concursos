@@ -3338,26 +3338,29 @@ function AdminPage() {
                                   </div>
                                 )}
                                 
-                                {/* Botão Elaborar/Continuar */}
+                                {/* Botão Elaborar Questões (sempre visível) */}
                                 <button
                                   onClick={() => {
-                                    if (pacoteExistente) {
-                                      // Se já tem pacote, ir direto para elaboração
-                                      setLocation(`/admin/elaborar-pacote/${pacoteExistente.id}`);
-                                    } else {
-                                      // Se não tem, abrir modal para criar
-                                      sessionStorage.setItem('elaborar_request', JSON.stringify(request));
-                                      setElaborandoPacote(request);
-                                    }
+                                    sessionStorage.setItem('elaborar_request', JSON.stringify(request));
+                                    setElaborandoPacote(request);
                                   }}
                                   className="w-full py-3 bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-400 hover:to-indigo-400 rounded-xl text-white font-bold shadow-lg shadow-purple-500/30 transition-all flex items-center justify-center gap-2"
                                 >
-                                  <span>{pacoteExistente ? '✏️' : '📝'}</span>
-                                  <span>{pacoteExistente ? 'Continuar Editando' : 'Elaborar Questões'}</span>
-                                  {pacoteExistente && (
-                                    <span className="text-xs opacity-80">({pacoteExistente.questionsIds?.length || 0} questões)</span>
-                                  )}
+                                  <span>📝</span>
+                                  <span>Elaborar Questões</span>
                                 </button>
+                                
+                                {/* Botão Continuar Editando (aparece quando pacote existe) */}
+                                {pacoteExistente && (
+                                  <button
+                                    onClick={() => setLocation(`/admin/elaborar-pacote/${pacoteExistente.id}`)}
+                                    className="w-full py-3 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-400 hover:to-emerald-400 rounded-xl text-white font-bold shadow-lg shadow-green-500/30 transition-all flex items-center justify-center gap-2"
+                                  >
+                                    <span>✏️</span>
+                                    <span>Continuar Editando Pacote</span>
+                                    <span className="text-xs opacity-80">({pacoteExistente.questionsIds?.length || 0} questões)</span>
+                                  </button>
+                                )}
                               </div>
                             </div>
                           );
