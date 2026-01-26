@@ -213,11 +213,42 @@ export default function ProdutosExclusivos() {
                   const qtdQuestoes = pacote.questoesPorMateria[materia] || 0;
                   
                   return (
-                    <Link 
+                    <div
                       key={index} 
-                      href={`/simulado?materia=${encodeURIComponent(materia)}&pacote=${pacote.id}`}
+                      onClick={() => {
+                        // 🔥 Preparar simulado com questões da matéria
+                        const questoesDaMateria = questoes.filter(q => q.disciplina === materia);
+                        
+                        if (questoesDaMateria.length === 0) {
+                          alert('Nenhuma questão encontrada para esta matéria.');
+                          return;
+                        }
+                        
+                        // Formato esperado pelo simulado
+                        const simuladoData = {
+                          questoes: questoesDaMateria.map(q => ({
+                            id: q.id,
+                            title: q.pergunta,
+                            optionA: q.alternativas[0],
+                            optionB: q.alternativas[1],
+                            optionC: q.alternativas[2],
+                            optionD: q.alternativas[3],
+                            correctAnswer: ['A', 'B', 'C', 'D'][q.correta],
+                            explanation: q.comentario || 'Sem comentário disponível.',
+                            banca: q.banca || pacote.banca,
+                            concurso: q.concurso || pacote.concurso,
+                            disciplina: q.disciplina,
+                            ano: q.ano
+                          })),
+                          nome: `${pacote.concurso} - ${materia}`,
+                          banca: pacote.banca
+                        };
+                        
+                        localStorage.setItem('simulado_atual', JSON.stringify(simuladoData));
+                        setLocation('/simulado');
+                      }}
+                      className="glass-card rounded-2xl p-6 hover:scale-[1.02] transition-all cursor-pointer border border-white/10 hover:border-emerald-500/50 group"
                     >
-                      <div className="glass-card rounded-2xl p-6 hover:scale-[1.02] transition-all cursor-pointer border border-white/10 hover:border-emerald-500/50 group">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-4">
                             <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500/20 to-indigo-500/20 flex items-center justify-center text-2xl">
@@ -242,8 +273,7 @@ export default function ProdutosExclusivos() {
                             </svg>
                           </div>
                         </div>
-                      </div>
-                    </Link>
+                    </div>
                   );
                 })}
               </div>
@@ -260,12 +290,41 @@ export default function ProdutosExclusivos() {
         {/* Botão para iniciar simulado geral */}
         {pacote && pacote.totalQuestoes > 0 && (
           <div className="mt-8">
-            <Link href={`/simulado?pacote=${pacote.id}`}>
-              <button className="w-full py-5 bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-400 hover:to-green-400 rounded-2xl text-white font-bold text-xl shadow-2xl shadow-emerald-500/30 transition-all hover:scale-[1.02] flex items-center justify-center gap-3">
-                <span className="text-3xl">🚀</span>
-                <span>Iniciar Simulado Completo ({pacote.totalQuestoes} questões)</span>
-              </button>
-            </Link>
+            <button 
+              onClick={() => {
+                // 🔥 Preparar simulado com TODAS as questões
+                if (questoes.length === 0) {
+                  alert('Nenhuma questão encontrada.');
+                  return;
+                }
+                
+                const simuladoData = {
+                  questoes: questoes.map(q => ({
+                    id: q.id,
+                    title: q.pergunta,
+                    optionA: q.alternativas[0],
+                    optionB: q.alternativas[1],
+                    optionC: q.alternativas[2],
+                    optionD: q.alternativas[3],
+                    correctAnswer: ['A', 'B', 'C', 'D'][q.correta],
+                    explanation: q.comentario || 'Sem comentário disponível.',
+                    banca: q.banca || pacote.banca,
+                    concurso: q.concurso || pacote.concurso,
+                    disciplina: q.disciplina,
+                    ano: q.ano
+                  })),
+                  nome: `${pacote.concurso} - Simulado Completo`,
+                  banca: pacote.banca
+                };
+                
+                localStorage.setItem('simulado_atual', JSON.stringify(simuladoData));
+                setLocation('/simulado');
+              }}
+              className="w-full py-5 bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-400 hover:to-green-400 rounded-2xl text-white font-bold text-xl shadow-2xl shadow-emerald-500/30 transition-all hover:scale-[1.02] flex items-center justify-center gap-3"
+            >
+              <span className="text-3xl">🚀</span>
+              <span>Iniciar Simulado Completo ({pacote.totalQuestoes} questões)</span>
+            </button>
           </div>
         )}
       </main>
