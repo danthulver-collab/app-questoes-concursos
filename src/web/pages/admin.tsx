@@ -3260,95 +3260,142 @@ function AdminPage() {
                   <p className="text-sm text-gray-500 mt-2">As solicitações dos alunos aparecerão aqui</p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {packageRequests.map((request, i) => {
-                    const userName = request.nome || request.email || 'Usuário';
-                    const userEmail = request.email || '';
-                    const requestId = request.id || request.userId;
-                    
-                    return (
-                      <div key={requestId || i} className="glass-card rounded-2xl overflow-hidden hover:scale-[1.02] transition-all">
-                        {/* Header com status */}
-                        <div className={`p-4 ${
-                          request.status === 'pronto' ? 'bg-emerald-500/20' :
-                          request.status === 'em_andamento' ? 'bg-blue-500/20' :
-                          'bg-amber-500/20'
-                        }`}>
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <h3 className="font-bold text-white text-lg">{userName}</h3>
-                              <p className="text-sm text-gray-300">{userEmail}</p>
-                            </div>
-                            <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                              request.status === 'pronto' ? 'bg-emerald-500 text-white' :
-                              request.status === 'em_andamento' ? 'bg-blue-500 text-white' :
-                              'bg-amber-500 text-white'
-                            }`}>
-                              {request.status === 'pronto' ? '✅ Pronto' :
-                               request.status === 'em_andamento' ? '🔨 Em Produção' :
-                               '⏳ Aguardando'}
-                            </span>
-                          </div>
-                        </div>
-                        
-                        {/* Informações */}
-                        <div className="p-4 space-y-3">
-                          <div className="grid grid-cols-2 gap-3 text-sm">
-                            <div>
-                              <p className="text-gray-500 text-xs">Concurso</p>
-                              <p className="text-white font-medium">{request.concurso || 'N/A'}</p>
-                            </div>
-                            <div>
-                              <p className="text-gray-500 text-xs">Cargo</p>
-                              <p className="text-white font-medium">{request.cargo || 'N/A'}</p>
-                            </div>
-                            <div>
-                              <p className="text-gray-500 text-xs">Banca</p>
-                              <p className="text-white font-medium">{request.banca || 'N/A'}</p>
-                            </div>
-                            <div>
-                              <p className="text-gray-500 text-xs">Plano</p>
-                              <p className="text-white font-medium">{request.plano === 'individual' ? '📦 Individual' : '⭐ Plus'}</p>
-                            </div>
-                          </div>
+                <div className="space-y-8">
+                  {/* Solicitações Pendentes */}
+                  {packageRequests.filter(r => r.status !== "pronto").length > 0 && (
+                    <div>
+                      <h3 className="text-xl font-bold text-white mb-4">⏳ Aguardando Elaboração</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {packageRequests.filter(r => r.status !== "pronto").map((request, i) => {
+                          const userName = request.nome || request.email || 'Usuário';
+                          const userEmail = request.email || '';
+                          const requestId = request.id || request.userId;
                           
-                          {/* Matérias */}
-                          {request.materias && request.materias.length > 0 && (
-                            <div>
-                              <p className="text-gray-500 text-xs mb-2">Matérias ({request.materias.length})</p>
-                              <div className="flex flex-wrap gap-1">
-                                {request.materias.slice(0, 4).map((m, idx) => (
-                                  <span key={idx} className="px-2 py-1 bg-purple-500/20 text-purple-400 rounded text-xs">
-                                    {m}
+                          // Verificar se já tem pacote criado
+                          const pacoteExistente = quizData.pacotes.find(p => 
+                            p.alunoAtribuido === request.userId || 
+                            p.alunoAtribuido === request.email
+                          );
+                          
+                          return (
+                            <div key={requestId || i} className="glass-card rounded-2xl overflow-hidden hover:scale-[1.02] transition-all">
+                              {/* Header com status */}
+                              <div className={`p-4 ${
+                                request.status === 'em_andamento' ? 'bg-blue-500/20' :
+                                'bg-amber-500/20'
+                              }`}>
+                                <div className="flex items-center justify-between">
+                                  <div>
+                                    <h3 className="font-bold text-white text-lg">{userName}</h3>
+                                    <p className="text-sm text-gray-300">{userEmail}</p>
+                                  </div>
+                                  <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                                    request.status === 'em_andamento' ? 'bg-blue-500 text-white' :
+                                    'bg-amber-500 text-white'
+                                  }`}>
+                                    {request.status === 'em_andamento' ? '🔨 Em Produção' : '⏳ Aguardando'}
                                   </span>
-                                ))}
-                                {request.materias.length > 4 && (
-                                  <span className="px-2 py-1 bg-gray-500/20 text-gray-400 rounded text-xs">
-                                    +{request.materias.length - 4}
-                                  </span>
+                                </div>
+                              </div>
+                              
+                              {/* Informações */}
+                              <div className="p-4 space-y-3">
+                                <div className="grid grid-cols-2 gap-3 text-sm">
+                                  <div>
+                                    <p className="text-gray-500 text-xs">Concurso</p>
+                                    <p className="text-white font-medium">{request.concurso || 'N/A'}</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-gray-500 text-xs">Cargo</p>
+                                    <p className="text-white font-medium">{request.cargo || 'N/A'}</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-gray-500 text-xs">Banca</p>
+                                    <p className="text-white font-medium">{request.banca || 'N/A'}</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-gray-500 text-xs">Plano</p>
+                                    <p className="text-white font-medium">{request.plano === 'individual' ? '📦 Individual' : '⭐ Plus'}</p>
+                                  </div>
+                                </div>
+                                
+                                {/* Matérias */}
+                                {request.materias && request.materias.length > 0 && (
+                                  <div>
+                                    <p className="text-gray-500 text-xs mb-2">Matérias ({request.materias.length})</p>
+                                    <div className="flex flex-wrap gap-1">
+                                      {request.materias.slice(0, 4).map((m, idx) => (
+                                        <span key={idx} className="px-2 py-1 bg-purple-500/20 text-purple-400 rounded text-xs">
+                                          {m}
+                                        </span>
+                                      ))}
+                                      {request.materias.length > 4 && (
+                                        <span className="px-2 py-1 bg-gray-500/20 text-gray-400 rounded text-xs">
+                                          +{request.materias.length - 4}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
                                 )}
+                                
+                                {/* Botão Elaborar/Continuar */}
+                                <button
+                                  onClick={() => {
+                                    if (pacoteExistente) {
+                                      // Se já tem pacote, ir direto para elaboração
+                                      setLocation(`/admin/elaborar-pacote/${pacoteExistente.id}`);
+                                    } else {
+                                      // Se não tem, abrir modal para criar
+                                      sessionStorage.setItem('elaborar_request', JSON.stringify(request));
+                                      setElaborandoPacote(request);
+                                    }
+                                  }}
+                                  className="w-full py-3 bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-400 hover:to-indigo-400 rounded-xl text-white font-bold shadow-lg shadow-purple-500/30 transition-all flex items-center justify-center gap-2"
+                                >
+                                  <span>{pacoteExistente ? '✏️' : '📝'}</span>
+                                  <span>{pacoteExistente ? 'Continuar Editando' : 'Elaborar Questões'}</span>
+                                  {pacoteExistente && (
+                                    <span className="text-xs opacity-80">({pacoteExistente.questionsIds?.length || 0} questões)</span>
+                                  )}
+                                </button>
                               </div>
                             </div>
-                          )}
-                          
-                          {/* Botão Elaborar */}
-                          <button
-                            onClick={() => {
-                              // Salvar dados da solicitação no sessionStorage para a página de elaboração
-                              sessionStorage.setItem('elaborar_request', JSON.stringify(request));
-                              setActiveSection("config"); // Reset temporário
-                              // Abrir modal de elaboração ou navegar
-                              setElaborandoPacote(request);
-                            }}
-                            className="w-full py-3 bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-400 hover:to-indigo-400 rounded-xl text-white font-bold shadow-lg shadow-purple-500/30 transition-all flex items-center justify-center gap-2"
-                          >
-                            <span>📝</span>
-                            <span>Elaborar Questões</span>
-                          </button>
-                        </div>
+                          );
+                        })}
                       </div>
-                    );
-                  })}
+                    </div>
+                  )}
+                  
+                  {/* Pacotes Concluídos */}
+                  {packageRequests.filter(r => r.status === "pronto").length > 0 && (
+                    <div>
+                      <h3 className="text-xl font-bold text-white mb-4">✅ Concluídos</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {packageRequests.filter(r => r.status === "pronto").map((request, i) => {
+                          const userName = request.nome || request.email || 'Usuário';
+                          const pacoteExistente = quizData.pacotes.find(p => 
+                            p.alunoAtribuido === request.userId || 
+                            p.alunoAtribuido === request.email
+                          );
+                          
+                          return (
+                            <div key={i} className="glass-card rounded-xl p-4 bg-emerald-500/10 border-emerald-500/20">
+                              <h4 className="font-bold text-white mb-1">{userName}</h4>
+                              <p className="text-sm text-gray-400 mb-2">{request.concurso}</p>
+                              {pacoteExistente && (
+                                <button
+                                  onClick={() => setLocation(`/admin/elaborar-pacote/${pacoteExistente.id}`)}
+                                  className="w-full py-2 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 rounded-lg text-sm"
+                                >
+                                  👁️ Ver Pacote
+                                </button>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
