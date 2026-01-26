@@ -220,8 +220,8 @@ export default function HomeNovo() {
               </div>
             </div>
 
-            {/* Cards: 3 opções - Comece questões, Estude matérias, Pacote Exclusivo */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Cards: Comece questões, Planejamento, Pacote */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Big CTA Button - Comece as questões aqui */}
               <Link href="/questoes/escolher">
                 <div className="glass-card rounded-3xl p-8 md:p-10 cursor-pointer group hover:scale-[1.02] transition-all duration-300 bg-gradient-to-br from-orange-500/20 to-amber-500/10 border-2 border-orange-500/30 hover:border-orange-500/60 shadow-2xl shadow-orange-500/20">
@@ -238,6 +238,27 @@ export default function HomeNovo() {
                     <div className="flex items-center gap-2 text-orange-400 font-semibold text-xl">
                       <span>Iniciar</span>
                       <ArrowRight className="w-6 h-6 group-hover:translate-x-2 transition-transform" />
+                    </div>
+                  </div>
+                </div>
+              </Link>
+
+              {/* Card Planejamento */}
+              <Link href="/planejamento">
+                <div className="glass-card rounded-3xl p-8 md:p-10 cursor-pointer group hover:scale-[1.02] transition-all duration-300 bg-gradient-to-br from-blue-500/20 to-indigo-500/10 border-2 border-blue-500/30 hover:border-blue-500/60 shadow-2xl shadow-blue-500/20">
+                  <div className="flex flex-col items-center justify-center gap-4 text-center">
+                    <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center text-4xl shadow-xl shadow-blue-500/40 group-hover:scale-110 transition-transform">
+                      📊
+                    </div>
+                    <h2 className="text-2xl md:text-3xl font-black text-white group-hover:text-blue-400 transition-colors">
+                      📊 PLANO DE ESTUDOS
+                    </h2>
+                    <p className="text-gray-400 text-base">
+                      Organize sua rotina e acompanhe evolução
+                    </p>
+                    <div className="flex items-center gap-2 text-blue-400 font-semibold text-lg">
+                      <span>Criar Plano</span>
+                      <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" />
                     </div>
                   </div>
                 </div>

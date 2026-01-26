@@ -3283,6 +3283,50 @@ function AdminPage() {
                 <p className="text-gray-500">Gerencie as áreas de concurso e suas carreiras</p>
               </div>
 
+              {/* Botões de Gerenciamento */}
+              <div className="grid md:grid-cols-3 gap-4 mb-6">
+                <button
+                  onClick={() => {
+                    const nome = prompt("Nome da nova Área:");
+                    if (!nome) return;
+                    const icone = prompt("Ícone (emoji):", "🎯");
+                    const desc = prompt("Descrição:");
+                    addArea({ nome: nome.trim(), icone, descricao: desc, carreiras: [], materias: [] });
+                    showSaveMessage("Área criada!");
+                  }}
+                  className="p-4 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl font-bold hover:scale-105 transition-transform flex items-center justify-center gap-2"
+                >
+                  <span>➕</span> Adicionar Área
+                </button>
+                <button
+                  onClick={() => {
+                    const areaId = prompt("ID da área (ex: area-administrativa):");
+                    if (!areaId) return;
+                    const nome = prompt("Nome da Carreira:");
+                    if (!nome) return;
+                    const cargos = prompt("Cargos (separados por vírgula):");
+                    addCarreira({ nome: nome.trim(), areaId, cargos: cargos?.split(',').map(c => c.trim()) || [] });
+                    showSaveMessage("Carreira criada!");
+                  }}
+                  className="p-4 bg-gradient-to-r from-emerald-500 to-green-500 rounded-xl font-bold hover:scale-105 transition-transform flex items-center justify-center gap-2"
+                >
+                  <span>➕</span> Adicionar Carreira
+                </button>
+                <button
+                  onClick={() => {
+                    const nome = prompt("Nome da Matéria:");
+                    if (!nome) return;
+                    const data = getQuizData();
+                    data.disciplinas.push({ id: nome.toLowerCase().replace(/\s+/g, '-'), nome: nome.trim() });
+                    saveQuizData(data);
+                    showSaveMessage("Matéria criada!");
+                  }}
+                  className="p-4 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl font-bold hover:scale-105 transition-transform flex items-center justify-center gap-2"
+                >
+                  <span>➕</span> Adicionar Matéria
+                </button>
+              </div>
+
               {/* Listagem de Áreas */}
               <div className="glass-card rounded-2xl p-6">
                 <h2 className="text-xl font-bold mb-4">📋 Áreas Cadastradas</h2>

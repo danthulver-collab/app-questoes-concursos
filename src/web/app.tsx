@@ -22,6 +22,7 @@ import SubjectStatsPage from "./pages/subject-stats";
 import ConfiguracoesPage from "./pages/configuracoes";
 import ConfigurarPacoteIndividual from "./pages/configurar-pacote-individual";
 import EscolherSimulado from "./pages/escolher-simulado";
+import PlanejamentoEstudos from "./pages/planejamento";
 import EscolherMateria from "./pages/escolher-materia";
 import AcompanharPedido from "./pages/acompanhar-pedido";
 import SimuladoPage from "./pages/simulado";
@@ -46,6 +47,11 @@ function App() {
                                         <Route path="/questoes/escolher">
                                                 <ProtectedRoute>
                                                         <EscolherSimulado />
+                                                </ProtectedRoute>
+                                        </Route>
+                                        <Route path="/planejamento">
+                                                <ProtectedRoute>
+                                                        <PlanejamentoEstudos />
                                                 </ProtectedRoute>
                                         </Route>
                                         <Route path="/questoes">
