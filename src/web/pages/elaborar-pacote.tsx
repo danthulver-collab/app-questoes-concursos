@@ -49,11 +49,16 @@ export default function ElaborarPacote() {
   });
   
   // Verificar se é admin
+  const isUserAdmin = isSuperAdmin(userId) || 
+    user?.username?.toLowerCase() === 'admin' || 
+    userId.toLowerCase() === 'admin';
+  
   useEffect(() => {
-    if (userId && !isSuperAdmin(userId)) {
+    if (userId && !isUserAdmin) {
+      console.log('[ElaborarPacote] Usuário não é admin, redirecionando');
       setLocation("/");
     }
-  }, [userId, setLocation]);
+  }, [userId, setLocation, isUserAdmin]);
 
   // Carregar dados da solicitação
   useEffect(() => {
@@ -280,10 +285,10 @@ export default function ElaborarPacote() {
     alert("✅ Questão excluída!");
   };
 
-  if (!isSuperAdmin(userId)) {
+  if (!isUserAdmin) {
     return (
       <div className="min-h-screen bg-[#0d1117] flex items-center justify-center">
-        <p className="text-red-400">Acesso negado</p>
+        <p className="text-red-400">Acesso negado - Apenas administradores</p>
       </div>
     );
   }

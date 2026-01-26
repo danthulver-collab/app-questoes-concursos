@@ -87,6 +87,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     "/aguardando-pagamento",
     "/aguardando-pacote", 
     "/admin",
+    "/admin/elaborar-pacote", // Admin pode elaborar pacotes
     "/perfil-editar" // Permite editar perfil
   ];
   
