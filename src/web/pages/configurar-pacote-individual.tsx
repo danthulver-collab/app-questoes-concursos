@@ -67,40 +67,37 @@ export default function ConfigurarPacoteIndividual() {
     setEnviando(true);
 
     try {
-      // Usando apenas campos básicos
+      // 🔥 Dados organizados nos campos corretos
       const insertData: any = {
         user_id: user?.id || 'unknown',
         email: user?.email || '',
         nome: user?.nome || user?.email?.split('@')[0] || '',
+        concurso: concurso.trim(),
+        cargo: cargo.trim(),
         banca: bancasSelecionadas.join(', '),
+        materias: materias,
+        num_questoes: parseInt(qtdQuestoesPorMateria) * materias.length,
         plano: 'individual',
-        status: 'aguardando_pagamento', // 🔥 Status inicial: aguardando pagamento
-        concurso: concurso,
-        cargo: cargo,
-        materias: materias
+        status: 'aguardando_pagamento'
       };
-
-      // Adicionar num_questoes por matéria
-      try {
-        const totalQuestoes = parseInt(qtdQuestoesPorMateria) * materias.length;
-        insertData.num_questoes = totalQuestoes;
-      } catch {}
-
-      // 🔥 Montar descrição detalhada com os assuntos por matéria
-      try {
-        let detalhamento = `Concurso: ${concurso} | Cargo: ${cargo} | Matérias: ${materias.join(', ')} | ${qtdQuestoesPorMateria} questões/matéria`;
-        
-        // Adicionar detalhamento de assuntos se preenchido
-        const materiasComDetalhes = materias.filter(m => detalhamentoPorMateria[m]?.trim());
-        if (materiasComDetalhes.length > 0) {
-          detalhamento += '\n\nDETALHAMENTO POR MATÉRIA:\n';
-          materiasComDetalhes.forEach(m => {
-            detalhamento += `\n📚 ${m}:\n${detalhamentoPorMateria[m]}`;
-          });
+      
+      // 🔥 Salvar detalhamento de matérias como JSON
+      const detalhamento: Record<string, string> = {};
+      materias.forEach(m => {
+        if (detalhamentoPorMateria[m]?.trim()) {
+          detalhamento[m] = detalhamentoPorMateria[m];
         }
-        
-        insertData.telefone = detalhamento;
-      } catch {}
+      });
+      
+      if (Object.keys(detalhamento).length > 0) {
+        insertData.detalhamento_materias = detalhamento;
+      }
+      
+      // Observações gerais (se houver)
+      const observacoesGerais = Object.values(detalhamentoPorMateria).filter(v => v.trim()).join('\n\n');
+      if (observacoesGerais) {
+        insertData.observacoes = observacoesGerais;
+      }
 
       console.log('📤 Enviando:', insertData);
 

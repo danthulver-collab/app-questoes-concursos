@@ -3377,6 +3377,30 @@ function AdminPage() {
                                   </div>
                                 )}
                                 
+                                {/* Observações/Detalhamento */}
+                                {(request.observacoes || request.detalhamento_materias) && (
+                                  <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
+                                    <p className="text-blue-400 text-xs font-bold mb-2">📋 Observações do Cliente:</p>
+                                    
+                                    {/* Detalhamento por matéria */}
+                                    {request.detalhamento_materias && typeof request.detalhamento_materias === 'object' && (
+                                      <div className="space-y-2 mb-2">
+                                        {Object.entries(request.detalhamento_materias).map(([materia, detalhes]) => (
+                                          <div key={materia} className="text-xs">
+                                            <span className="text-purple-400 font-bold">📚 {materia}:</span>
+                                            <p className="text-gray-300 ml-4 whitespace-pre-wrap">{detalhes as string}</p>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    )}
+                                    
+                                    {/* Observações gerais */}
+                                    {request.observacoes && (
+                                      <p className="text-gray-300 text-xs whitespace-pre-wrap">{request.observacoes}</p>
+                                    )}
+                                  </div>
+                                )}
+                                
                                 {/* Mensagem aguardando pagamento OU botão elaborar */}
                                 {request.status === 'aguardando_pagamento' ? (
                                   <div className="w-full py-3 bg-red-500/20 border border-red-500/30 rounded-xl text-red-400 font-bold text-center">
