@@ -4886,6 +4886,15 @@ function AdminPage() {
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-xl font-bold text-white">📝 Questões do Pacote</h3>
                   <div className="flex items-center gap-3">
+                    {/* Botão Elaborar Questões - Abre página completa */}
+                    {!isNewPacote && (
+                      <a
+                        href={`/admin/elaborar-pacote/${editingPacote.id}`}
+                        className="px-4 py-2 bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-400 hover:to-indigo-400 text-white rounded-lg text-sm font-bold shadow-lg shadow-purple-500/30 transition-all hover:scale-105"
+                      >
+                        📝 Elaborar Questões
+                      </a>
+                    )}
                     {/* Selector de matéria */}
                     <select
                       className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm"
