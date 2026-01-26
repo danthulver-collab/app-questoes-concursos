@@ -828,6 +828,48 @@ export default function ElaborarPacote() {
           >
             ← Voltar para Admin
           </Link>
+          
+          {/* Botão Finalizar Pedido */}
+          {pacote && request && request.status !== "pronto" && (
+            <button
+              onClick={async () => {
+                if (!confirm(`Finalizar pedido de ${nomeAluno || emailAluno}?\n\n✅ O aluno será notificado\n🔓 O pacote será liberado\n📦 Status: PRONTO`)) return;
+                
+                try {
+                  // Atualizar status da solicitação no Supabase
+                  if (request.id) {
+                    await supabase
+                      .from('plan_requests')
+                      .update({ status: 'pronto' })
+                      .eq('id', request.id);
+                  }
+                  
+                  // Criar notificação para o aluno
+                  await supabase
+                    .from('notificacoes')
+                    .insert({
+                      user_id: emailAluno || request.userId,
+                      titulo: '🎉 Seu pacote está pronto!',
+                      mensagem: `Seu pacote "${concurso || pacote.nome}" foi finalizado com ${totalQuestoes} questões. Comece a estudar agora!`,
+                      tipo: 'pacote_pronto',
+                      lida: false,
+                      created_at: new Date().toISOString()
+                    });
+                  
+                  alert(`✅ Pedido finalizado!\n\n🔔 ${nomeAluno || emailAluno} foi notificado\n🔓 Pacote liberado com ${totalQuestoes} questões`);
+                  
+                  // Voltar para admin
+                  setLocation('/admin');
+                } catch (error) {
+                  console.error('Erro ao finalizar:', error);
+                  alert('❌ Erro ao finalizar pedido');
+                }
+              }}
+              className="px-8 py-4 bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-400 hover:to-green-400 text-white rounded-xl font-bold text-lg shadow-2xl shadow-emerald-500/50 transition-all hover:scale-105"
+            >
+              ✅ Finalizar Pedido e Liberar para Aluno
+            </button>
+          )}
         </div>
       </div>
     </div>
