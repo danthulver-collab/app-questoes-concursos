@@ -5664,7 +5664,7 @@ function AdminPage() {
                   setElaborarMaterias([]);
                   
                   // Redirecionar para página de criação de questões
-                  window.location.href = `/admin/elaborar-pacote/${novoPacote.id}`;
+                  setLocation(`/admin/elaborar-pacote/${novoPacote.id}`);
                 }}
                 disabled={elaborarMaterias.length === 0}
                 className="w-full py-4 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-400 hover:to-emerald-400 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl text-white font-bold text-lg shadow-xl transition-all"
