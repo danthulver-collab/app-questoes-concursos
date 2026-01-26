@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { AppLayout } from "../components/app-layout";
 import { useAuth } from "../lib/auth-context-supabase";
+import { supabase } from "../lib/supabase";
 import { 
   Lock, 
   CreditCard, 
@@ -19,6 +20,7 @@ export default function ConfiguracoesPage() {
   const { user, logout } = useAuth();
   const [activeTab, setActiveTab] = useState("senha");
   const [showSuccess, setShowSuccess] = useState(false);
+  const [motivoCancelamento, setMotivoCancelamento] = useState("");
 
   const tabs = [
     { id: "senha", label: "Trocar Senha", icon: Lock },
@@ -31,6 +33,46 @@ export default function ConfiguracoesPage() {
   const handleSaveSuccess = () => {
     setShowSuccess(true);
     setTimeout(() => setShowSuccess(false), 3000);
+  };
+  
+  // 🔥 Função para cancelar plano
+  const handleCancelarPlano = async () => {
+    if (!confirm('Tem certeza que deseja cancelar seu plano? Você voltará para o plano gratuito.')) {
+      return;
+    }
+    
+    try {
+      // 1. Atualizar profiles para free
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({ 
+          plan: 'free',
+          package_status: null
+        })
+        .eq('email', user?.email);
+      
+      if (profileError) {
+        console.error('Erro ao atualizar profile:', profileError);
+      }
+      
+      // 2. Salvar motivo se preenchido
+      if (motivoCancelamento.trim()) {
+        await supabase
+          .from('cancelamentos')
+          .insert({
+            user_id: user?.id,
+            email: user?.email,
+            motivo: motivoCancelamento,
+            created_at: new Date().toISOString()
+          });
+      }
+      
+      alert('✅ Plano cancelado com sucesso! Você voltou para o plano gratuito.');
+      window.location.reload();
+    } catch (error) {
+      console.error('Erro ao cancelar:', error);
+      alert('❌ Erro ao cancelar plano. Tente novamente.');
+    }
   };
 
   return (
@@ -270,6 +312,8 @@ export default function ConfiguracoesPage() {
                         </label>
                         <textarea
                           rows={4}
+                          value={motivoCancelamento}
+                          onChange={(e) => setMotivoCancelamento(e.target.value)}
                           className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                           placeholder="Nos conte o motivo do seu cancelamento..."
                         />
@@ -283,6 +327,7 @@ export default function ConfiguracoesPage() {
                           Manter Plano
                         </button>
                         <button
+                          onClick={handleCancelarPlano}
                           className="px-6 py-3 bg-red-600 rounded-xl font-semibold text-white hover:bg-red-700 transition-all"
                         >
                           Confirmar Cancelamento
