@@ -74,6 +74,7 @@ import {
   type BulkCleanupCriteria
 } from "../lib/access-control";
 import { ProgressTimeline, MiniTimeline } from "../components/progress-timeline";
+import { AdminNotifications } from "../components/admin-notifications";
 
 import { getPackageRequests as getPackageRequestsLocal, updatePackageRequestStatus as updatePackageRequestStatusLocal, updatePackageExtrasResponse as updatePackageExtrasResponseLocal, linkPackageToRequest, getLinkedPackageId } from "./onboarding";
 import { getPackageRequests as getPackageRequestsSupabase, updatePackageRequestStatus as updatePackageRequestStatusSupabase, updatePackageExtrasResponse as updatePackageExtrasResponseSupabase, type PackageRequest } from "../lib/supabase-package-requests";
@@ -2619,6 +2620,9 @@ function AdminPage() {
   return (
     <div className="min-h-screen bg-[#070b14] text-white relative overflow-hidden">
       <div className="absolute inset-0 gradient-mesh pointer-events-none" />
+      
+      {/* 🔥 Sistema de Notificações Sonoras do Admin */}
+      <AdminNotifications />
       
       <div className="sticky top-0 z-30 bg-slate-900/95 backdrop-blur border-b border-white/10">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
