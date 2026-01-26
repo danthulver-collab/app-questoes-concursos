@@ -237,7 +237,12 @@ export default function PlanosPage() {
               
               <div className="space-y-2">
                 <button
-                  onClick={() => canUpgradeTo("individual") && setLocation("/individual/configurar")}
+                  onClick={() => {
+                    if (canUpgradeTo("individual")) {
+                      // 🔥 Redirecionar para assinatura do Mercado Pago
+                      window.location.href = "https://www.mercadopago.com.br/subscriptions/checkout?preapproval_plan_id=30f86054568c40ceb375ac19c82259a7";
+                    }
+                  }}
                   disabled={!canUpgradeTo("individual")}
                   className={`w-full py-3 rounded-xl font-bold transition-all ${
                     currentPlan === "individual"
@@ -247,7 +252,7 @@ export default function PlanosPage() {
                       : "bg-white/10 text-gray-400 cursor-not-allowed"
                   }`}
                 >
-                  {currentPlan === "individual" ? "Plano Atual" : canUpgradeTo("individual") ? "📦 Escolher Pacote" : "—"}
+                  {currentPlan === "individual" ? "Plano Atual" : canUpgradeTo("individual") ? "📦 Assinar Mensal" : "—"}
                 </button>
                 {canUpgradeTo("individual") && (
                   <button
@@ -319,7 +324,12 @@ export default function PlanosPage() {
               
               <div className="space-y-2">
                 <button
-                  onClick={() => canUpgradeTo("plus") && handleImmediatePayment("plus")}
+                  onClick={() => {
+                    if (canUpgradeTo("plus")) {
+                      // 🔥 Redirecionar para assinatura mensal do Mercado Pago
+                      window.location.href = "https://www.mercadopago.com.br/subscriptions/checkout?preapproval_plan_id=7509d70a8c2d44ea9e34c63d98115716";
+                    }
+                  }}
                   disabled={!canUpgradeTo("plus")}
                   className={`w-full py-3 rounded-xl font-bold transition-all ${
                     currentPlan === "plus"
@@ -329,7 +339,7 @@ export default function PlanosPage() {
                       : "bg-white/10 text-gray-400 cursor-not-allowed"
                   }`}
                 >
-                  {currentPlan === "plus" ? "Plano Atual" : canUpgradeTo("plus") ? "💳 Pagar Agora" : "—"}
+                  {currentPlan === "plus" ? "Plano Atual" : canUpgradeTo("plus") ? "💳 Assinar Mensal" : "—"}
                 </button>
                 {canUpgradeTo("plus") && (
                   <button
