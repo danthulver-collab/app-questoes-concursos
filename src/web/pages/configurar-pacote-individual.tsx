@@ -20,6 +20,9 @@ export default function ConfigurarPacoteIndividual() {
   const [edital, setEdital] = useState<File | null>(null);
   const [enviando, setEnviando] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  
+  // 🔥 Estado para detalhamento de assuntos por matéria
+  const [detalhamentoPorMateria, setDetalhamentoPorMateria] = useState<Record<string, string>>({});
 
   const toggleBanca = (b: string) => {
     setBancasSelecionadas(prev => prev.includes(b) ? prev.filter(x => x !== b) : [...prev, b]);
@@ -80,9 +83,20 @@ export default function ConfigurarPacoteIndividual() {
         insertData.num_questoes = totalQuestoes;
       } catch {}
 
-      // Adicionar telefone com dados
+      // 🔥 Montar descrição detalhada com os assuntos por matéria
       try {
-        insertData.telefone = `Concurso: ${concurso} | Cargo: ${cargo} | Matérias: ${materias.join(', ')} | ${qtdQuestoesPorMateria} questões/matéria`;
+        let detalhamento = `Concurso: ${concurso} | Cargo: ${cargo} | Matérias: ${materias.join(', ')} | ${qtdQuestoesPorMateria} questões/matéria`;
+        
+        // Adicionar detalhamento de assuntos se preenchido
+        const materiasComDetalhes = materias.filter(m => detalhamentoPorMateria[m]?.trim());
+        if (materiasComDetalhes.length > 0) {
+          detalhamento += '\n\nDETALHAMENTO POR MATÉRIA:\n';
+          materiasComDetalhes.forEach(m => {
+            detalhamento += `\n📚 ${m}:\n${detalhamentoPorMateria[m]}`;
+          });
+        }
+        
+        insertData.telefone = detalhamento;
       } catch {}
 
       console.log('📤 Enviando:', insertData);
@@ -249,6 +263,41 @@ export default function ConfigurarPacoteIndividual() {
               </div>
             )}
           </div>
+
+          {/* 🔥 DETALHAMENTO POR MATÉRIA - Novo campo */}
+          {materias.length > 0 && (
+            <div className="glass-card rounded-2xl p-6">
+              <label className="block text-white font-semibold mb-4 flex items-center gap-2">
+                <span className="text-xl">📝</span> Detalhamento por Matéria (Opcional)
+              </label>
+              <p className="text-gray-400 text-sm mb-4">
+                Especifique os assuntos e quantidade para cada matéria. Exemplo: "20 de Windows, 30 de Word, 15 de Excel"
+              </p>
+              
+              <div className="space-y-3">
+                {materias.map(materia => (
+                  <div key={materia} className="bg-white/5 rounded-xl p-4">
+                    <label className="text-emerald-400 font-medium mb-2 block">
+                      📚 {materia}
+                    </label>
+                    <textarea
+                      rows={2}
+                      value={detalhamentoPorMateria[materia] || ''}
+                      onChange={(e) => setDetalhamentoPorMateria({
+                        ...detalhamentoPorMateria,
+                        [materia]: e.target.value
+                      })}
+                      className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-sm"
+                      placeholder="Ex: 20 de Windows, 30 de Word, 15 de Excel, 10 de PowerPoint..."
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      💡 Dica: Separe por vírgula e especifique quantidades
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Questões por Matéria */}
           <div className="glass-card rounded-2xl p-6">
