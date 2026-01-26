@@ -79,6 +79,8 @@ import { getPackageRequests as getPackageRequestsLocal, updatePackageRequestStat
 import { getPackageRequests as getPackageRequestsSupabase, updatePackageRequestStatus as updatePackageRequestStatusSupabase, updatePackageExtrasResponse as updatePackageExtrasResponseSupabase, type PackageRequest } from "../lib/supabase-package-requests";
 import { confirmPaymentAndUpgrade } from "../lib/plan-upgrade";
 import { supabase } from "../lib/supabase";
+import { syncSupabaseToLocalStorage, startAutoSync } from "../lib/supabase-sync";
+import { getPacotesFromSupabase, savePacoteToSupabase } from "../lib/supabase-pacotes";
 
 const OPTION_LABELS = ["A", "B", "C", "D"] as const;
 
@@ -1875,6 +1877,16 @@ function AdminPage() {
     
     const data = getQuizData();
     setQuizData(data);
+    
+    // 🔥 SINCRONIZAÇÃO AUTOMÁTICA COM SUPABASE
+    syncSupabaseToLocalStorage().then(syncedData => {
+      if (syncedData) {
+        setQuizData(syncedData);
+      }
+    });
+    
+    // Iniciar auto-sync a cada 10 segundos
+    startAutoSync();
     
     // Load config
     const storedConfig = localStorage.getItem(CONFIG_STORAGE_KEY);

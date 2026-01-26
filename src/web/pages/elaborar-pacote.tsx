@@ -13,6 +13,7 @@ import { getQuizData, saveQuizData, type QuizData, type Question, type Pacote } 
 import { supabase } from "../lib/supabase";
 import { getPacoteStatus, renovarPacote, isPacoteAccessible } from "../lib/pacote-expiration";
 import { savePacoteToSupabase, saveQuestaoToSupabase, deleteQuestaoFromSupabase, getPacotesFromSupabase, getQuestoesFromSupabase } from "../lib/supabase-pacotes";
+import { syncSupabaseToLocalStorage } from "../lib/supabase-sync";
 
 export default function ElaborarPacote() {
   const params = useParams<{ id: string }>();
@@ -67,8 +68,9 @@ export default function ElaborarPacote() {
       try {
         setLoading(true);
         
-        // Carregar quiz data
-        const data = await getQuizData();
+        // 🔥 SINCRONIZAR COM SUPABASE PRIMEIRO
+        const syncedData = await syncSupabaseToLocalStorage();
+        const data = syncedData || getQuizData();
         setQuizData(data);
         
         // Carregar solicitações
