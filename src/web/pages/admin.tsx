@@ -5547,45 +5547,73 @@ function AdminPage() {
 
               {/* Matérias Solicitadas */}
               <div>
-                <h3 className="text-lg font-bold text-white mb-3">📚 Matérias</h3>
-                <div className="flex flex-wrap gap-2 mb-3">
-                  {elaborarMaterias.map((materia, i) => (
-                    <span key={i} className="inline-flex items-center gap-2 px-3 py-2 bg-purple-500/20 text-purple-400 rounded-lg text-sm font-medium">
+                <h3 className="text-lg font-bold text-white mb-3">📚 Matérias do Pacote</h3>
+                
+                {/* Matérias selecionadas */}
+                <div className="flex flex-wrap gap-2 mb-4 p-4 bg-purple-500/10 border border-purple-500/20 rounded-xl min-h-[60px]">
+                  {elaborarMaterias.length > 0 ? elaborarMaterias.map((materia, i) => (
+                    <span key={i} className="inline-flex items-center gap-2 px-3 py-2 bg-purple-500 text-white rounded-lg text-sm font-medium">
                       {materia}
                       <button
                         onClick={() => setElaborarMaterias(elaborarMaterias.filter((_, idx) => idx !== i))}
-                        className="w-4 h-4 flex items-center justify-center rounded-full bg-red-500/30 hover:bg-red-500/50 text-red-400 text-xs"
+                        className="w-4 h-4 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/40 text-white text-xs"
                       >
                         ×
                       </button>
                     </span>
-                  ))}
+                  )) : (
+                    <span className="text-gray-500 text-sm italic">Nenhuma matéria selecionada - clique abaixo para adicionar</span>
+                  )}
                 </div>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={elaborarNovaMateria}
-                    onChange={(e) => setElaborarNovaMateria(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && elaborarNovaMateria.trim()) {
-                        setElaborarMaterias([...elaborarMaterias, elaborarNovaMateria.trim()]);
-                        setElaborarNovaMateria("");
-                      }
-                    }}
-                    className="flex-1 px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white"
-                    placeholder="Adicionar matéria..."
-                  />
-                  <button
-                    onClick={() => {
-                      if (elaborarNovaMateria.trim()) {
-                        setElaborarMaterias([...elaborarMaterias, elaborarNovaMateria.trim()]);
-                        setElaborarNovaMateria("");
-                      }
-                    }}
-                    className="px-4 py-2 bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 rounded-lg"
-                  >
-                    + Adicionar
-                  </button>
+                
+                {/* Matérias comuns pré-definidas */}
+                <div className="mb-4">
+                  <p className="text-gray-400 text-xs mb-2">Matérias comuns (clique para adicionar):</p>
+                  <div className="flex flex-wrap gap-2">
+                    {["Português", "Matemática", "Raciocínio Lógico", "Direito Constitucional", "Direito Administrativo", "Informática", "Conhecimentos Gerais", "AFO", "Direito Civil", "Direito Penal", "Direito Processual Penal", "Direito Processual Civil", "Direito Tributário", "Direito Previdenciário", "Direito do Trabalho", "Legislação Específica", "Atualidades", "Geografia", "História", "Estatística"]
+                      .filter(m => !elaborarMaterias.includes(m))
+                      .map(m => (
+                        <button
+                          key={m}
+                          onClick={() => setElaborarMaterias([...elaborarMaterias, m])}
+                          className="px-3 py-1.5 bg-white/5 hover:bg-purple-500/30 text-gray-300 hover:text-purple-400 rounded-lg text-sm transition-all border border-white/10 hover:border-purple-500/50"
+                        >
+                          + {m}
+                        </button>
+                      ))
+                    }
+                  </div>
+                </div>
+                
+                {/* Adicionar matéria customizada */}
+                <div>
+                  <p className="text-gray-400 text-xs mb-2">Ou adicione outra matéria:</p>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={elaborarNovaMateria}
+                      onChange={(e) => setElaborarNovaMateria(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && elaborarNovaMateria.trim()) {
+                          setElaborarMaterias([...elaborarMaterias, elaborarNovaMateria.trim()]);
+                          setElaborarNovaMateria("");
+                        }
+                      }}
+                      className="flex-1 px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500"
+                      placeholder="Digite o nome da matéria..."
+                    />
+                    <button
+                      onClick={() => {
+                        if (elaborarNovaMateria.trim() && !elaborarMaterias.includes(elaborarNovaMateria.trim())) {
+                          setElaborarMaterias([...elaborarMaterias, elaborarNovaMateria.trim()]);
+                          setElaborarNovaMateria("");
+                        }
+                      }}
+                      className="px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-lg font-medium"
+                    >
+                      + Adicionar
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -5593,6 +5621,11 @@ function AdminPage() {
               <button
                 onClick={async () => {
                   if (!quizData || !elaborandoPacote) return;
+                  
+                  if (elaborarMaterias.length === 0) {
+                    alert("❌ Adicione pelo menos uma matéria!");
+                    return;
+                  }
                   
                   // Criar novo pacote
                   const novoPacote: Pacote = {
@@ -5608,7 +5641,8 @@ function AdminPage() {
                     premium: false,
                     alunoAtribuido: elaborandoPacote.userId || elaborandoPacote.email,
                     createdAt: new Date().toISOString(),
-                    updatedAt: new Date().toISOString()
+                    updatedAt: new Date().toISOString(),
+                    expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 dias
                   };
                   
                   const newData = { ...quizData, pacotes: [...quizData.pacotes, novoPacote] };
@@ -5625,16 +5659,17 @@ function AdminPage() {
                   
                   await loadPackageRequests();
                   
-                  alert(`✅ Pacote "${novoPacote.nome}" criado com sucesso!\n\nAgora você pode adicionar questões.`);
-                  
-                  // Resetar estado e fechar
+                  // Fechar modal e abrir página de elaboração
                   setElaborandoPacote(null);
                   setElaborarMaterias([]);
-                  setActiveSection("pacotes"); // Ir para seção de pacotes
+                  
+                  // Redirecionar para página de criação de questões
+                  window.location.href = `/admin/elaborar-pacote/${novoPacote.id}`;
                 }}
-                className="w-full py-4 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-400 hover:to-emerald-400 rounded-xl text-white font-bold text-lg shadow-xl"
+                disabled={elaborarMaterias.length === 0}
+                className="w-full py-4 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-400 hover:to-emerald-400 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl text-white font-bold text-lg shadow-xl transition-all"
               >
-                📦 Criar Pacote e Continuar
+                📦 Criar Pacote e Elaborar Questões →
               </button>
 
               {/* Botão Fechar */}

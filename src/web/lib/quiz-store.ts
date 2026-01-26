@@ -77,6 +77,10 @@ export interface Pacote {
   cargo?: string;
   createdAt: string;
   updatedAt: string;
+  expiresAt?: string; // Data de expiração (30 dias)
+  suspendedAt?: string; // Data de suspensão (+30 dias sem pagar)
+  canceledAt?: string; // Data de cancelamento (+15 dias suspenso)
+  status?: "active" | "suspended" | "canceled";
 }
 
 export interface QuizData {

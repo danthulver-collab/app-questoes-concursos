@@ -11,6 +11,7 @@ import { isSuperAdmin } from "../lib/access-control";
 import { getPackageRequests, type PackageRequest } from "../lib/supabase-package-requests";
 import { getQuizData, saveQuizData, type QuizData, type Question, type Pacote } from "../lib/quiz-store";
 import { supabase } from "../lib/supabase";
+import { getPacoteStatus, renovarPacote, isPacoteAccessible } from "../lib/pacote-expiration";
 
 export default function ElaborarPacote() {
   const params = useParams<{ id: string }>();
@@ -313,7 +314,7 @@ export default function ElaborarPacote() {
 
   return (
     <div className="min-h-screen bg-[#0d1117]">
-      <AppHeader title="Elaboração do Pacote" showBackButton />
+      <AppHeader title="Criação de Questões" showBackButton />
       
       <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
         
@@ -321,22 +322,51 @@ export default function ElaborarPacote() {
         <div className="bg-gradient-to-r from-purple-500/20 to-blue-500/20 border border-purple-500/30 rounded-2xl p-6">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             <div>
-              <h1 className="text-2xl font-bold text-white mb-1">
-                📦 Elaboração do Pacote Individual
+              <h1 className="text-3xl font-bold text-white mb-1">
+                📝 CRIAÇÃO DE QUESTÕES - {concurso || pacote?.nome || "Pedido"}
               </h1>
               <p className="text-gray-400">
-                Aluno: <span className="text-white font-semibold">{nomeAluno || emailAluno || "Não identificado"}</span>
+                Aluno: <span className="text-white font-semibold">{nomeAluno || emailAluno || pacote?.alunoAtribuido || "Não identificado"}</span>
+                {pacote?.expiresAt && (
+                  <span className="ml-4 text-amber-400">
+                    ⏰ Expira em: {new Date(pacote.expiresAt).toLocaleDateString('pt-BR')}
+                  </span>
+                )}
               </p>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               <span className="px-4 py-2 bg-purple-500/20 text-purple-400 rounded-full text-sm font-bold">
                 {totalQuestoes} / {numQuestoes} questões
               </span>
-              {pacote && (
-                <span className="px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-xs">
-                  ✓ Pacote criado
-                </span>
-              )}
+              {pacote && (() => {
+                const statusInfo = getPacoteStatus(pacote);
+                return (
+                  <>
+                    <span className={`px-3 py-1 bg-${statusInfo.color}-500/20 text-${statusInfo.color}-400 rounded-full text-xs font-bold`}>
+                      {statusInfo.message}
+                    </span>
+                    {(statusInfo.status === "expired" || statusInfo.status === "suspended") && (
+                      <button
+                        onClick={async () => {
+                          if (!quizData || !confirm("Renovar pacote por +30 dias?")) return;
+                          const renewed = renovarPacote(pacote);
+                          const newData = {
+                            ...quizData,
+                            pacotes: quizData.pacotes.map(p => p.id === pacote.id ? renewed : p)
+                          };
+                          await saveQuizData(newData);
+                          setQuizData(newData);
+                          setPacote(renewed);
+                          alert("✅ Pacote renovado por +30 dias!");
+                        }}
+                        className="px-3 py-1 bg-green-500 hover:bg-green-600 text-white rounded-full text-xs font-bold"
+                      >
+                        🔄 Renovar +30 dias
+                      </button>
+                    )}
+                  </>
+                );
+              })()}
             </div>
           </div>
         </div>
