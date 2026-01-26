@@ -252,12 +252,41 @@ function QuestoesAreasEditor({ showSaveMessage }: { showSaveMessage: (msg?: stri
       {/* Seletor de Matéria */}
       {selectedArea && !selectedMateria && (
         <div className="space-y-4">
-          <div className="flex items-center gap-3 mb-6">
-            <span className="text-3xl">{selectedAreaObj?.icone}</span>
-            <h2 className="text-2xl font-bold">{selectedAreaObj?.nome}</h2>
-            <button onClick={() => setSelectedArea("")} className="ml-auto text-gray-400 hover:text-white">
-              ← Trocar Área
-            </button>
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <span className="text-3xl">{selectedAreaObj?.icone}</span>
+              <h2 className="text-2xl font-bold">{selectedAreaObj?.nome}</h2>
+            </div>
+            <div className="flex gap-3">
+              <button 
+                onClick={() => {
+                  const nome = prompt("Nome da nova matéria:");
+                  if (!nome) return;
+                  const data = getQuizData();
+                  const newMateria = {
+                    id: nome.toLowerCase().replace(/\s+/g, '-'),
+                    nome: nome.trim()
+                  };
+                  data.disciplinas.push(newMateria);
+                  
+                  // Adicionar à área
+                  const area = data.areas.find(a => a.id === selectedArea);
+                  if (area && !area.materias.includes(newMateria.id)) {
+                    area.materias.push(newMateria.id);
+                  }
+                  
+                  saveQuizData(data);
+                  showSaveMessage("Matéria adicionada!");
+                  window.location.reload();
+                }}
+                className="px-4 py-2 bg-gradient-to-r from-emerald-500 to-green-500 rounded-xl font-bold hover:scale-105 transition-transform flex items-center gap-2"
+              >
+                <span>➕</span> Adicionar Matéria
+              </button>
+              <button onClick={() => setSelectedArea("")} className="px-4 py-2 bg-white/10 rounded-xl hover:bg-white/20 transition-all">
+                ← Trocar Área
+              </button>
+            </div>
           </div>
           
           <div className="grid md:grid-cols-3 gap-4">
