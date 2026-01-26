@@ -18,14 +18,28 @@ export const upgradePlanAfterPayment = async (
     console.log(`🚀 Iniciando upgrade de plano para ${userEmail} -> ${newPlan}`);
     
     // 1. Atualizar no Supabase profiles
+    // 🔥 Se for plano individual, também define package_status como 'aguardando'
+    const updateData: Record<string, string> = { plan: newPlan };
+    if (newPlan === 'individual') {
+      updateData.package_status = 'aguardando';
+    }
+    
     const { error: profileError } = await supabase
       .from('profiles')
-      .update({ plan: newPlan })
+      .update(updateData)
       .eq('id', userId);
     
     if (profileError) {
-      console.error('Erro ao atualizar profile:', profileError);
-      throw profileError;
+      // Tenta por email se falhou por ID
+      const { error: emailError } = await supabase
+        .from('profiles')
+        .update(updateData)
+        .eq('email', userEmail);
+      
+      if (emailError) {
+        console.error('Erro ao atualizar profile:', emailError);
+        throw emailError;
+      }
     }
     
     // 2. Atualizar no localStorage
@@ -34,7 +48,7 @@ export const upgradePlanAfterPayment = async (
     // 3. Resetar contador de questões (agora tem acesso ilimitado)
     resetQuestionsCounter(userEmail);
     
-    console.log(`✅ Plano atualizado com sucesso para ${newPlan}`);
+    console.log(`✅ Plano atualizado com sucesso para ${newPlan}${newPlan === 'individual' ? ' (package_status: aguardando)' : ''}`);
     return true;
   } catch (error) {
     console.error('Erro no upgrade de plano:', error);

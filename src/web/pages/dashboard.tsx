@@ -5,7 +5,7 @@ import { getUserStats, getAllUsersStats, getBadgeInfo, type UserStats } from "..
 import { getQuizData } from "../lib/quiz-store";
 import { AppHeader } from "../components/app-header";
 import { getOnboardingData } from "./onboarding";
-import { getUserPlan, getRemainingQuestions, PLAN_LIMITS, type PlanType } from "../lib/access-control";
+import { getUserPlan, getRemainingQuestions, PLAN_LIMITS, type PlanType, isSuperAdmin } from "../lib/access-control";
 import { monitorPaymentStatus } from "../lib/plan-upgrade";
 import { supabase } from "../lib/supabase";
 import { resetUserStats } from "../lib/reset-stats";
@@ -15,6 +15,12 @@ interface OnboardingData {
   cargoDesejado: string;
   bancaOrganizadora: string;
   materias: string;
+}
+
+// 🔥 Interface para dados do profile do Supabase
+interface ProfileData {
+  plan: string | null;
+  package_status: 'aguardando' | 'em_andamento' | 'pronto' | null;
 }
 
 function DashboardPage() {
@@ -31,6 +37,12 @@ function DashboardPage() {
   // Plan-related state
   const [userPlan, setUserPlan] = useState<PlanType | null>(null);
   const [remainingQuestions, setRemainingQuestions] = useState<number>(PLAN_LIMITS.free.questionsPerDay);
+  
+  // 🔥 Estado para profile do Supabase (Produtos Exclusivos)
+  const [profileData, setProfileData] = useState<ProfileData | null>(null);
+  
+  // 🔥 Verificar se é admin
+  const isAdmin = user?.email ? isSuperAdmin(user.email) : false;
 
   useEffect(() => {
     if (user?.username) {
@@ -100,8 +112,34 @@ function DashboardPage() {
         
         checkPedido();
         
+        // 🔥 Buscar profile do Supabase (para Produtos Exclusivos)
+        const fetchProfile = async () => {
+          try {
+            const { data: profile, error } = await supabase
+              .from('profiles')
+              .select('plan, package_status')
+              .eq('email', user.email)
+              .single();
+            
+            if (profile && !error) {
+              setProfileData({
+                plan: profile.plan,
+                package_status: profile.package_status
+              });
+              console.log('📋 Profile carregado:', profile);
+            }
+          } catch (e) {
+            console.error('❌ Erro ao buscar profile:', e);
+          }
+        };
+        
+        fetchProfile();
+        
         // Atualizar a cada 3 segundos (mais rápido)
-        const interval = setInterval(checkPedido, 3000);
+        const interval = setInterval(() => {
+          checkPedido();
+          fetchProfile();
+        }, 3000);
         return () => clearInterval(interval);
       }
     }
@@ -226,6 +264,84 @@ function DashboardPage() {
                    activePedido.status === 'pronto' ? '✅ Entregue' :
                    '⏳ Aguardando'}
                 </div>
+              </div>
+            </div>
+          )}
+          
+          {/* 🔥 CARD PRODUTOS EXCLUSIVOS - Apenas para alunos (não admin) */}
+          {!isAdmin && (
+            <div className={`glass-card rounded-3xl p-8 md:p-12 animate-slide-in-up border-2 shadow-2xl transition-all ${
+              profileData?.plan === 'individual' && profileData?.package_status === 'pronto'
+                ? 'bg-gradient-to-br from-emerald-500/20 to-green-500/10 border-emerald-500/30 shadow-emerald-500/20 hover:scale-[1.02] cursor-pointer'
+                : 'bg-gradient-to-br from-gray-500/10 to-gray-600/5 border-gray-500/20 shadow-gray-500/10'
+            }`}
+              onClick={() => {
+                if (profileData?.plan === 'individual' && profileData?.package_status === 'pronto') {
+                  setLocation('/produtos-exclusivos');
+                }
+              }}
+            >
+              <div className="flex flex-col items-center justify-center text-center gap-4">
+                {/* Ícone com cadeado ou desbloqueado */}
+                <div className={`w-20 h-20 rounded-full flex items-center justify-center text-4xl shadow-xl ${
+                  profileData?.plan === 'individual' && profileData?.package_status === 'pronto'
+                    ? 'bg-gradient-to-br from-emerald-500 to-green-500 shadow-emerald-500/40'
+                    : 'bg-gradient-to-br from-gray-600 to-gray-700 shadow-gray-500/40'
+                }`}>
+                  {profileData?.plan === 'individual' && profileData?.package_status === 'pronto' ? '🔓' : '🔒'}
+                </div>
+                
+                <h2 className={`text-2xl md:text-3xl font-black ${
+                  profileData?.plan === 'individual' && profileData?.package_status === 'pronto'
+                    ? 'text-white'
+                    : 'text-gray-400'
+                }`}>
+                  ✨ Produtos Exclusivos
+                </h2>
+                
+                {/* Mensagem baseada no status */}
+                <p className={`text-base max-w-md ${
+                  profileData?.plan === 'individual' && profileData?.package_status === 'pronto'
+                    ? 'text-gray-300'
+                    : 'text-gray-500'
+                }`}>
+                  {profileData?.plan === 'individual' && profileData?.package_status === 'pronto'
+                    ? '🎉 Seu pacote exclusivo está pronto! Acesse suas questões personalizadas.'
+                    : profileData?.plan === 'individual' && profileData?.package_status === 'em_andamento'
+                    ? '🔨 Seu pacote está sendo preparado. Aguarde a liberação.'
+                    : profileData?.plan === 'individual'
+                    ? '⏳ Aguardando liberação do pacote exclusivo.'
+                    : '🔒 Disponível apenas para assinantes do Plano Individual.'
+                  }
+                </p>
+                
+                {/* Botão ou Status */}
+                {profileData?.plan === 'individual' && profileData?.package_status === 'pronto' ? (
+                  <button
+                    className="mt-4 px-8 py-4 bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-400 hover:to-green-400 rounded-2xl text-white font-bold text-xl shadow-2xl shadow-emerald-500/40 transition-all active:scale-95 hover:scale-105 flex items-center gap-3"
+                  >
+                    <span className="text-3xl">📦</span>
+                    <span>Acessar Produtos Exclusivos</span>
+                  </button>
+                ) : (
+                  <div className={`mt-4 px-6 py-3 rounded-2xl text-base font-bold ${
+                    profileData?.plan === 'individual'
+                      ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                      : 'bg-gray-500/20 text-gray-400 border border-gray-500/30'
+                  }`}>
+                    {profileData?.plan === 'individual'
+                      ? `⏳ ${profileData?.package_status === 'em_andamento' ? 'Em Produção' : 'Aguardando'}`
+                      : '🔒 Bloqueado'
+                    }
+                  </div>
+                )}
+                
+                {/* Link para upgrade se não for individual */}
+                {profileData?.plan !== 'individual' && (
+                  <Link href="/planos" className="mt-2 text-sm text-orange-400 hover:text-orange-300 underline">
+                    Fazer upgrade para Plano Individual →
+                  </Link>
+                )}
               </div>
             </div>
           )}

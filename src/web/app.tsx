@@ -27,6 +27,7 @@ import EscolherMateria from "./pages/escolher-materia";
 import AcompanharPedido from "./pages/acompanhar-pedido";
 import SimuladoPage from "./pages/simulado";
 import ElaborarPacote from "./pages/elaborar-pacote";
+import ProdutosExclusivos from "./pages/produtos-exclusivos";
 import { Provider } from "./components/provider";
 import { AuthProvider } from "./lib/auth-context-supabase";
 import { ProtectedRoute } from "./components/protected-route";
@@ -168,6 +169,11 @@ function App() {
                                         <Route path="/admin/elaborar-pacote/:id">
                                                 <ProtectedRoute>
                                                         <ElaborarPacote />
+                                                </ProtectedRoute>
+                                        </Route>
+                                        <Route path="/produtos-exclusivos">
+                                                <ProtectedRoute>
+                                                        <ProdutosExclusivos />
                                                 </ProtectedRoute>
                                         </Route>
                                 </Switch>

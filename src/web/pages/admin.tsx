@@ -3376,6 +3376,47 @@ function AdminPage() {
                                     <span className="text-xs opacity-80">({pacoteExistente.questionsIds?.length || 0} questões)</span>
                                   </button>
                                 )}
+                                
+                                {/* 🔥 Botão LIBERAR PACOTE - Atualiza package_status no Supabase */}
+                                {pacoteExistente && pacoteExistente.questionsIds && pacoteExistente.questionsIds.length > 0 && request.status !== 'pronto' && (
+                                  <button
+                                    onClick={async () => {
+                                      if (!confirm(`Liberar pacote para ${userName}?\n\nIsso irá:\n✅ Atualizar package_status para 'pronto' no Supabase\n✅ O aluno poderá acessar o pacote imediatamente`)) return;
+                                      
+                                      try {
+                                        // 1. Atualizar package_status no profiles
+                                        const { error: profileError } = await supabase
+                                          .from('profiles')
+                                          .update({ package_status: 'pronto' })
+                                          .eq('email', request.email);
+                                        
+                                        if (profileError) {
+                                          console.error('Erro ao atualizar profile:', profileError);
+                                        }
+                                        
+                                        // 2. Atualizar status do plan_request
+                                        const { error: requestError } = await supabase
+                                          .from('plan_requests')
+                                          .update({ status: 'pronto' })
+                                          .eq('id', request.id);
+                                        
+                                        if (requestError) {
+                                          console.error('Erro ao atualizar request:', requestError);
+                                        }
+                                        
+                                        alert('✅ Pacote liberado! O aluno já pode acessar.');
+                                        window.location.reload();
+                                      } catch (error) {
+                                        console.error('Erro ao liberar pacote:', error);
+                                        alert('❌ Erro ao liberar pacote');
+                                      }
+                                    }}
+                                    className="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 rounded-xl text-white font-bold shadow-lg shadow-amber-500/30 transition-all flex items-center justify-center gap-2"
+                                  >
+                                    <span>🔓</span>
+                                    <span>Liberar Pacote para Aluno</span>
+                                  </button>
+                                )}
                               </div>
                             </div>
                           );
