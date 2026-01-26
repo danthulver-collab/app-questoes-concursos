@@ -12,6 +12,7 @@ import { getPackageRequests, type PackageRequest } from "../lib/supabase-package
 import { getQuizData, saveQuizData, type QuizData, type Question, type Pacote } from "../lib/quiz-store";
 import { supabase } from "../lib/supabase";
 import { getPacoteStatus, renovarPacote, isPacoteAccessible } from "../lib/pacote-expiration";
+import { savePacoteToSupabase, saveQuestaoToSupabase, deleteQuestaoFromSupabase, getPacotesFromSupabase, getQuestoesFromSupabase } from "../lib/supabase-pacotes";
 
 export default function ElaborarPacote() {
   const params = useParams<{ id: string }>();
@@ -174,12 +175,16 @@ export default function ElaborarPacote() {
         ? quizData.pacotes.map(p => p.id === pacote.id ? updatedPacote : p)
         : [...quizData.pacotes, updatedPacote];
       
+      // Salvar no Supabase PRIMEIRO
+      await savePacoteToSupabase(updatedPacote);
+      
+      // Depois salvar no localStorage (backup)
       const newData = { ...quizData, pacotes: newPacotes };
       await saveQuizData(newData);
       setQuizData(newData);
       setPacote(updatedPacote);
       
-      alert("✅ Pacote salvo com sucesso!");
+      alert("✅ Pacote salvo no Supabase!");
     } catch (error) {
       console.error("Erro ao salvar:", error);
       alert("❌ Erro ao salvar pacote");
@@ -230,27 +235,37 @@ export default function ElaborarPacote() {
       dificuldade: "medio"
     };
     
+    // Salvar questão no Supabase PRIMEIRO
+    await saveQuestaoToSupabase(question);
+    
     const newQuestionsIds = [...(pacote.questionsIds || []), question.id];
     const updatedPacote = { ...pacote, questionsIds: newQuestionsIds };
     
+    // Atualizar pacote no Supabase
+    await savePacoteToSupabase(updatedPacote);
+    
+    // Salvar também no localStorage (backup)
     const newData = {
       ...quizData,
       questions: [...quizData.questions, question],
       pacotes: quizData.pacotes.map(p => p.id === pacote.id ? updatedPacote : p)
     };
-    
     await saveQuizData(newData);
+    
     setQuizData(newData);
     setPacote(updatedPacote);
     setShowNewQuestion(false);
     setNewQuestion({ pergunta: "", alternativas: ["", "", "", ""], correta: 0, comentario: "" });
     
-    alert("✅ Questão criada!");
+    alert("✅ Questão criada e salva no Supabase!");
   };
 
   // Salvar questão editada
   const handleSaveQuestion = async () => {
     if (!quizData || !editingQuestion) return;
+    
+    // Salvar no Supabase PRIMEIRO
+    await saveQuestaoToSupabase(editingQuestion);
     
     const newQuestions = quizData.questions.map(q => 
       q.id === editingQuestion.id ? editingQuestion : q
@@ -261,15 +276,22 @@ export default function ElaborarPacote() {
     setQuizData(newData);
     setEditingQuestion(null);
     
-    alert("✅ Questão salva!");
+    alert("✅ Questão salva no Supabase!");
   };
 
   // Excluir questão
   const handleDeleteQuestion = async (questionId: string) => {
     if (!quizData || !pacote || !confirm("Excluir esta questão?")) return;
     
+    // Excluir do Supabase PRIMEIRO
+    await deleteQuestaoFromSupabase(questionId);
+    
     const newQuestionsIds = pacote.questionsIds.filter(id => id !== questionId);
     const updatedPacote = { ...pacote, questionsIds: newQuestionsIds };
+    
+    // Atualizar pacote no Supabase
+    await savePacoteToSupabase(updatedPacote);
+    
     const newQuestions = quizData.questions.filter(q => q.id !== questionId);
     
     const newData = {
@@ -282,7 +304,7 @@ export default function ElaborarPacote() {
     setQuizData(newData);
     setPacote(updatedPacote);
     
-    alert("✅ Questão excluída!");
+    alert("✅ Questão excluída do Supabase!");
   };
 
   if (!isUserAdmin) {
