@@ -104,6 +104,9 @@ interface PlatformConfig {
 function GerenciarAreasHierarquico({ showSaveMessage }: { showSaveMessage: (msg?: string) => void }) {
   const [selectedAreaId, setSelectedAreaId] = useState<string>("");
   const [selectedCarreiraId, setSelectedCarreiraId] = useState<string>("");
+  const [refreshKey, setRefreshKey] = useState(0);
+  
+  const refresh = () => setRefreshKey(prev => prev + 1);
   
   const areas = getAllAreas();
   const selectedArea = areas.find(a => a.id === selectedAreaId);
@@ -128,7 +131,7 @@ function GerenciarAreasHierarquico({ showSaveMessage }: { showSaveMessage: (msg?
               const desc = prompt("Descrição:");
               addArea({ nome: nome.trim(), icone, descricao: desc, carreiras: [], materias: [] });
               showSaveMessage("Área criada!");
-              window.location.reload();
+              refresh();
             }}
             className="px-6 py-3 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl font-bold hover:scale-105 transition-transform flex items-center gap-2"
           >
@@ -197,7 +200,7 @@ function GerenciarAreasHierarquico({ showSaveMessage }: { showSaveMessage: (msg?
                     if (nome && selectedAreaId) {
                       updateArea(selectedAreaId, { nome, icone, descricao: desc });
                       showSaveMessage("Área atualizada!");
-                      window.location.reload();
+                      refresh();
                     }
                   }}
                   className="px-4 py-2 bg-blue-500/20 text-blue-400 rounded-xl hover:bg-blue-500/30 transition-all"
@@ -236,7 +239,7 @@ function GerenciarAreasHierarquico({ showSaveMessage }: { showSaveMessage: (msg?
                   cargos: cargos?.split(',').map(c => c.trim()) || [] 
                 });
                 showSaveMessage("Carreira criada!");
-                window.location.reload();
+                refresh();
               }}
               className="px-4 py-2 bg-gradient-to-r from-emerald-500 to-green-500 rounded-xl font-bold hover:scale-105 transition-transform"
             >
@@ -267,7 +270,7 @@ function GerenciarAreasHierarquico({ showSaveMessage }: { showSaveMessage: (msg?
                             cargos: cargos?.split(',').map(c => c.trim()) || carr.cargos 
                           });
                           showSaveMessage("Carreira atualizada!");
-                          window.location.reload();
+                          refresh();
                         }
                       }}
                       className="px-3 py-1.5 bg-blue-500/20 text-blue-400 rounded-lg hover:bg-blue-500/30 text-xs"
@@ -279,7 +282,7 @@ function GerenciarAreasHierarquico({ showSaveMessage }: { showSaveMessage: (msg?
                         if (confirm(`Deletar "${carr.nome}"?`)) {
                           deleteCarreira(carr.id);
                           showSaveMessage("Carreira deletada!");
-                          window.location.reload();
+                          refresh();
                         }
                       }}
                       className="px-3 py-1.5 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 text-xs"
@@ -315,7 +318,7 @@ function GerenciarAreasHierarquico({ showSaveMessage }: { showSaveMessage: (msg?
                 
                 saveQuizData(data);
                 showSaveMessage("Matéria criada!");
-                window.location.reload();
+                refresh();
               }}
               className="px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl font-bold hover:scale-105 transition-transform"
             >
@@ -338,7 +341,7 @@ function GerenciarAreasHierarquico({ showSaveMessage }: { showSaveMessage: (msg?
                           if (idx >= 0) data.disciplinas[idx].nome = nome.trim();
                           saveQuizData(data);
                           showSaveMessage("Matéria atualizada!");
-                          window.location.reload();
+                          refresh();
                         }
                       }}
                       className="px-2 py-1 bg-blue-500/20 text-blue-400 rounded hover:bg-blue-500/30 text-xs"
@@ -357,7 +360,7 @@ function GerenciarAreasHierarquico({ showSaveMessage }: { showSaveMessage: (msg?
                           }
                           saveQuizData(data);
                           showSaveMessage("Matéria deletada!");
-                          window.location.reload();
+                          refresh();
                         }
                       }}
                       className="px-2 py-1 bg-red-500/20 text-red-400 rounded hover:bg-red-500/30 text-xs"
@@ -570,7 +573,7 @@ function QuestoesAreasEditor({ showSaveMessage }: { showSaveMessage: (msg?: stri
                   
                   saveQuizData(data);
                   showSaveMessage("Matéria adicionada!");
-                  window.location.reload();
+                  refresh();
                 }}
                 className="px-4 py-2 bg-gradient-to-r from-emerald-500 to-green-500 rounded-xl font-bold hover:scale-105 transition-transform flex items-center gap-2"
               >
