@@ -44,6 +44,10 @@ export const getQuestoesFromSupabase = async (): Promise<Record<string, Record<s
         options: q.options || [],
         correct_answer: q.correct_answer,
         explanation: q.explanation || '',
+        plano: q.plano || 'free',
+        audio_voice: q.audio_voice,
+        enable_chatgpt: q.enable_chatgpt || false,
+        audio_comentario: q.audio_comentario,
         created_at: q.created_at,
         updated_at: q.updated_at
       });
