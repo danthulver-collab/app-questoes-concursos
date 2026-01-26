@@ -24,6 +24,8 @@ export default function SimuladoPage() {
   const [anotacoes, setAnotacoes] = useState<Record<number, string>>({});
   const [showLimitModal, setShowLimitModal] = useState(false);
   const [questoesRespondidas, setQuestoesRespondidas] = useState(0);
+  const [isAudioPlaying, setIsAudioPlaying] = useState(false);
+  const [currentUtterance, setCurrentUtterance] = useState<SpeechSynthesisUtterance | null>(null);
   
   // Verificar plano para comentários - incluindo admin
   const userId = user?.email || user?.username || '';
@@ -359,18 +361,32 @@ Responda de forma clara, didática e objetiva, focando em ajudar o aluno a enten
                               onClick={() => {
                                 const text = questao.audio_comentario || questao.explanation || "Comentário não disponível";
                                 if ('speechSynthesis' in window) {
-                                  speechSynthesis.cancel();
-                                  const utterance = new SpeechSynthesisUtterance(text);
-                                  utterance.lang = 'pt-BR';
-                                  utterance.rate = 0.85;
-                                  speechSynthesis.speak(utterance);
+                                  if (isAudioPlaying) {
+                                    speechSynthesis.pause();
+                                    setIsAudioPlaying(false);
+                                  } else if (currentUtterance && speechSynthesis.paused) {
+                                    speechSynthesis.resume();
+                                    setIsAudioPlaying(true);
+                                  } else {
+                                    speechSynthesis.cancel();
+                                    const utterance = new SpeechSynthesisUtterance(text);
+                                    utterance.lang = 'pt-BR';
+                                    utterance.rate = 0.85;
+                                    utterance.onend = () => {
+                                      setIsAudioPlaying(false);
+                                      setCurrentUtterance(null);
+                                    };
+                                    setCurrentUtterance(utterance);
+                                    speechSynthesis.speak(utterance);
+                                    setIsAudioPlaying(true);
+                                  }
                                 }
                               }}
                               className="flex items-center justify-center gap-3 p-5 bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-500 hover:to-violet-500 rounded-2xl text-white font-bold text-lg shadow-xl shadow-purple-500/30 transition-all active:scale-95 hover:scale-[1.02]"
                             >
-                              <span className="text-3xl">🎧</span>
+                              <span className="text-3xl">{isAudioPlaying ? '⏸️' : '🎧'}</span>
                               <div className="text-left">
-                                <div>Ouvir Comentário</div>
+                                <div>{isAudioPlaying ? 'Pausar' : 'Ouvir'} Comentário</div>
                                 <div className="text-xs font-normal opacity-80">Áudio explicativo</div>
                               </div>
                             </button>
