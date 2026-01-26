@@ -100,6 +100,299 @@ interface PlatformConfig {
   logoUrl: string;
 }
 
+// Componente para gerenciar áreas hierarquicamente
+function GerenciarAreasHierarquico({ showSaveMessage }: { showSaveMessage: (msg?: string) => void }) {
+  const [selectedAreaId, setSelectedAreaId] = useState<string>("");
+  const [selectedCarreiraId, setSelectedCarreiraId] = useState<string>("");
+  
+  const areas = getAllAreas();
+  const selectedArea = areas.find(a => a.id === selectedAreaId);
+  const carreiras = selectedAreaId ? getCarreirasByArea(selectedAreaId) : [];
+  const selectedCarreira = carreiras.find(c => c.id === selectedCarreiraId);
+  const materias = selectedAreaId ? getMateriasByArea(selectedAreaId) : [];
+
+  // Lista de Áreas
+  if (!selectedAreaId) {
+    return (
+      <div className="max-w-6xl mx-auto space-y-6 animate-slide-in-up">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-extrabold text-white mb-2">🎯 Gerenciar Áreas</h1>
+            <p className="text-gray-400">Clique em uma área para gerenciar carreiras e matérias</p>
+          </div>
+          <button
+            onClick={() => {
+              const nome = prompt("Nome da nova Área:");
+              if (!nome) return;
+              const icone = prompt("Ícone (emoji):", "🎯");
+              const desc = prompt("Descrição:");
+              addArea({ nome: nome.trim(), icone, descricao: desc, carreiras: [], materias: [] });
+              showSaveMessage("Área criada!");
+              window.location.reload();
+            }}
+            className="px-6 py-3 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl font-bold hover:scale-105 transition-transform flex items-center gap-2"
+          >
+            <span>➕</span> Nova Área
+          </button>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-6">
+          {areas.map(area => {
+            const carrs = getCarreirasByArea(area.id);
+            return (
+              <button
+                key={area.id}
+                onClick={() => setSelectedAreaId(area.id)}
+                className="group text-left p-6 glass-card rounded-2xl border-2 border-white/10 hover:border-orange-500 transition-all hover:scale-[1.02]"
+              >
+                <div className="flex items-start gap-4">
+                  <div className="text-5xl group-hover:scale-110 transition-transform">{area.icone}</div>
+                  <div className="flex-1">
+                    <h3 className="text-2xl font-bold text-white group-hover:text-orange-400 transition-colors">{area.nome}</h3>
+                    <p className="text-gray-400 mt-2">{area.descricao}</p>
+                    <div className="flex gap-3 mt-3 text-sm">
+                      <span className="px-3 py-1 bg-orange-500/20 text-orange-400 rounded-full">{carrs.length} carreiras</span>
+                      <span className="px-3 py-1 bg-amber-500/20 text-amber-400 rounded-full">{area.materias.length} matérias</span>
+                    </div>
+                  </div>
+                  <svg className="w-6 h-6 text-gray-400 group-hover:text-orange-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
+  // Dentro de uma Área
+  if (selectedAreaId && !selectedCarreiraId) {
+    return (
+      <div className="max-w-6xl mx-auto space-y-6 animate-slide-in-up">
+        <button
+          onClick={() => setSelectedAreaId("")}
+          className="flex items-center gap-2 text-gray-400 hover:text-white transition-all mb-4"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+          Voltar para Áreas
+        </button>
+
+        {/* Editar Área */}
+        <div className="glass-card rounded-2xl p-6 border-2 border-orange-500/30">
+          <div className="flex items-start gap-6">
+            <div className="text-6xl">{selectedArea?.icone}</div>
+            <div className="flex-1">
+              <h2 className="text-3xl font-bold text-white mb-2">{selectedArea?.nome}</h2>
+              <p className="text-gray-400 mb-4">{selectedArea?.descricao}</p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    const nome = prompt("Novo nome:", selectedArea?.nome);
+                    const icone = prompt("Novo ícone:", selectedArea?.icone);
+                    const desc = prompt("Nova descrição:", selectedArea?.descricao);
+                    if (nome && selectedAreaId) {
+                      updateArea(selectedAreaId, { nome, icone, descricao: desc });
+                      showSaveMessage("Área atualizada!");
+                      window.location.reload();
+                    }
+                  }}
+                  className="px-4 py-2 bg-blue-500/20 text-blue-400 rounded-xl hover:bg-blue-500/30 transition-all"
+                >
+                  ✏️ Editar Área
+                </button>
+                <button
+                  onClick={() => {
+                    if (confirm(`Deletar área "${selectedArea?.nome}"? Isso também deleta carreiras e matérias.`)) {
+                      deleteArea(selectedAreaId);
+                      showSaveMessage("Área deletada!");
+                      setSelectedAreaId("");
+                    }
+                  }}
+                  className="px-4 py-2 bg-red-500/20 text-red-400 rounded-xl hover:bg-red-500/30 transition-all"
+                >
+                  🗑️ Deletar Área
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Carreiras desta Área */}
+        <div className="glass-card rounded-2xl p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-2xl font-bold text-white">💼 Carreiras desta Área</h3>
+            <button
+              onClick={() => {
+                const nome = prompt("Nome da nova Carreira:");
+                if (!nome) return;
+                const cargos = prompt("Cargos (separados por vírgula):");
+                addCarreira({ 
+                  nome: nome.trim(), 
+                  areaId: selectedAreaId, 
+                  cargos: cargos?.split(',').map(c => c.trim()) || [] 
+                });
+                showSaveMessage("Carreira criada!");
+                window.location.reload();
+              }}
+              className="px-4 py-2 bg-gradient-to-r from-emerald-500 to-green-500 rounded-xl font-bold hover:scale-105 transition-transform"
+            >
+              ➕ Nova Carreira
+            </button>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-4">
+            {carreiras.map(carr => (
+              <div key={carr.id} className="p-4 bg-white/5 rounded-xl border border-white/10">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1">
+                    <h4 className="font-bold text-lg text-white">{carr.nome}</h4>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {carr.cargos.map((cargo, i) => (
+                        <span key={i} className="px-2 py-1 bg-emerald-500/20 text-emerald-400 text-xs rounded">{cargo}</span>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => {
+                        const nome = prompt("Novo nome:", carr.nome);
+                        const cargos = prompt("Cargos (separados por vírgula):", carr.cargos.join(', '));
+                        if (nome) {
+                          updateCarreira(carr.id, { 
+                            nome, 
+                            cargos: cargos?.split(',').map(c => c.trim()) || carr.cargos 
+                          });
+                          showSaveMessage("Carreira atualizada!");
+                          window.location.reload();
+                        }
+                      }}
+                      className="px-3 py-1.5 bg-blue-500/20 text-blue-400 rounded-lg hover:bg-blue-500/30 text-xs"
+                    >
+                      ✏️
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (confirm(`Deletar "${carr.nome}"?`)) {
+                          deleteCarreira(carr.id);
+                          showSaveMessage("Carreira deletada!");
+                          window.location.reload();
+                        }
+                      }}
+                      className="px-3 py-1.5 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 text-xs"
+                    >
+                      🗑️
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Matérias desta Área */}
+        <div className="glass-card rounded-2xl p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-2xl font-bold text-white">📚 Matérias desta Área</h3>
+            <button
+              onClick={() => {
+                const nome = prompt("Nome da nova Matéria:");
+                if (!nome) return;
+                const data = getQuizData();
+                const newMateria = {
+                  id: nome.toLowerCase().replace(/\s+/g, '-'),
+                  nome: nome.trim()
+                };
+                data.disciplinas.push(newMateria);
+                
+                const area = data.areas.find(a => a.id === selectedAreaId);
+                if (area && !area.materias.includes(newMateria.id)) {
+                  area.materias.push(newMateria.id);
+                }
+                
+                saveQuizData(data);
+                showSaveMessage("Matéria criada!");
+                window.location.reload();
+              }}
+              className="px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl font-bold hover:scale-105 transition-transform"
+            >
+              ➕ Nova Matéria
+            </button>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-4">
+            {materias.map(mat => (
+              <div key={mat.id} className="p-4 bg-white/5 rounded-xl border border-white/10">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="font-bold text-white flex-1">{mat.nome}</span>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => {
+                        const nome = prompt("Novo nome:", mat.nome);
+                        if (nome) {
+                          const data = getQuizData();
+                          const idx = data.disciplinas.findIndex(d => d.id === mat.id);
+                          if (idx >= 0) data.disciplinas[idx].nome = nome.trim();
+                          saveQuizData(data);
+                          showSaveMessage("Matéria atualizada!");
+                          window.location.reload();
+                        }
+                      }}
+                      className="px-2 py-1 bg-blue-500/20 text-blue-400 rounded hover:bg-blue-500/30 text-xs"
+                    >
+                      ✏️
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (confirm(`Deletar "${mat.nome}"?`)) {
+                          const data = getQuizData();
+                          data.disciplinas = data.disciplinas.filter(d => d.id !== mat.id);
+                          // Remover da área
+                          const area = data.areas.find(a => a.id === selectedAreaId);
+                          if (area) {
+                            area.materias = area.materias.filter(m => m !== mat.id);
+                          }
+                          saveQuizData(data);
+                          showSaveMessage("Matéria deletada!");
+                          window.location.reload();
+                        }
+                      }}
+                      className="px-2 py-1 bg-red-500/20 text-red-400 rounded hover:bg-red-500/30 text-xs"
+                    >
+                      🗑️
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Botão para Gerenciar Questões */}
+        <div className="glass-card rounded-2xl p-6 border-2 border-purple-500/30 bg-gradient-to-br from-purple-500/10 to-pink-500/10">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-xl font-bold text-white mb-2">📝 Gerenciar Questões</h3>
+              <p className="text-gray-400">Adicionar, editar e deletar questões desta área</p>
+            </div>
+            <button
+              onClick={() => setActiveSection("questoes-areas" as any)}
+              className="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl font-bold hover:scale-105 transition-transform"
+            >
+              Ir para Questões →
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return null;
+}
+
 // Import questões functions
 import { getQuestoesPorArea, saveQuestoesPorArea } from "./escolher-simulado";
 import { saveQuestaoSupabase, deleteQuestaoSupabase, getQuestoesFromSupabase } from "../lib/supabase-questoes";
@@ -3277,6 +3570,10 @@ function AdminPage() {
 
           {/* AREAS E CARREIRAS SECTION */}
           {activeSection === "areas" && (
+            <GerenciarAreasHierarquico showSaveMessage={showSaveMessage} />
+          )}
+
+          {activeSection === "areas_OLD_DISABLED" && (
             <div className="max-w-5xl mx-auto space-y-6 animate-slide-in-up">
               <div>
                 <h1 className="text-3xl font-extrabold mb-2">🎯 Áreas e Carreiras</h1>
