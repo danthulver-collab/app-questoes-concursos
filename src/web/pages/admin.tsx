@@ -3116,6 +3116,22 @@ function AdminPage() {
                           </p>
                         </div>
                         
+                        {/* Botão Elaborar Questões - Para Plano Individual */}
+                        {request.plano === 'individual' && (
+                          <div className="mt-4 pt-4 border-t border-white/10">
+                            <a
+                              href={`/admin/elaborar-pacote/${request.id}`}
+                              className="w-full py-4 bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-400 hover:to-indigo-400 rounded-xl text-white font-bold text-lg shadow-xl shadow-purple-500/30 transition-all active:scale-95 hover:scale-105 flex items-center justify-center gap-3"
+                            >
+                              <span className="text-2xl">📝</span>
+                              <span>Elaborar Questões</span>
+                            </a>
+                            <p className="text-xs text-gray-500 mt-2 text-center">
+                              Visualize os dados do pedido e gerencie as questões do pacote
+                            </p>
+                          </div>
+                        )}
+
                         {/* Botão Confirmar Pagamento Plus */}
                         {request.status === 'em_andamento' && request.plano === 'plus' && (
                           <div className="mt-4 pt-4 border-t border-white/10">

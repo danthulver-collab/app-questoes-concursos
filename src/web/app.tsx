@@ -26,6 +26,7 @@ import PlanejamentoEstudos from "./pages/planejamento";
 import EscolherMateria from "./pages/escolher-materia";
 import AcompanharPedido from "./pages/acompanhar-pedido";
 import SimuladoPage from "./pages/simulado";
+import ElaborarPacote from "./pages/elaborar-pacote";
 import { Provider } from "./components/provider";
 import { AuthProvider } from "./lib/auth-context-supabase";
 import { ProtectedRoute } from "./components/protected-route";
@@ -162,6 +163,11 @@ function App() {
                                         <Route path="/escolher-materia">
                                                 <ProtectedRoute>
                                                         <EscolherMateria />
+                                                </ProtectedRoute>
+                                        </Route>
+                                        <Route path="/admin/elaborar-pacote/:id">
+                                                <ProtectedRoute>
+                                                        <ElaborarPacote />
                                                 </ProtectedRoute>
                                         </Route>
                                 </Switch>
