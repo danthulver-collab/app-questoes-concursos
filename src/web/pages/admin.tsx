@@ -3314,6 +3314,8 @@ function AdminPage() {
                             <div key={requestId || i} className="glass-card rounded-2xl overflow-hidden hover:scale-[1.02] transition-all">
                               {/* Header com status */}
                               <div className={`p-4 ${
+                                request.status === 'aguardando_pagamento' ? 'bg-red-500/20' :
+                                request.status === 'pago' ? 'bg-green-500/20' :
                                 request.status === 'em_andamento' ? 'bg-blue-500/20' :
                                 'bg-amber-500/20'
                               }`}>
@@ -3323,10 +3325,14 @@ function AdminPage() {
                                     <p className="text-sm text-gray-300">{userEmail}</p>
                                   </div>
                                   <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                                    request.status === 'aguardando_pagamento' ? 'bg-red-500 text-white' :
+                                    request.status === 'pago' ? 'bg-green-500 text-white' :
                                     request.status === 'em_andamento' ? 'bg-blue-500 text-white' :
                                     'bg-amber-500 text-white'
                                   }`}>
-                                    {request.status === 'em_andamento' ? '🔨 Em Produção' : '⏳ Aguardando'}
+                                    {request.status === 'aguardando_pagamento' ? '💳 Aguardando Pagamento' :
+                                     request.status === 'pago' ? '✅ Pago' :
+                                     request.status === 'em_andamento' ? '🔨 Em Produção' : '⏳ Aguardando'}
                                   </span>
                                 </div>
                               </div>
@@ -3371,17 +3377,23 @@ function AdminPage() {
                                   </div>
                                 )}
                                 
-                                {/* Botão Elaborar Questões (sempre visível) */}
-                                <button
-                                  onClick={() => {
-                                    sessionStorage.setItem('elaborar_request', JSON.stringify(request));
-                                    setElaborandoPacote(request);
-                                  }}
-                                  className="w-full py-3 bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-400 hover:to-indigo-400 rounded-xl text-white font-bold shadow-lg shadow-purple-500/30 transition-all flex items-center justify-center gap-2"
-                                >
-                                  <span>📝</span>
-                                  <span>Elaborar Questões</span>
-                                </button>
+                                {/* Mensagem aguardando pagamento OU botão elaborar */}
+                                {request.status === 'aguardando_pagamento' ? (
+                                  <div className="w-full py-3 bg-red-500/20 border border-red-500/30 rounded-xl text-red-400 font-bold text-center">
+                                    💳 Aguardando Pagamento do Cliente
+                                  </div>
+                                ) : (
+                                  <button
+                                    onClick={() => {
+                                      sessionStorage.setItem('elaborar_request', JSON.stringify(request));
+                                      setElaborandoPacote(request);
+                                    }}
+                                    className="w-full py-3 bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-400 hover:to-indigo-400 rounded-xl text-white font-bold shadow-lg shadow-purple-500/30 transition-all flex items-center justify-center gap-2"
+                                  >
+                                    <span>📝</span>
+                                    <span>Elaborar Questões</span>
+                                  </button>
+                                )}
                                 
                                 {/* Botão Continuar Editando (aparece quando pacote existe) */}
                                 {pacoteExistente && (

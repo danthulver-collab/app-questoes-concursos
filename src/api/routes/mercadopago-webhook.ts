@@ -62,37 +62,47 @@ app.post('/mercadopago', async (c) => {
         
         console.log(`✅ Pagamento aprovado! Email: ${payerEmail}, Plano: ${plano}`);
         
-        // Atualizar plano no Supabase
+        // 🔥 Atualizar status do pedido para "pago" e profiles
+        const { data: pedidos } = await supabase
+          .from('plan_requests')
+          .select('*')
+          .eq('email', payerEmail)
+          .eq('status', 'aguardando_pagamento') // Pega o mais recente aguardando pagamento
+          .order('created_at', { ascending: false })
+          .limit(1);
+        
+        if (pedidos && pedidos.length > 0) {
+          // Atualizar pedido para "pago"
+          await supabase
+            .from('plan_requests')
+            .update({ 
+              status: 'pago', // 🔥 Muda para "pago"
+              payment_id: paymentId,
+              paid_at: new Date().toISOString()
+            })
+            .eq('id', pedidos[0].id);
+          
+          console.log('✅ Pedido marcado como PAGO');
+        }
+        
+        // Atualizar plano no Supabase profiles
+        const expirationDate = new Date();
+        expirationDate.setDate(expirationDate.getDate() + 30); // +30 dias
+        
         const { error: updateError } = await supabase
           .from('profiles')
           .update({ 
             plan: plano,
-            active: true
+            package_status: 'aguardando', // Aguardando elaboração do admin
+            plan_expires_at: expirationDate.toISOString(),
+            last_renewed_at: new Date().toISOString()
           })
           .eq('email', payerEmail);
         
         if (updateError) {
           console.error('❌ Erro ao atualizar profile:', updateError);
         } else {
-          console.log(`✅ Plano ${plano} ativado para ${payerEmail}`);
-        }
-        
-        // Buscar pedido e marcar como pronto
-        const { data: pedidos } = await supabase
-          .from('plan_requests')
-          .select('*')
-          .eq('email', payerEmail)
-          .eq('plano', plano)
-          .order('created_at', { ascending: false })
-          .limit(1);
-        
-        if (pedidos && pedidos.length > 0) {
-          await supabase
-            .from('plan_requests')
-            .update({ status: 'pronto' })
-            .eq('id', pedidos[0].id);
-          
-          console.log('✅ Pedido marcado como pronto');
+          console.log(`✅ Plano ${plano} ativado para ${payerEmail} até ${expirationDate.toLocaleDateString()}`);
         }
         
         return c.json({ 

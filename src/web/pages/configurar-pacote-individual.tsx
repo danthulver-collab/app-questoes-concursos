@@ -74,7 +74,10 @@ export default function ConfigurarPacoteIndividual() {
         nome: user?.nome || user?.email?.split('@')[0] || '',
         banca: bancasSelecionadas.join(', '),
         plano: 'individual',
-        status: 'aguardando_montagem'
+        status: 'aguardando_pagamento', // 🔥 Status inicial: aguardando pagamento
+        concurso: concurso,
+        cargo: cargo,
+        materias: materias
       };
 
       // Adicionar num_questoes por matéria
