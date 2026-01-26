@@ -39,6 +39,9 @@ export default function ElaborarPacote() {
   const [numQuestoes, setNumQuestoes] = useState(100);
   const [observacoes, setObservacoes] = useState("");
   
+  // 🔥 Estado para quantidade de questões por matéria
+  const [questoesPorMateria, setQuestoesPorMateria] = useState<Record<string, number>>({});
+  
   // Estados de questões
   const [selectedMateria, setSelectedMateria] = useState<string>("");
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
@@ -199,7 +202,12 @@ export default function ElaborarPacote() {
   // Adicionar matéria
   const handleAddMateria = () => {
     if (novaMateria.trim() && !materias.includes(novaMateria.trim())) {
-      setMaterias([...materias, novaMateria.trim()]);
+      const materia = novaMateria.trim();
+      setMaterias([...materias, materia]);
+      // 🔥 Definir quantidade padrão de 10 questões
+      if (!questoesPorMateria[materia]) {
+        setQuestoesPorMateria({...questoesPorMateria, [materia]: 10});
+      }
       setNovaMateria("");
     }
   };
@@ -492,21 +500,47 @@ export default function ElaborarPacote() {
                 Matérias Solicitadas ({materias.length})
               </label>
               
-              {/* Matérias selecionadas */}
-              <div className="flex flex-wrap gap-2 mb-3">
+              {/* Matérias selecionadas com quantidade */}
+              <div className="space-y-2 mb-3">
                 {materias.map((materia, i) => (
-                  <span key={i} className="inline-flex items-center gap-2 px-4 py-2 bg-purple-500/20 text-purple-400 rounded-xl text-sm font-medium">
-                    {materia}
-                    <span className="text-purple-300 text-xs">
-                      ({getQuestoesByMateria(materia).length} questões)
-                    </span>
+                  <div key={i} className="flex items-center gap-3 p-3 bg-purple-500/10 border border-purple-500/20 rounded-xl">
+                    <div className="flex-1">
+                      <span className="text-white font-medium">{materia}</span>
+                      <span className="text-purple-300 text-xs ml-2">
+                        ({getQuestoesByMateria(materia).length} criadas)
+                      </span>
+                    </div>
+                    
+                    {/* 🔥 Input de quantidade desejada */}
+                    <div className="flex items-center gap-2">
+                      <label className="text-gray-400 text-xs">Meta:</label>
+                      <input
+                        type="number"
+                        min="1"
+                        max="200"
+                        value={questoesPorMateria[materia] || 10}
+                        onChange={(e) => {
+                          const qtd = parseInt(e.target.value) || 10;
+                          setQuestoesPorMateria({...questoesPorMateria, [materia]: qtd});
+                        }}
+                        className="w-20 px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-white text-center text-sm focus:border-purple-500/50 focus:outline-none"
+                        placeholder="10"
+                      />
+                      <span className="text-gray-500 text-xs">questões</span>
+                    </div>
+                    
                     <button
-                      onClick={() => handleRemoveMateria(materia)}
-                      className="w-5 h-5 flex items-center justify-center rounded-full bg-red-500/30 hover:bg-red-500/50 text-red-400 text-xs"
+                      onClick={() => {
+                        handleRemoveMateria(materia);
+                        const newQtd = {...questoesPorMateria};
+                        delete newQtd[materia];
+                        setQuestoesPorMateria(newQtd);
+                      }}
+                      className="w-8 h-8 flex items-center justify-center rounded-full bg-red-500/20 hover:bg-red-500/40 text-red-400 transition-all"
                     >
                       ×
                     </button>
-                  </span>
+                  </div>
                 ))}
                 {materias.length === 0 && (
                   <span className="text-gray-500 text-sm italic">Nenhuma matéria adicionada</span>
