@@ -5582,12 +5582,33 @@ function AdminPage() {
                   </div>
                   <div>
                     <label className="text-gray-400 text-xs mb-1 block">Banca</label>
-                    <input
-                      type="text"
+                    <select
                       value={elaborandoPacote.banca || ""}
                       onChange={(e) => setElaborandoPacote({...elaborandoPacote, banca: e.target.value})}
                       className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white"
-                    />
+                    >
+                      <option value="">Selecione...</option>
+                      <option value="CESPE/CEBRASPE">CESPE/CEBRASPE</option>
+                      <option value="FGV">FGV</option>
+                      <option value="FCC">FCC</option>
+                      <option value="VUNESP">VUNESP</option>
+                      <option value="IBFC">IBFC</option>
+                      <option value="CESGRANRIO">CESGRANRIO</option>
+                      <option value="QUADRIX">QUADRIX</option>
+                      <option value="FUNDATEC">FUNDATEC</option>
+                      <option value="IDECAN">IDECAN</option>
+                      <option value="IBADE">IBADE</option>
+                      <option value="Outra">Outra</option>
+                    </select>
+                    {elaborandoPacote.banca === "Outra" && (
+                      <input
+                        type="text"
+                        placeholder="Digite o nome da banca..."
+                        onChange={(e) => setElaborandoPacote({...elaborandoPacote, banca: e.target.value})}
+                        className="w-full mt-2 px-4 py-2 bg-white/5 border border-purple-500/50 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-purple-500"
+                        autoFocus
+                      />
+                    )}
                   </div>
                 </div>
               </div>
