@@ -3335,28 +3335,142 @@ function AdminPage() {
                     const carreiras = getCarreirasByArea(area.id);
                     return (
                       <div key={area.id} className="p-4 bg-white/5 rounded-xl border border-white/10">
-                        <div className="flex items-start gap-3">
-                          <div className="text-3xl">{area.icone}</div>
-                          <div className="flex-1">
-                            <h3 className="font-bold text-lg">{area.nome}</h3>
-                            <p className="text-sm text-gray-400 mt-1">{area.descricao}</p>
-                            <div className="flex gap-2 mt-2 text-xs text-gray-500">
-                              <span>{carreiras.length} carreiras</span>
-                              <span>•</span>
-                              <span>{area.materias.length} matérias</span>
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex items-start gap-3 flex-1">
+                            <div className="text-3xl">{area.icone}</div>
+                            <div className="flex-1">
+                              <h3 className="font-bold text-lg">{area.nome}</h3>
+                              <p className="text-sm text-gray-400 mt-1">{area.descricao}</p>
+                              <div className="flex gap-2 mt-2 text-xs text-gray-500">
+                                <span>{carreiras.length} carreiras</span>
+                                <span>•</span>
+                                <span>{area.materias.length} matérias</span>
+                              </div>
+                              <div className="flex flex-wrap gap-1 mt-2">
+                                {carreiras.map(carr => (
+                                  <span key={carr.id} className="px-2 py-1 bg-orange-500/20 text-orange-400 text-xs rounded">
+                                    {carr.nome}
+                                  </span>
+                                ))}
+                              </div>
                             </div>
-                            <div className="flex flex-wrap gap-1 mt-2">
-                              {carreiras.map(carr => (
-                                <span key={carr.id} className="px-2 py-1 bg-orange-500/20 text-orange-400 text-xs rounded">
-                                  {carr.nome}
-                                </span>
-                              ))}
-                            </div>
+                          </div>
+                          <div className="flex flex-col gap-2">
+                            <button
+                              onClick={() => {
+                                const nome = prompt("Novo nome:", area.nome);
+                                const icone = prompt("Novo ícone:", area.icone);
+                                const desc = prompt("Nova descrição:", area.descricao);
+                                if (nome) updateArea(area.id, { nome, icone, descricao: desc });
+                                showSaveMessage("Área atualizada!");
+                              }}
+                              className="px-3 py-1.5 bg-blue-500/20 text-blue-400 rounded-lg hover:bg-blue-500/30 transition-all text-xs"
+                            >
+                              ✏️ Editar
+                            </button>
+                            <button
+                              onClick={() => {
+                                if (confirm(`Deletar área "${area.nome}"? Isso também deleta suas carreiras.`)) {
+                                  deleteArea(area.id);
+                                  showSaveMessage("Área deletada!");
+                                }
+                              }}
+                              className="px-3 py-1.5 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 transition-all text-xs"
+                            >
+                              🗑️ Deletar
+                            </button>
                           </div>
                         </div>
                       </div>
                     );
                   })}
+                </div>
+              </div>
+
+              {/* Listagem de Carreiras */}
+              <div className="glass-card rounded-2xl p-6">
+                <h2 className="text-xl font-bold mb-4">💼 Todas as Carreiras</h2>
+                <div className="grid md:grid-cols-3 gap-3">
+                  {getAllCarreiras().map(carr => {
+                    const area = getAllAreas().find(a => a.id === carr.areaId);
+                    return (
+                      <div key={carr.id} className="p-3 bg-white/5 rounded-lg border border-white/10 text-sm">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            <div className="font-bold text-white truncate">{carr.nome}</div>
+                            <div className="text-xs text-gray-500">{area?.nome}</div>
+                          </div>
+                          <div className="flex gap-1 flex-shrink-0">
+                            <button
+                              onClick={() => {
+                                const nome = prompt("Novo nome:", carr.nome);
+                                if (nome) updateCarreira(carr.id, { nome });
+                                showSaveMessage("Carreira atualizada!");
+                              }}
+                              className="px-2 py-1 bg-blue-500/20 text-blue-400 rounded hover:bg-blue-500/30 text-xs"
+                            >
+                              ✏️
+                            </button>
+                            <button
+                              onClick={() => {
+                                if (confirm(`Deletar "${carr.nome}"?`)) {
+                                  deleteCarreira(carr.id);
+                                  showSaveMessage("Carreira deletada!");
+                                }
+                              }}
+                              className="px-2 py-1 bg-red-500/20 text-red-400 rounded hover:bg-red-500/30 text-xs"
+                            >
+                              🗑️
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Listagem de Matérias */}
+              <div className="glass-card rounded-2xl p-6">
+                <h2 className="text-xl font-bold mb-4">📚 Todas as Matérias</h2>
+                <div className="grid md:grid-cols-4 gap-3">
+                  {getQuizData().disciplinas.map(mat => (
+                    <div key={mat.id} className="p-3 bg-white/5 rounded-lg border border-white/10 text-sm">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-bold text-white text-xs truncate flex-1">{mat.nome}</span>
+                        <div className="flex gap-1 flex-shrink-0">
+                          <button
+                            onClick={() => {
+                              const nome = prompt("Novo nome:", mat.nome);
+                              if (nome) {
+                                const data = getQuizData();
+                                const idx = data.disciplinas.findIndex(d => d.id === mat.id);
+                                if (idx >= 0) data.disciplinas[idx].nome = nome.trim();
+                                saveQuizData(data);
+                                showSaveMessage("Matéria atualizada!");
+                              }
+                            }}
+                            className="px-2 py-1 bg-blue-500/20 text-blue-400 rounded hover:bg-blue-500/30 text-xs"
+                          >
+                            ✏️
+                          </button>
+                          <button
+                            onClick={() => {
+                              if (confirm(`Deletar "${mat.nome}"?`)) {
+                                const data = getQuizData();
+                                data.disciplinas = data.disciplinas.filter(d => d.id !== mat.id);
+                                saveQuizData(data);
+                                showSaveMessage("Matéria deletada!");
+                              }
+                            }}
+                            className="px-2 py-1 bg-red-500/20 text-red-400 rounded hover:bg-red-500/30 text-xs"
+                          >
+                            🗑️
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
 
