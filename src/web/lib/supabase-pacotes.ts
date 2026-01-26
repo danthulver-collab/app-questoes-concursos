@@ -169,7 +169,9 @@ export const getQuestoesFromSupabase = async (): Promise<Question[]> => {
     const questoes: Question[] = (data || []).map(item => ({
       id: item.id,
       pergunta: item.pergunta,
-      alternativas: item.alternativas as [string, string, string, string],
+      alternativas: (typeof item.alternativas === 'string' 
+        ? JSON.parse(item.alternativas) 
+        : item.alternativas) as [string, string, string, string],
       correta: item.correta as 0 | 1 | 2 | 3,
       disciplina: item.disciplina || '',
       modulo: item.modulo || '',
