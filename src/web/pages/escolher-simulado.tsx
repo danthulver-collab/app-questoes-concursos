@@ -210,14 +210,14 @@ export default function EscolherSimulado() {
   
   const daysSinceCadastro = getUserDaysSinceCadastro();
   
-  // Matérias liberadas gradualmente (7 dias)
-  const MATERIAS_7_DIAS = ["direito-tributario", "contabilidade", "administracao"];
+  // Matérias liberadas gradualmente (apenas 2 bloqueadas por 7 dias)
+  const MATERIAS_7_DIAS = ["direito-tributario", "contabilidade"];
   const isMateriaLocked = (materiaId: string) => {
     if (isPlusUser) return false; // Plus vê tudo
     if (MATERIAS_7_DIAS.includes(materiaId)) {
       return daysSinceCadastro < 7; // Bloqueia se < 7 dias
     }
-    return false; // Outras matérias liberadas
+    return false; // TODAS outras matérias liberadas
   };
 
   // Carregar questões do Supabase ao montar
