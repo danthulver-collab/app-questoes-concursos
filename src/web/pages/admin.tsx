@@ -82,7 +82,7 @@ import { supabase } from "../lib/supabase";
 
 const OPTION_LABELS = ["A", "B", "C", "D"] as const;
 
-type AdminSection = "config" | "concursos" | "disciplinas" | "modulos" | "questoes" | "usuarios" | "acessos" | "estatisticas" | "importexport" | "pacotes" | "solicitacoes" | "opcoes" | "simulados" | "areas";
+type AdminSection = "config" | "concursos" | "disciplinas" | "modulos" | "questoes" | "usuarios" | "acessos" | "estatisticas" | "importexport" | "pacotes" | "solicitacoes" | "opcoes" | "simulados" | "areas" | "pacotes_exclusivos";
 
 interface UserData {
   username: string;
@@ -1822,6 +1822,14 @@ function AdminPage() {
   const [pacoteAtribuirModal, setPacoteAtribuirModal] = useState<Pacote | null>(null);
   const [selectedAlunosForPacote, setSelectedAlunosForPacote] = useState<string[]>([]);
   
+  // Elaboração de pacote exclusivo
+  const [elaborandoPacote, setElaborandoPacote] = useState<any | null>(null);
+  const [elaborarMaterias, setElaborarMaterias] = useState<string[]>([]);
+  const [elaborarNovaMateria, setElaborarNovaMateria] = useState("");
+  const [elaborarSelectedMateria, setElaborarSelectedMateria] = useState<string>("");
+  const [elaborarQuestoes, setElaborarQuestoes] = useState<Question[]>([]);
+  const [elaborarNovaQuestao, setElaborarNovaQuestao] = useState<Partial<Question> | null>(null);
+  
   // Import/Export
   const [importText, setImportText] = useState("");
   const [importError, setImportError] = useState("");
@@ -1842,6 +1850,13 @@ function AdminPage() {
     model: "llama-3.3-70b-versatile"
   });
   const [showApiKey, setShowApiKey] = useState(false);
+
+  // Inicializar matérias quando abrir modal de elaboração
+  useEffect(() => {
+    if (elaborandoPacote) {
+      setElaborarMaterias(elaborandoPacote.materias || []);
+    }
+  }, [elaborandoPacote]);
 
   useEffect(() => {
     // Check admin access
@@ -2542,6 +2557,7 @@ function AdminPage() {
   const sidebarItems: { id: AdminSection; icon: string; label: string; badge?: number }[] = [
     { id: "config", icon: "⚙️", label: "Configurações" },
     { id: "solicitacoes", icon: "📋", label: "Solicitações", badge: pendingPackagesCount },
+    { id: "pacotes_exclusivos", icon: "✨", label: "Pacotes Exclusivos", badge: pendingPackagesCount },
     { id: "areas", icon: "🎯", label: "Áreas e Carreiras" },
     { id: "pacotes", icon: "📦", label: "Pacotes de Concurso" },
     { id: "simulados", icon: "📝", label: "Simulados" },
@@ -3198,6 +3214,146 @@ function AdminPage() {
             </div>
           )}
           
+          {/* PACOTES EXCLUSIVOS SECTION - Nova seção para elaborar questões */}
+          {activeSection === "pacotes_exclusivos" && (
+            <div className="max-w-6xl mx-auto space-y-6 animate-slide-in-up">
+              <div>
+                <h1 className="text-3xl font-extrabold mb-2">✨ Pacotes Exclusivos</h1>
+                <p className="text-gray-500">
+                  Elabore questões personalizadas para cada solicitação de aluno
+                </p>
+              </div>
+
+              {/* Stats */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="glass-card rounded-xl p-4 text-center">
+                  <div className="text-2xl font-black text-amber-400">
+                    {packageRequests?.filter(r => r.status === "aguardando_montagem")?.length || 0}
+                  </div>
+                  <div className="text-xs text-gray-500">⏳ Aguardando</div>
+                </div>
+                <div className="glass-card rounded-xl p-4 text-center">
+                  <div className="text-2xl font-black text-blue-400">
+                    {packageRequests?.filter(r => r.status === "em_andamento")?.length || 0}
+                  </div>
+                  <div className="text-xs text-gray-500">🔨 Em Produção</div>
+                </div>
+                <div className="glass-card rounded-xl p-4 text-center">
+                  <div className="text-2xl font-black text-emerald-400">
+                    {packageRequests?.filter(r => r.status === "pronto")?.length || 0}
+                  </div>
+                  <div className="text-xs text-gray-500">✅ Prontos</div>
+                </div>
+                <div className="glass-card rounded-xl p-4 text-center">
+                  <div className="text-2xl font-black text-purple-400">
+                    {packageRequests?.length || 0}
+                  </div>
+                  <div className="text-xs text-gray-500">📊 Total</div>
+                </div>
+              </div>
+
+              {/* Lista de Solicitações para Elaborar */}
+              {!packageRequests || packageRequests.length === 0 ? (
+                <div className="glass-card rounded-2xl p-12 text-center">
+                  <span className="text-6xl mb-4 block">📭</span>
+                  <p className="text-gray-400 text-xl">Nenhuma solicitação ainda</p>
+                  <p className="text-sm text-gray-500 mt-2">As solicitações dos alunos aparecerão aqui</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {packageRequests.map((request, i) => {
+                    const userName = request.nome || request.email || 'Usuário';
+                    const userEmail = request.email || '';
+                    const requestId = request.id || request.userId;
+                    
+                    return (
+                      <div key={requestId || i} className="glass-card rounded-2xl overflow-hidden hover:scale-[1.02] transition-all">
+                        {/* Header com status */}
+                        <div className={`p-4 ${
+                          request.status === 'pronto' ? 'bg-emerald-500/20' :
+                          request.status === 'em_andamento' ? 'bg-blue-500/20' :
+                          'bg-amber-500/20'
+                        }`}>
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <h3 className="font-bold text-white text-lg">{userName}</h3>
+                              <p className="text-sm text-gray-300">{userEmail}</p>
+                            </div>
+                            <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                              request.status === 'pronto' ? 'bg-emerald-500 text-white' :
+                              request.status === 'em_andamento' ? 'bg-blue-500 text-white' :
+                              'bg-amber-500 text-white'
+                            }`}>
+                              {request.status === 'pronto' ? '✅ Pronto' :
+                               request.status === 'em_andamento' ? '🔨 Em Produção' :
+                               '⏳ Aguardando'}
+                            </span>
+                          </div>
+                        </div>
+                        
+                        {/* Informações */}
+                        <div className="p-4 space-y-3">
+                          <div className="grid grid-cols-2 gap-3 text-sm">
+                            <div>
+                              <p className="text-gray-500 text-xs">Concurso</p>
+                              <p className="text-white font-medium">{request.concurso || 'N/A'}</p>
+                            </div>
+                            <div>
+                              <p className="text-gray-500 text-xs">Cargo</p>
+                              <p className="text-white font-medium">{request.cargo || 'N/A'}</p>
+                            </div>
+                            <div>
+                              <p className="text-gray-500 text-xs">Banca</p>
+                              <p className="text-white font-medium">{request.banca || 'N/A'}</p>
+                            </div>
+                            <div>
+                              <p className="text-gray-500 text-xs">Plano</p>
+                              <p className="text-white font-medium">{request.plano === 'individual' ? '📦 Individual' : '⭐ Plus'}</p>
+                            </div>
+                          </div>
+                          
+                          {/* Matérias */}
+                          {request.materias && request.materias.length > 0 && (
+                            <div>
+                              <p className="text-gray-500 text-xs mb-2">Matérias ({request.materias.length})</p>
+                              <div className="flex flex-wrap gap-1">
+                                {request.materias.slice(0, 4).map((m, idx) => (
+                                  <span key={idx} className="px-2 py-1 bg-purple-500/20 text-purple-400 rounded text-xs">
+                                    {m}
+                                  </span>
+                                ))}
+                                {request.materias.length > 4 && (
+                                  <span className="px-2 py-1 bg-gray-500/20 text-gray-400 rounded text-xs">
+                                    +{request.materias.length - 4}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                          
+                          {/* Botão Elaborar */}
+                          <button
+                            onClick={() => {
+                              // Salvar dados da solicitação no sessionStorage para a página de elaboração
+                              sessionStorage.setItem('elaborar_request', JSON.stringify(request));
+                              setActiveSection("config"); // Reset temporário
+                              // Abrir modal de elaboração ou navegar
+                              setElaborandoPacote(request);
+                            }}
+                            className="w-full py-3 bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-400 hover:to-indigo-400 rounded-xl text-white font-bold shadow-lg shadow-purple-500/30 transition-all flex items-center justify-center gap-2"
+                          >
+                            <span>📝</span>
+                            <span>Elaborar Questões</span>
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
           {/* PACOTES SECTION */}
           {activeSection === "pacotes" && (
             <div className="max-w-5xl mx-auto space-y-6 animate-slide-in-up">
@@ -5302,6 +5458,112 @@ function AdminPage() {
               >
                 Atribuir
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL ELABORAR PACOTE EXCLUSIVO */}
+      {elaborandoPacote && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+          <div className="bg-[#0d1117] border border-purple-500/30 rounded-3xl w-full max-w-6xl max-h-[95vh] overflow-y-auto shadow-2xl">
+            {/* Header */}
+            <div className="sticky top-0 bg-gradient-to-r from-purple-500/20 to-indigo-500/20 p-6 border-b border-purple-500/30 flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold text-white">✨ Solicitação Exclusiva</h2>
+                <p className="text-sm text-gray-400">
+                  {elaborandoPacote.nome || elaborandoPacote.email} - {elaborandoPacote.concurso}
+                </p>
+              </div>
+              <button 
+                onClick={() => setElaborandoPacote(null)} 
+                className="p-3 hover:bg-white/10 rounded-xl text-gray-400 hover:text-white"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="p-6 space-y-6">
+              {/* Dados do Pedido */}
+              <div>
+                <h3 className="text-lg font-bold text-white mb-4">📋 Dados da Solicitação</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="text-gray-400 text-xs mb-1 block">Nome</label>
+                    <input
+                      type="text"
+                      value={elaborandoPacote.nome || ""}
+                      onChange={(e) => setElaborandoPacote({...elaborandoPacote, nome: e.target.value})}
+                      className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-gray-400 text-xs mb-1 block">Email</label>
+                    <input
+                      type="text"
+                      value={elaborandoPacote.email || elaborandoPacote.userId}
+                      className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-gray-400"
+                      disabled
+                    />
+                  </div>
+                  <div>
+                    <label className="text-gray-400 text-xs mb-1 block">Telefone</label>
+                    <input
+                      type="text"
+                      value={elaborandoPacote.telefone || ""}
+                      onChange={(e) => setElaborandoPacote({...elaborandoPacote, telefone: e.target.value})}
+                      className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-gray-400 text-xs mb-1 block">Concurso</label>
+                    <input
+                      type="text"
+                      value={elaborandoPacote.concurso || ""}
+                      onChange={(e) => setElaborandoPacote({...elaborandoPacote, concurso: e.target.value})}
+                      className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-gray-400 text-xs mb-1 block">Cargo</label>
+                    <input
+                      type="text"
+                      value={elaborandoPacote.cargo || ""}
+                      onChange={(e) => setElaborandoPacote({...elaborandoPacote, cargo: e.target.value})}
+                      className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-gray-400 text-xs mb-1 block">Banca</label>
+                    <input
+                      type="text"
+                      value={elaborandoPacote.banca || ""}
+                      onChange={(e) => setElaborandoPacote({...elaborandoPacote, banca: e.target.value})}
+                      className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Botão Criar Pacote */}
+              <button
+                onClick={() => {
+                  alert("Funcionalidade de criar pacote em desenvolvimento");
+                }}
+                className="w-full py-4 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-400 hover:to-emerald-400 rounded-xl text-white font-bold text-lg shadow-xl"
+              >
+                📦 Criar Pacote e Continuar
+              </button>
+
+              {/* Botão Fechar */}
+              <div className="flex justify-end">
+                <button
+                  onClick={() => setElaborandoPacote(null)}
+                  className="px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl font-medium"
+                >
+                  Fechar
+                </button>
+              </div>
             </div>
           </div>
         </div>
