@@ -3229,11 +3229,25 @@ function AdminPage() {
           {/* PACOTES EXCLUSIVOS SECTION - Nova seção para elaborar questões */}
           {activeSection === "pacotes_exclusivos" && (
             <div className="max-w-6xl mx-auto space-y-6 animate-slide-in-up">
-              <div>
-                <h1 className="text-3xl font-extrabold mb-2">✨ Pacotes Exclusivos</h1>
-                <p className="text-gray-500">
-                  Elabore questões personalizadas para cada solicitação de aluno
-                </p>
+              <div className="flex items-center justify-between">
+                <div>
+                  <h1 className="text-3xl font-extrabold mb-2">✨ Pacotes Exclusivos</h1>
+                  <p className="text-gray-500">
+                    Elabore questões personalizadas para cada solicitação de aluno
+                  </p>
+                </div>
+                <button
+                  onClick={async () => {
+                    const syncedData = await syncSupabaseToLocalStorage();
+                    if (syncedData) {
+                      setQuizData(syncedData);
+                      alert('✅ Pacotes sincronizados do Supabase!');
+                    }
+                  }}
+                  className="px-4 py-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 rounded-xl text-sm font-medium"
+                >
+                  🔄 Sincronizar Pacotes
+                </button>
               </div>
 
               {/* Stats */}
