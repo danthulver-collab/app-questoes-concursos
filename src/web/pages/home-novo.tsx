@@ -21,6 +21,12 @@ import {
   Flame
 } from "lucide-react";
 
+// 🔥 Interface para dados do profile do Supabase (Produtos Exclusivos)
+interface ProfileData {
+  plan: string | null;
+  package_status: 'aguardando' | 'em_andamento' | 'pronto' | null;
+}
+
 export default function HomeNovo() {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
@@ -32,6 +38,9 @@ export default function HomeNovo() {
   const remaining = getRemainingQuestions(userId);
   const activeConcursos = getActiveConcursos(userId);
   const [activePedido, setActivePedido] = useState<any>(null);
+  
+  // 🔥 Estado para profile do Supabase (Produtos Exclusivos)
+  const [profileData, setProfileData] = useState<ProfileData | null>(null);
   
   // Buscar pacotes atribuídos ao usuário (Individual)
   const userPackages = getUserPackagesDetails(userId);
@@ -46,7 +55,7 @@ export default function HomeNovo() {
   const quizData = getQuizData();
   const realConcursos = getUniqueConcursos(quizData.questions);
   
-  // Buscar pedido ativo
+  // Buscar pedido ativo e profile do Supabase
   useEffect(() => {
     if (!user?.email) return;
     
@@ -70,8 +79,34 @@ export default function HomeNovo() {
       }
     };
     
+    // 🔥 Buscar profile do Supabase (para Produtos Exclusivos)
+    const fetchProfile = async () => {
+      try {
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('plan, package_status')
+          .eq('email', user.email)
+          .single();
+        
+        if (profile && !error) {
+          setProfileData({
+            plan: profile.plan,
+            package_status: profile.package_status
+          });
+          console.log('📋 [HOME-NOVO] Profile carregado:', profile);
+        }
+      } catch (e) {
+        console.error('❌ Erro ao buscar profile:', e);
+      }
+    };
+    
     checkPedido();
-    const interval = setInterval(checkPedido, 3000);
+    fetchProfile();
+    
+    const interval = setInterval(() => {
+      checkPedido();
+      fetchProfile();
+    }, 3000);
     return () => clearInterval(interval);
   }, [user?.email]);
 
@@ -363,6 +398,82 @@ export default function HomeNovo() {
                 </div>
               )}
             </div>
+            
+            {/* 🔥 CARD PRODUTOS EXCLUSIVOS - Apenas para alunos (não admin) */}
+            {!isAdmin && (
+              <div className="mt-6">
+                <div 
+                  onClick={() => {
+                    if (profileData?.plan === 'individual' && profileData?.package_status === 'pronto') {
+                      setLocation('/produtos-exclusivos');
+                    } else if (profileData?.plan !== 'individual') {
+                      setLocation('/planos');
+                    }
+                  }}
+                  className={`glass-card rounded-3xl p-8 md:p-10 transition-all duration-300 border-2 shadow-2xl relative ${
+                    profileData?.plan === 'individual' && profileData?.package_status === 'pronto'
+                      ? 'bg-gradient-to-br from-emerald-500/20 to-green-500/10 border-emerald-500/30 hover:border-emerald-500/60 shadow-emerald-500/20 hover:scale-[1.02] cursor-pointer'
+                      : 'bg-gradient-to-br from-gray-500/10 to-gray-600/5 border-gray-500/20 shadow-gray-500/10'
+                  }`}
+                >
+                  {/* Overlay de cadeado quando bloqueado */}
+                  {!(profileData?.plan === 'individual' && profileData?.package_status === 'pronto') && (
+                    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center gap-3 z-10 rounded-3xl cursor-pointer">
+                      <div className="text-6xl animate-pulse">🔒</div>
+                      <span className={`px-4 py-2 text-white text-sm font-bold rounded-full shadow-lg ${
+                        profileData?.plan === 'individual' 
+                          ? 'bg-amber-500' 
+                          : 'bg-gray-500'
+                      }`}>
+                        {profileData?.plan === 'individual' 
+                          ? (profileData?.package_status === 'em_andamento' ? '🔨 EM PRODUÇÃO' : '⏳ AGUARDANDO')
+                          : '🔒 PLANO INDIVIDUAL'
+                        }
+                      </span>
+                      <p className="text-white text-sm text-center px-4">
+                        {profileData?.plan === 'individual' 
+                          ? 'Seu pacote está sendo preparado'
+                          : 'Clique para fazer upgrade'
+                        }
+                      </p>
+                    </div>
+                  )}
+                  
+                  <div className="flex flex-col items-center justify-center gap-4 text-center">
+                    <div className={`w-20 h-20 rounded-full flex items-center justify-center text-4xl shadow-xl ${
+                      profileData?.plan === 'individual' && profileData?.package_status === 'pronto'
+                        ? 'bg-gradient-to-br from-emerald-500 to-green-500 shadow-emerald-500/40'
+                        : 'bg-gradient-to-br from-gray-600 to-gray-700 shadow-gray-500/40'
+                    }`}>
+                      {profileData?.plan === 'individual' && profileData?.package_status === 'pronto' ? '🔓' : '✨'}
+                    </div>
+                    <h2 className={`text-3xl md:text-4xl font-black ${
+                      profileData?.plan === 'individual' && profileData?.package_status === 'pronto'
+                        ? 'text-white'
+                        : 'text-gray-300'
+                    }`}>
+                      ✨ PRODUTOS EXCLUSIVOS
+                    </h2>
+                    <p className={`text-lg ${
+                      profileData?.plan === 'individual' && profileData?.package_status === 'pronto'
+                        ? 'text-gray-300'
+                        : 'text-gray-500'
+                    }`}>
+                      {profileData?.plan === 'individual' && profileData?.package_status === 'pronto'
+                        ? 'Seu pacote exclusivo está pronto! Acesse agora.'
+                        : 'Questões sob demanda personalizadas para você'
+                      }
+                    </p>
+                    {profileData?.plan === 'individual' && profileData?.package_status === 'pronto' && (
+                      <div className="flex items-center gap-2 text-emerald-400 font-semibold text-xl">
+                        <span>Acessar Pacote</span>
+                        <ArrowRight className="w-6 h-6 group-hover:translate-x-2 transition-transform" />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
