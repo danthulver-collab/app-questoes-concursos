@@ -124,13 +124,14 @@ function GerenciarAreasHierarquico({ showSaveMessage, onGoToQuestoes }: { showSa
             <p className="text-gray-400">Clique em uma área para gerenciar carreiras e matérias</p>
           </div>
           <button
-            onClick={() => {
+            onClick={async () => {
               const nome = prompt("Nome da nova Área:");
               if (!nome) return;
               const icone = prompt("Ícone (emoji):", "🎯");
               const desc = prompt("Descrição:");
-              addArea({ nome: nome.trim(), icone, descricao: desc, carreiras: [], materias: [] });
-              showSaveMessage("Área criada!");
+              const newArea = addArea({ nome: nome.trim(), icone, descricao: desc, carreiras: [], materias: [] });
+              await saveAreaSupabase(newArea);
+              showSaveMessage("✅ Área criada no Supabase!");
               refresh();
             }}
             className="px-6 py-3 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl font-bold hover:scale-105 transition-transform flex items-center gap-2"
@@ -193,13 +194,15 @@ function GerenciarAreasHierarquico({ showSaveMessage, onGoToQuestoes }: { showSa
               <p className="text-gray-400 mb-4">{selectedArea?.descricao}</p>
               <div className="flex gap-3">
                 <button
-                  onClick={() => {
+                  onClick={async () => {
                     const nome = prompt("Novo nome:", selectedArea?.nome);
                     const icone = prompt("Novo ícone:", selectedArea?.icone);
                     const desc = prompt("Nova descrição:", selectedArea?.descricao);
                     if (nome && selectedAreaId) {
                       updateArea(selectedAreaId, { nome, icone, descricao: desc });
-                      showSaveMessage("Área atualizada!");
+                      const updated = getAllAreas().find(a => a.id === selectedAreaId);
+                      if (updated) await saveAreaSupabase(updated);
+                      showSaveMessage("✅ Área atualizada no Supabase!");
                       refresh();
                     }
                   }}
@@ -208,11 +211,13 @@ function GerenciarAreasHierarquico({ showSaveMessage, onGoToQuestoes }: { showSa
                   ✏️ Editar Área
                 </button>
                 <button
-                  onClick={() => {
+                  onClick={async () => {
                     if (confirm(`Deletar área "${selectedArea?.nome}"? Isso também deleta carreiras e matérias.`)) {
+                      await deleteAreaSupabase(selectedAreaId);
                       deleteArea(selectedAreaId);
-                      showSaveMessage("Área deletada!");
+                      showSaveMessage("✅ Área deletada do Supabase!");
                       setSelectedAreaId("");
+                      refresh();
                     }
                   }}
                   className="px-4 py-2 bg-red-500/20 text-red-400 rounded-xl hover:bg-red-500/30 transition-all"
@@ -399,6 +404,7 @@ function GerenciarAreasHierarquico({ showSaveMessage, onGoToQuestoes }: { showSa
 // Import questões functions
 import { getQuestoesPorArea, saveQuestoesPorArea } from "./escolher-simulado";
 import { saveQuestaoSupabase, deleteQuestaoSupabase, getQuestoesFromSupabase } from "../lib/supabase-questoes";
+import { saveAreaSupabase, saveCarreiraSupabase, deleteAreaSupabase, deleteCarreiraSupabase } from "../lib/supabase-areas";
 
 // Componente para editar questões por área
 function QuestoesAreasEditor({ showSaveMessage }: { showSaveMessage: (msg?: string) => void }) {

@@ -172,11 +172,15 @@ export default function PlanejamentoEstudos() {
             <div className="glass-card rounded-2xl p-6 border border-white/10">
               <h2 className="text-2xl font-bold text-white mb-6">📈 Sua Evolução</h2>
               
-              {/* Gráfico de Pizza */}
+              {/* Gráfico de Pizza 3D */}
               {Object.keys(materiasEstudadas).length > 0 ? (
                 <div className="mb-8">
-                  <div className="relative w-64 h-64 mx-auto">
-                    <svg viewBox="0 0 100 100" className="transform -rotate-90">
+                  <div className="relative w-72 h-72 mx-auto">
+                    {/* Sombra 3D */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-orange-500/20 to-purple-500/20 rounded-full blur-2xl" />
+                    
+                    {/* Pizza SVG */}
+                    <svg viewBox="0 0 100 100" className="transform -rotate-90 relative z-10 drop-shadow-2xl">
                       {Object.entries(materiasEstudadas).map(([mat, count]: any, i) => {
                         const percentage = (count / total) * 100;
                         const offset = Object.entries(materiasEstudadas).slice(0, i).reduce((acc: number, [, c]: any) => acc + ((c / total) * 100), 0);
@@ -188,17 +192,24 @@ export default function PlanejamentoEstudos() {
                             r="40"
                             fill="none"
                             stroke={cores[i % cores.length]}
-                            strokeWidth="20"
+                            strokeWidth="22"
                             strokeDasharray={`${percentage * 2.51} ${251.2 - percentage * 2.51}`}
                             strokeDashoffset={-offset * 2.51}
-                            className="transition-all duration-500"
+                            className="transition-all duration-700 hover:stroke-width-24 cursor-pointer"
+                            style={{
+                              filter: `drop-shadow(0 0 8px ${cores[i % cores.length]}40)`,
+                              strokeLinecap: 'round'
+                            }}
                           />
                         );
                       })}
                     </svg>
+                    
+                    {/* Centro com gradiente */}
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
-                      <div className="text-4xl font-black text-white">{metricas.total}</div>
-                      <div className="text-sm text-gray-400">questões</div>
+                      <div className="absolute w-32 h-32 bg-gradient-to-br from-orange-500/30 to-purple-500/30 rounded-full blur-xl animate-pulse" />
+                      <div className="relative text-5xl font-black bg-gradient-to-r from-orange-400 to-amber-400 bg-clip-text text-transparent">{metricas.total}</div>
+                      <div className="relative text-sm text-gray-300 font-medium">questões</div>
                     </div>
                   </div>
                   
