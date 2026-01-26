@@ -27,7 +27,11 @@ export function AppLayout({ children }: AppLayoutProps) {
   
   const userId = user?.email || user?.username || "";
   const userPlan = getUserPlan(userId) || "free";
-  const isAdmin = user?.email === 'danthulver@gmail.com' || user?.username === 'admin' || isSuperAdmin(userId);
+  // Verificar admin de múltiplas formas
+  const isAdmin = isSuperAdmin(userId) || 
+    user?.username?.toLowerCase() === 'admin' || 
+    user?.email?.toLowerCase() === 'admin' ||
+    userId.toLowerCase() === 'admin';
   const remaining = getRemainingQuestions(userId);
 
   const menuItems = [
@@ -57,8 +61,8 @@ export function AppLayout({ children }: AppLayoutProps) {
         {/* Logo */}
         <div className="p-6 border-b border-white/10">
           <Link href="/">
-            <div className="flex items-center gap-3 cursor-pointer hover:opacity-90 transition-all">
-              <img src="/logo.png" alt="Só Questões de Concursos" className="h-12 w-auto" />
+            <div className="flex items-center justify-center cursor-pointer hover:opacity-90 transition-all">
+              <img src="/logo.png" alt="Só Questões de Concursos" className="h-20 w-auto" />
             </div>
           </Link>
         </div>

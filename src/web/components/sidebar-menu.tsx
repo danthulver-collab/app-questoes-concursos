@@ -9,7 +9,11 @@ export function SidebarMenu() {
   const userId = user?.email || user?.username || '';
   const userPlan = getUserPlan(userId);
   const remaining = getRemainingQuestions(userId);
-  const isAdmin = isSuperAdmin(userId);
+  // Verificar admin de múltiplas formas
+  const isAdmin = isSuperAdmin(userId) || 
+    user?.username?.toLowerCase() === 'admin' || 
+    user?.email?.toLowerCase() === 'admin' ||
+    userId.toLowerCase() === 'admin';
   const isFree = !isAdmin && (!userPlan || userPlan === 'free' || userPlan === 'gratuito');
   
   const menuItems = [
@@ -23,8 +27,8 @@ export function SidebarMenu() {
       <div className="bg-[#1a1f2e]/90 backdrop-blur-md rounded-2xl border border-white/10 shadow-2xl overflow-hidden">
         {/* Logo no topo */}
         <Link href="/">
-          <div className="p-4 border-b border-white/10 hover:bg-white/5 transition-all cursor-pointer">
-            <img src="/logo.png" alt="Só Questões" className="h-8 w-auto" />
+          <div className="p-4 border-b border-white/10 hover:bg-white/5 transition-all cursor-pointer flex justify-center">
+            <img src="/logo.png" alt="Só Questões" className="h-16 w-auto" />
           </div>
         </Link>
         
