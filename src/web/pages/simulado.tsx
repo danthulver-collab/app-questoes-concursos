@@ -248,11 +248,11 @@ Responda de forma clara, didática e objetiva, focando em ajudar o aluno a enten
               <div className="mb-6">
                 {/* Versão curta ou completa */}
                 <div className="text-xl text-white font-semibold leading-relaxed whitespace-pre-wrap">
-                  {textoExpandido[currentIndex] ? questao.title : (questao.title.length > 500 ? questao.title.substring(0, 500) + '...' : questao.title)}
+                  {textoExpandido[currentIndex] ? questao.title : (questao.title.length > 10000 ? questao.title.substring(0, 10000) + '...' : questao.title)}
                 </div>
                 
-                {/* Botão VER MAIS - aparece se pergunta > 500 chars */}
-                {questao.title && questao.title.length > 500 && (
+                {/* Botão VER MAIS - aparece se pergunta > 10000 chars */}
+                {questao.title && questao.title.length > 10000 && (
                   <button
                     onClick={() => setTextoExpandido({...textoExpandido, [currentIndex]: !textoExpandido[currentIndex]})}
                     className="mt-4 px-5 py-2.5 bg-gradient-to-r from-emerald-500/20 to-blue-500/20 hover:from-emerald-500/30 hover:to-blue-500/30 text-emerald-400 rounded-xl text-sm font-bold flex items-center gap-2 transition-all border border-emerald-500/30 hover:border-emerald-400/50"
