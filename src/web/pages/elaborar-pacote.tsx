@@ -14,7 +14,7 @@ import { supabase } from "../lib/supabase";
 import { getPacoteStatus, renovarPacote, isPacoteAccessible } from "../lib/pacote-expiration";
 import { savePacoteToSupabase, saveQuestaoToSupabase, deleteQuestaoFromSupabase, getPacotesFromSupabase, getQuestoesFromSupabase } from "../lib/supabase-pacotes";
 import { syncSupabaseToLocalStorage } from "../lib/supabase-sync";
-import { ImportarQuestoesQConcursos } from "../components/importar-questoes-qconcursos";
+import { ImportarQuestoesMassa } from "../components/importar-questoes-massa";
 
 export default function ElaborarPacote() {
   const params = useParams<{ id: string }>();
@@ -973,7 +973,7 @@ export default function ElaborarPacote() {
       
       {/* 🔥 Modal de Importação em Massa - Contextual */}
       {showImportModal && pacote && quizData && (
-        <ImportarQuestoesQConcursos 
+        <ImportarQuestoesMassa 
           onClose={() => {
             setShowImportModal(false);
             // NÃO recarrega - evita deslogar
