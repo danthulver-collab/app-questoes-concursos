@@ -392,7 +392,14 @@ Responda de forma clara, didática e objetiva, focando em ajudar o aluno a enten
                                 max="2"
                                 step="0.1"
                                 value={audioSpeed}
-                                onChange={(e) => setAudioSpeed(parseFloat(e.target.value))}
+                                onChange={(e) => {
+                                  const newSpeed = parseFloat(e.target.value);
+                                  setAudioSpeed(newSpeed);
+                                  // 🔥 Atualiza velocidade do áudio tocando
+                                  if (currentUtterance && speechSynthesis.speaking) {
+                                    currentUtterance.rate = newSpeed;
+                                  }
+                                }}
                                 className="flex-1"
                               />
                               <span className="text-white font-bold w-12 text-center">{audioSpeed.toFixed(1)}x</span>
