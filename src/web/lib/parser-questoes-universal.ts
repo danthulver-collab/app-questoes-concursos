@@ -11,8 +11,11 @@ export interface QuestaoParseada {
   texto_contexto?: string;
 }
 
-export function parsearQuestoesUniversal(texto: string): QuestaoParseada[] {
+export function parsearQuestoesUniversal(textoOriginal: string): QuestaoParseada[] {
   const questoes: QuestaoParseada[] = [];
+  
+  // 🔥 Normalizar quebras de linha (Windows para Unix)
+  const texto = textoOriginal.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
   
   // Separar por "Gabarito: [LETRA]"
   const blocos = texto.split(/(?=Gabarito:\s*[A-E])/gi)
