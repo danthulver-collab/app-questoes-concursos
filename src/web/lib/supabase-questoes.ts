@@ -48,6 +48,7 @@ export const getQuestoesFromSupabase = async (): Promise<Record<string, Record<s
         audio_voice: q.audio_voice,
         enable_chatgpt: q.enable_chatgpt || false,
         audio_comentario: q.audio_comentario,
+        texto_contexto: q.texto_contexto || null, // 🔥 Adicionar texto_contexto
         created_at: q.created_at,
         updated_at: q.updated_at
       });
