@@ -63,10 +63,12 @@ export function ImportarQuestoesMassa({
   const parsearQuestoes = (texto: string): QuestaoImportada[] => {
     const questoes: QuestaoImportada[] = [];
     
-    // 🔥 Separar por "Gabarito:" - mais confiável
-    let blocos = texto.split(/(?=Gabarito:)/gi).filter(b => {
-      // Só considera válido se tiver Gabarito E pelo menos 2 alternativas
-      return b.includes('Gabarito:') && (b.match(/[A-E][\)\.]?\s/g) || []).length >= 2;
+    // 🔥 Separar por "Gabarito:" seguido de letra (mais preciso)
+    let blocos = texto.split(/(?=Gabarito:\s*[A-E])/gi).filter(b => {
+      // Só válido se tiver Gabarito + letra E pelo menos 3 alternativas
+      const temGabarito = b.match(/Gabarito:\s*[A-E]/i);
+      const numAlternativas = (b.match(/^[A-E][\)\.]?\s/gm) || []).length;
+      return temGabarito && numAlternativas >= 3;
     });
     
     console.log(`📊 ${blocos.length} blocos detectados (por Gabarito:)`);

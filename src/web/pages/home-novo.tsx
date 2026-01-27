@@ -261,20 +261,20 @@ export default function HomeNovo() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Big CTA Button - Comece as questões aqui */}
               <Link href="/questoes/escolher">
-                <div className="glass-card rounded-3xl p-8 md:p-10 cursor-pointer group hover:scale-[1.02] transition-all duration-300 bg-gradient-to-br from-orange-500/20 to-amber-500/10 border-2 border-orange-500/30 hover:border-orange-500/60 shadow-2xl shadow-orange-500/20">
-                  <div className="flex flex-col items-center justify-center gap-4 text-center">
-                    <div className="w-20 h-20 rounded-full bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center text-4xl shadow-xl shadow-orange-500/40 group-hover:scale-110 transition-transform">
+                <div className="glass-card rounded-3xl p-6 md:p-10 cursor-pointer group hover:scale-[1.02] transition-all duration-300 bg-gradient-to-br from-orange-500/20 to-amber-500/10 border-2 border-orange-500/30 hover:border-orange-500/60 shadow-2xl shadow-orange-500/20">
+                  <div className="flex flex-col items-center justify-center gap-3 md:gap-4 text-center">
+                    <div className="w-16 md:w-20 h-16 md:h-20 rounded-full bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center text-3xl md:text-4xl shadow-xl shadow-orange-500/40 group-hover:scale-110 transition-transform">
                       📚
                     </div>
-                    <h2 className="text-3xl md:text-4xl font-black text-white group-hover:text-orange-400 transition-colors">
+                    <h2 className="text-2xl md:text-4xl font-black text-white group-hover:text-orange-400 transition-colors">
                       📚 COMECE AS QUESTÕES AQUI
                     </h2>
-                    <p className="text-gray-400 text-lg">
-                      Pratique com questões de concursos e melhore seu desempenho
+                    <p className="text-gray-400 text-sm md:text-lg">
+                      Pratique com questões de concursos
                     </p>
-                    <div className="flex items-center gap-2 text-orange-400 font-semibold text-xl">
+                    <div className="flex items-center gap-2 text-orange-400 font-semibold text-base md:text-xl">
                       <span>Iniciar</span>
-                      <ArrowRight className="w-6 h-6 group-hover:translate-x-2 transition-transform" />
+                      <ArrowRight className="w-5 md:w-6 h-5 md:h-6 group-hover:translate-x-2 transition-transform" />
                     </div>
                   </div>
                 </div>
