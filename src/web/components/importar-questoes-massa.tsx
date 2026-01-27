@@ -72,13 +72,16 @@ export function ImportarQuestoesMassa({
     for (let i = 2; i < blocosBrutos.length; i += 2) {
       const gabarito = blocosBrutos[i-1].toUpperCase();
       const blocoDepois = blocosBrutos[i] || '';
-      const blocoAntes = blocosBrutos[i-2] || '';
+      let blocoAntes = blocosBrutos[i-2] || '';
+      
+      // 🔥 LIMPAR "Comentário:" da questão anterior que ficou grudado
+      blocoAntes = blocoAntes.replace(/^[\s\S]*?Comentário:[\s\S]*?\n\s*(\d+[\.\)])/i, '$1');
       
       const correta = {'A':0,'B':1,'C':2,'D':3,'E':4}[gabarito] || 0;
       
       // COMENTÁRIO
       const comMatch = blocoDepois.match(/Comentário:\s*(.+?)(?=\n\d+\.|$)/is);
-      const comentario = comMatch ? comMatch[1].trim().substring(0,5000) : `Gabarito: ${gabarito}`;
+      const comentario = comMatch ? comMatch[1].trim() : `Gabarito: ${gabarito}`;
       
       // 🔥 TIPO 1: QUESTÃO V/F COM ( )
       if (blocoAntes.match(/\(\s*\)/g)?.length >= 2) {
