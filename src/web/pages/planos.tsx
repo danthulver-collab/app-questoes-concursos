@@ -330,7 +330,7 @@ export default function PlanosPage() {
                 <button
                   onClick={() => {
                     if (canUpgradeTo("plus")) {
-                      // 🔥 Redirecionar para assinatura mensal do Mercado Pago
+                      // 🔥 Link MENSAL atualizado Plano Plus
                       window.location.href = "https://www.mercadopago.com.br/subscriptions/checkout?preapproval_plan_id=7509d70a8c2d44ea9e34c63d98115716";
                     }
                   }}

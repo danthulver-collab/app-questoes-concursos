@@ -116,7 +116,7 @@ export default function ConfigurarPacoteIndividual() {
 
       console.log('✅ Pedido salvo:', data);
       
-      // 🔥 Redirecionar para assinatura do Mercado Pago
+      // 🔥 Redirecionar para assinatura MENSAL do Mercado Pago (link atualizado)
       window.location.href = "https://www.mercadopago.com.br/subscriptions/checkout?preapproval_plan_id=30f86054568c40ceb375ac19c82259a7";
     } catch (e: any) {
       alert('Erro: ' + e.message);

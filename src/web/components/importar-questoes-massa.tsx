@@ -34,6 +34,8 @@ interface ImportarQuestoesMassaProps {
   materiaSelecionada?: string; // 🔥 Matéria já selecionada (pacotes exclusivos)
   areaId?: string; // 🔥 Se vier de Áreas, salva em questoes_areas
   materiaId?: string; // 🔥 ID da matéria para questoes_areas
+  pacoteId?: string; // 🔥 Se vier de Pacote, vincula questões ao pacote
+  onQuestoesImportadas?: (questoesIds: string[]) => void; // Callback com IDs criados
 }
 
 export function ImportarQuestoesMassa({ 
@@ -43,7 +45,9 @@ export function ImportarQuestoesMassa({
   concursoPadrao,
   materiaSelecionada,
   areaId,
-  materiaId
+  materiaId,
+  pacoteId,
+  onQuestoesImportadas
 }: ImportarQuestoesMassaProps) {
   const [materia, setMateria] = useState(materiaSelecionada || materiasFiltradas?.[0] || 'Portugues');
   const [banca, setBanca] = useState(bancaPadrao || 'CESPE');
@@ -191,6 +195,7 @@ export function ImportarQuestoesMassa({
       
       let sucesso = 0;
       let erros = 0;
+      const questoesIdsImportados: string[] = []; // 🔥 Guardar IDs para vincular ao pacote
       
       for (let i = 0; i < questoesParseadas.length; i++) {
         const q = questoesParseadas[i];
@@ -222,8 +227,9 @@ export function ImportarQuestoesMassa({
             }
           } else {
             // Salvar em questoes (banco geral)
+            const questaoId = `${materia.toLowerCase()}_${Date.now()}_${i}`;
             const questao = {
-              id: `${materia.toLowerCase()}_${Date.now()}_${i}`,
+              id: questaoId,
               pergunta: q.pergunta,
               alternativas: q.alternativas,
               correta: q.correta,
@@ -240,6 +246,7 @@ export function ImportarQuestoesMassa({
             
             if (result.success) {
               sucesso++;
+              questoesIdsImportados.push(questaoId); // Guardar ID
             } else {
               erros++;
             }
@@ -255,8 +262,12 @@ export function ImportarQuestoesMassa({
       setResultado(`✅ Importação concluída!\n\n${sucesso} questões inseridas\n${erros} erros`);
       
       if (sucesso > 0) {
+        // 🔥 Se tem callback, chama com os IDs (para vincular ao pacote)
+        if (onQuestoesImportadas && questoesIdsImportados.length > 0) {
+          onQuestoesImportadas(questoesIdsImportados);
+        }
+        
         alert(`✅ ${sucesso} questões de ${materia} importadas com sucesso!`);
-        // NÃO recarrega página - apenas fecha modal
         onClose();
       }
     } catch (e: any) {

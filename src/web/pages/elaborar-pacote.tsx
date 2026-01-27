@@ -927,17 +927,40 @@ export default function ElaborarPacote() {
       </div>
       
       {/* 🔥 Modal de Importação em Massa - Contextual */}
-      {showImportModal && (
+      {showImportModal && pacote && quizData && (
         <ImportarQuestoesMassa 
-          onClose={() => {
+          onClose={async () => {
             setShowImportModal(false);
-            // Recarregar dados após importação
+            // Recarregar
             window.location.reload();
           }}
-          materiasFiltradas={materias} // Apenas matérias do pacote
-          bancaPadrao={banca} // Banca do aluno
-          concursoPadrao={concurso} // Concurso do aluno
-          materiaSelecionada={selectedMateria} // Matéria já selecionada
+          onQuestoesImportadas={async (questoesIds) => {
+            // 🔥 Vincular questões ao pacote
+            try {
+              const updatedPacote = {
+                ...pacote,
+                questionsIds: [...(pacote.questionsIds || []), ...questoesIds],
+                updatedAt: new Date().toISOString()
+              };
+              
+              await savePacoteToSupabase(updatedPacote);
+              
+              const newData = {
+                ...quizData,
+                pacotes: quizData.pacotes.map(p => p.id === pacote.id ? updatedPacote : p)
+              };
+              await saveQuizData(newData);
+              
+              console.log(`✅ ${questoesIds.length} questões vinculadas ao pacote`);
+            } catch (e) {
+              console.error('Erro ao vincular:', e);
+            }
+          }}
+          materiasFiltradas={materias}
+          bancaPadrao={banca}
+          concursoPadrao={concurso}
+          materiaSelecionada={selectedMateria}
+          pacoteId={pacote.id}
         />
       )}
     </div>
