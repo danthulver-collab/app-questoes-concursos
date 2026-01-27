@@ -61,38 +61,41 @@ export function parsearQuestoesUniversal(texto: string): QuestaoParseada[] {
         console.log(`⚠️ Q${idx+1}: Apenas ${Object.keys(altMap).length} alternativas - pode ser V/F`);
       }
       
-      // 5. EXTRAIR PERGUNTA (ÚLTIMA linha antes das alternativas)
-      const linhas = antesGabarito.split('\n')
+      // 5. EXTRAIR PERGUNTA (busca linha com ? : ou EXCETO)
+      const antesGab = bloco.split(/Gabarito:/i)[0];
+      const linhasLimpas = antesGab.split('\n')
         .map(l => l.trim())
-        .filter(l => l && 
-                    !l.match(/^[A-E][\)\.]/) && 
-                    !l.match(/^\d+\.?\s*$/) &&
-                    !l.match(/^\(\s*\)/)); // Remove linhas ( )
+        .filter(l => l.length > 5 && !l.match(/^[A-E][\)\.]/) && !l.match(/^\d+\.?\s*$/));
+      
+      // Remove número da primeira linha se tiver
+      if (linhasLimpas.length > 0 && linhasLimpas[0].match(/^\d+\./)) {
+        linhasLimpas[0] = linhasLimpas[0].replace(/^\d+\.\s*/, '');
+      }
       
       let pergunta = '';
       let contexto = '';
       
-      if (linhas.length > 0) {
-        // Procura linha que termina com ? ou : ou EXCETO:
-        let indicePergunta = -1;
-        for (let i = linhas.length - 1; i >= 0; i--) {
-          if (linhas[i].match(/[?:]$|EXCETO:|correta é:|corretas são:/i)) {
-            indicePergunta = i;
-            break;
-          }
+      // Procura por linha que parece pergunta (termina com ? : EXCETO etc)
+      let indicePergunta = -1;
+      for (let i = linhasLimpas.length - 1; i >= 0; i--) {
+        const linha = linhasLimpas[i];
+        if (linha.match(/[?:]$|EXCETO:|correta|assinale|marque/i)) {
+          indicePergunta = i;
+          break;
         }
-        
-        if (indicePergunta >= 0) {
-          pergunta = linhas[indicePergunta];
-          contexto = linhas.slice(0, indicePergunta).join('\n');
-        } else {
-          // Última linha = pergunta
-          pergunta = linhas[linhas.length - 1];
-          contexto = linhas.slice(0, -1).join('\n');
+      }
+      
+      if (indicePergunta >= 0) {
+        pergunta = linhasLimpas[indicePergunta];
+        if (indicePergunta > 0) {
+          contexto = linhasLimpas.slice(0, indicePergunta).join('\n');
         }
-        
-        // Remove número inicial
-        pergunta = pergunta.replace(/^\d+\.\s*/, '');
+      } else if (linhasLimpas.length > 0) {
+        // Última linha = pergunta
+        pergunta = linhasLimpas[linhasLimpas.length - 1];
+        if (linhasLimpas.length > 1) {
+          contexto = linhasLimpas.slice(0, -1).join('\n');
+        }
       }
       
       // Fallback
