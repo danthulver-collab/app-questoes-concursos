@@ -407,16 +407,15 @@ function GerenciarAreasHierarquico({ showSaveMessage, onGoToQuestoes }: { showSa
             </button>
           </div>
         </div>
+        
+        {/* 🔥 Modal de Importação em Massa para Áreas - Contextual */}
+        {showImportModal && (
+          <ImportarQuestoesMassa 
+            onClose={() => setShowImportModal(false)}
+            materiasFiltradas={materias.map(m => m.nome)} // Apenas matérias desta área
+          />
+        )}
       </div>
-      
-      {/* 🔥 Modal de Importação em Massa para Áreas - Contextual */}
-      {showImportModal && (
-        <ImportarQuestoesMassa 
-          onClose={() => setShowImportModal(false)}
-          materiasFiltradas={materias.map(m => m.nome)} // Apenas matérias desta área
-        />
-      )}
-    </div>
     );
   }
 

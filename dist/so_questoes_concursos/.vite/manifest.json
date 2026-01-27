@@ -1,0 +1,65 @@
+{
+  "_worker-entry-DIIFgAwF.js": {
+    "file": "assets/worker-entry-DIIFgAwF.js",
+    "name": "worker-entry",
+    "dynamicImports": [
+      "node_modules/better-auth/dist/adapters/memory-adapter/index.mjs",
+      "node_modules/better-auth/dist/adapters/kysely-adapter/index.mjs",
+      "node_modules/better-auth/dist/adapters/kysely-adapter/index.mjs",
+      "node_modules/better-auth/dist/adapters/kysely-adapter/bun-sqlite-dialect.mjs",
+      "node_modules/better-auth/dist/adapters/kysely-adapter/node-sqlite-dialect.mjs",
+      "virtual:runable-badge"
+    ]
+  },
+  "node_modules/better-auth/dist/adapters/kysely-adapter/bun-sqlite-dialect.mjs": {
+    "file": "assets/bun-sqlite-dialect-1jFktE_E.js",
+    "name": "bun-sqlite-dialect",
+    "src": "node_modules/better-auth/dist/adapters/kysely-adapter/bun-sqlite-dialect.mjs",
+    "isDynamicEntry": true,
+    "imports": [
+      "_worker-entry-DIIFgAwF.js"
+    ]
+  },
+  "node_modules/better-auth/dist/adapters/kysely-adapter/index.mjs": {
+    "file": "assets/index-BtCcb6JA.js",
+    "name": "index",
+    "src": "node_modules/better-auth/dist/adapters/kysely-adapter/index.mjs",
+    "isDynamicEntry": true,
+    "imports": [
+      "_worker-entry-DIIFgAwF.js"
+    ]
+  },
+  "node_modules/better-auth/dist/adapters/kysely-adapter/node-sqlite-dialect.mjs": {
+    "file": "assets/node-sqlite-dialect-BaEnKeVl.js",
+    "name": "node-sqlite-dialect",
+    "src": "node_modules/better-auth/dist/adapters/kysely-adapter/node-sqlite-dialect.mjs",
+    "isDynamicEntry": true,
+    "imports": [
+      "_worker-entry-DIIFgAwF.js"
+    ]
+  },
+  "node_modules/better-auth/dist/adapters/memory-adapter/index.mjs": {
+    "file": "assets/index-CNv21qYA.js",
+    "name": "index",
+    "src": "node_modules/better-auth/dist/adapters/memory-adapter/index.mjs",
+    "isDynamicEntry": true,
+    "imports": [
+      "_worker-entry-DIIFgAwF.js"
+    ]
+  },
+  "virtual:cloudflare/worker-entry": {
+    "file": "index.js",
+    "name": "index",
+    "src": "virtual:cloudflare/worker-entry",
+    "isEntry": true,
+    "imports": [
+      "_worker-entry-DIIFgAwF.js"
+    ]
+  },
+  "virtual:runable-badge": {
+    "file": "assets/_virtual_runable-badge-DfNGPYay.js",
+    "name": "_virtual_runable-badge",
+    "src": "virtual:runable-badge",
+    "isDynamicEntry": true
+  }
+}
