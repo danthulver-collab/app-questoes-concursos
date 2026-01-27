@@ -929,7 +929,11 @@ export default function ElaborarPacote() {
       {/* 🔥 Modal de Importação em Massa - Contextual */}
       {showImportModal && (
         <ImportarQuestoesMassa 
-          onClose={() => setShowImportModal(false)}
+          onClose={() => {
+            setShowImportModal(false);
+            // Recarregar dados após importação
+            window.location.reload();
+          }}
           materiasFiltradas={materias} // Apenas matérias do pacote
           bancaPadrao={banca} // Banca do aluno
           concursoPadrao={concurso} // Concurso do aluno

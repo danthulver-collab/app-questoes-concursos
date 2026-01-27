@@ -59,104 +59,89 @@ export function ImportarQuestoesMassa({
   const parsearQuestoes = (texto: string): QuestaoImportada[] => {
     const questoes: QuestaoImportada[] = [];
     
-    // 🔥 PARSER UNIVERSAL: Separa por múltiplos indicadores
-    const separadores = [
-      /(?=Gabarito:)/gi,
-      /(?=Comentário:)/gi,
-      /(?=^Questão \d+)/gm,
-      /(?=^Analise)/gm,
-      /(?=^Assinale)/gm,
-      /(?=^Marque)/gm
-    ];
+    // 🔥 Separar por "Gabarito:" - mais confiável
+    let blocos = texto.split(/(?=Gabarito:)/gi).filter(b => {
+      // Só considera válido se tiver Gabarito E pelo menos 2 alternativas
+      return b.includes('Gabarito:') && (b.match(/[A-E][\)\.]?\s/g) || []).length >= 2;
+    });
     
-    let blocos: string[] = [texto];
-    
-    // Tenta cada separador até encontrar um que funcione
-    for (const sep of separadores) {
-      const tentativa = texto.split(sep).filter(b => b.trim().length > 50);
-      if (tentativa.length > blocos.length) {
-        blocos = tentativa;
-        console.log(`✅ Separador encontrado! ${tentativa.length} blocos`);
-        break;
-      }
-    }
-    
-    console.log(`📊 ${blocos.length} blocos detectados para processar`);
+    console.log(`📊 ${blocos.length} blocos detectados (por Gabarito:)`);
     
     for (let idx = 0; idx < blocos.length; idx++) {
       const bloco = blocos[idx];
       
       try {
-        // Extrair com REGEX mais robusto
-        let pergunta = '';
+        let pergunta = 'Questão ' + (idx + 1); // Pergunta padrão
         let alternativas: string[] = [];
         let correta: 0 | 1 | 2 | 3 = 0;
         let comentario = '';
         let texto_contexto = '';
         
-        // Pegar Gabarito/Correta
-        const gabaritoMatch = bloco.match(/(Gabarito|Correta|Resposta):\s*([A-E])/i);
+        // 1. Extrair GABARITO
+        const gabaritoMatch = bloco.match(/Gabarito:\s*([A-E])/i);
         if (gabaritoMatch) {
-          const letra = gabaritoMatch[2].toUpperCase();
+          const letra = gabaritoMatch[1].toUpperCase();
           const mapa: Record<string, number> = {'A': 0, 'B': 1, 'C': 2, 'D': 3, 'E': 4};
           correta = (mapa[letra] || 0) as 0 | 1 | 2 | 3;
         }
         
-        // Separar em partes
-        const partes = bloco.split(/(Gabarito:|Comentário:)/i);
-        const antesGabarito = partes[0] || '';
-        const depoisComentario = partes[partes.length - 1] || '';
-        
-        // Extrair comentário
-        if (bloco.match(/Comentário:/i)) {
-          comentario = depoisComentario.replace(/Comentário:/i, '').trim().substring(0, 500);
+        // 2. Extrair COMENTÁRIO
+        const comentarioMatch = bloco.match(/Comentário:\s*(.+?)(?=\n[A-E][\)\.]|$)/is);
+        if (comentarioMatch) {
+          comentario = comentarioMatch[1].trim().substring(0, 1000);
         }
         
-        // Extrair alternativas usando regex
-        const regexAlternativas = /([A-Ea-e])[\)\.]?\s+([^A-Ea-e\n]+?)(?=\s*[A-Ea-e][\)\.]|\s*(?:Gabarito|Correta|Comentário|Marque):|\s*$)/gs;
-        const matchesAlt = [...antesGabarito.matchAll(regexAlternativas)];
+        // 3. Extrair ALTERNATIVAS (aceita A-E com qualquer formato)
+        const regexAlt = /([A-E])[\)\.]?\s+(.+?)(?=\s*[A-E][\)\.]|Gabarito:|Comentário:|$)/gis;
+        const matchesAlt = [...bloco.matchAll(regexAlt)];
         
+        const alternativasMap: Record<string, string> = {};
         matchesAlt.forEach(match => {
-          if (alternativas.length < 4) {
-            alternativas.push(match[2].trim());
-          }
+          const letra = match[1].toUpperCase();
+          const texto = match[2].trim().replace(/\n/g, ' ').substring(0, 300);
+          alternativasMap[letra] = texto;
         });
         
-        // Extrair pergunta (primeira linha antes das alternativas)
-        const linhas = antesGabarito.split('\n').map(l => l.trim()).filter(l => l);
-        for (const linha of linhas) {
-          if (!linha.match(/^[A-Ea-e][\)\.]/) && linha.length > 10) {
-            if (!pergunta) {
-              pergunta = linha;
-            } else if (!linha.match(/^(I{1,3}V?|V?I{1,3})\./)) {
-              texto_contexto += (texto_contexto ? '\n' : '') + linha;
-            }
+        // Garantir ordem A, B, C, D
+        alternativas = [
+          alternativasMap['A'] || '(Alternativa não fornecida)',
+          alternativasMap['B'] || '(Alternativa não fornecida)',
+          alternativasMap['C'] || '(Alternativa não fornecida)',
+          alternativasMap['D'] || '(Alternativa não fornecida)'
+        ];
+        
+        // 4. Extrair PERGUNTA (primeira linha antes das alternativas OU primeira frase)
+        const antesAlternativas = bloco.split(/[A-E][\)\.]?\s/)[0];
+        const linhasPergunta = antesAlternativas.split('\n').filter(l => l.trim().length > 10);
+        if (linhasPergunta.length > 0) {
+          pergunta = linhasPergunta[0].trim();
+          if (linhasPergunta.length > 1) {
+            texto_contexto = linhasPergunta.slice(1).join('\n').trim();
           }
         }
         
-        // Validar e adicionar
-        if (pergunta.length > 5 && alternativas.length >= 4) {
+        // Validar
+        const temAlternativasValidas = alternativas.filter(a => !a.includes('não fornecida')).length >= 3;
+        
+        if (temAlternativasValidas) {
           questoes.push({
-            pergunta: pergunta.trim(),
-            alternativas: [
-              alternativas[0] || '',
-              alternativas[1] || '',
-              alternativas[2] || '',
-              alternativas[3] || ''
-            ] as [string, string, string, string],
+            pergunta: pergunta.trim() || `Questão ${idx + 1}`,
+            alternativas: alternativas as [string, string, string, string],
             correta: Math.min(correta, 3) as 0 | 1 | 2 | 3,
-            comentario: comentario || 'Resposta: ' + ['A', 'B', 'C', 'D'][correta],
-            texto_contexto: texto_contexto.trim().substring(0, 2000) || undefined
+            comentario: comentario || 'Gabarito: ' + ['A', 'B', 'C', 'D'][correta],
+            texto_contexto: texto_contexto || undefined
           });
           
-          console.log(`✅ Q${questoes.length}: ${pergunta.substring(0, 40)}...`);
+          console.log(`✅ Q${questoes.length}: ${pergunta.substring(0, 40)}... | Alt: ${alternativas.filter(a => !a.includes('não fornecida')).length}/4`);
+        } else {
+          console.log(`⚠️ Bloco ${idx} ignorado (alternativas insuficientes)`);
         }
       } catch (e) {
         console.error(`❌ Erro no bloco ${idx}:`, e);
       }
     }
     
-    console.log(`✅ TOTAL PARSEADO: ${questoes.length} questões`);
+    console.log(`✅ TOTAL PARSEADO: ${questoes.length} de ${blocos.length} blocos`);
     return questoes;
   };
 
@@ -270,11 +255,9 @@ export function ImportarQuestoesMassa({
       setResultado(`✅ Importação concluída!\n\n${sucesso} questões inseridas\n${erros} erros`);
       
       if (sucesso > 0) {
-        setTimeout(() => {
-          alert(`✅ ${sucesso} questões de ${materia} importadas com sucesso!`);
-          onClose();
-          window.location.reload();
-        }, 2000);
+        alert(`✅ ${sucesso} questões de ${materia} importadas com sucesso!`);
+        // NÃO recarrega página - apenas fecha modal
+        onClose();
       }
     } catch (e: any) {
       console.error('Erro ao importar:', e);
