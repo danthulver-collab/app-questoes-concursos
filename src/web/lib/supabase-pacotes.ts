@@ -167,7 +167,7 @@ export const getQuestoesFromSupabase = async (): Promise<Question[]> => {
     }
 
     // Mapear para formato esperado
-    const questoes: Question[] = (data || []).map(item => ({
+    const questoes: any[] = (data || []).map(item => ({
       id: item.id,
       pergunta: item.pergunta,
       alternativas: (typeof item.alternativas === 'string' 
@@ -180,7 +180,8 @@ export const getQuestoesFromSupabase = async (): Promise<Question[]> => {
       concurso: item.concurso || '',
       ano: item.ano || new Date().getFullYear(),
       comentario: item.comentario || '',
-      dificuldade: item.dificuldade as 'facil' | 'medio' | 'dificil' || 'medio'
+      dificuldade: item.dificuldade as 'facil' | 'medio' | 'dificil' || 'medio',
+      texto_contexto: item.texto_contexto || null // 🔥 Incluir texto_contexto
     }));
 
     return questoes;

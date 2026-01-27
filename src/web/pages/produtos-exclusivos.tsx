@@ -235,6 +235,7 @@ export default function ProdutosExclusivos() {
                             optionD: q.alternativas[3],
                             correctAnswer: ['A', 'B', 'C', 'D'][q.correta],
                             explanation: q.comentario || 'Sem comentário disponível.',
+                            texto_contexto: (q as any).texto_contexto || null, // 🔥 Passar texto contexto
                             banca: q.banca || pacote.banca,
                             concurso: q.concurso || pacote.concurso,
                             disciplina: q.disciplina,
@@ -308,6 +309,7 @@ export default function ProdutosExclusivos() {
                     optionD: q.alternativas[3],
                     correctAnswer: ['A', 'B', 'C', 'D'][q.correta],
                     explanation: q.comentario || 'Sem comentário disponível.',
+                    texto_contexto: (q as any).texto_contexto || null, // 🔥 Passar texto contexto
                     banca: q.banca || pacote.banca,
                     concurso: q.concurso || pacote.concurso,
                     disciplina: q.disciplina,
