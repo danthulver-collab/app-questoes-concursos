@@ -104,7 +104,7 @@ export function ImportarQuestoesMassa({
         // 2. Extrair COMENTÁRIO
         const comentarioMatch = bloco.match(/Comentário:\s*(.+?)(?=\n[A-E][\)\.]|$)/is);
         if (comentarioMatch) {
-          comentario = comentarioMatch[1].trim().substring(0, 1000);
+          comentario = comentarioMatch[1].trim().substring(0, 5000); // 🔥 Aumentado para 5000
         }
         
         // 3. Extrair ALTERNATIVAS (aceita A-E com qualquer formato)
@@ -114,7 +114,7 @@ export function ImportarQuestoesMassa({
         const alternativasMap: Record<string, string> = {};
         matchesAlt.forEach(match => {
           const letra = match[1].toUpperCase();
-          const texto = match[2].trim().replace(/\n/g, ' ').substring(0, 300);
+          const texto = match[2].trim().replace(/\n/g, ' ').substring(0, 1000); // 🔥 Aumentado para 1000
           alternativasMap[letra] = texto;
         });
         
@@ -470,6 +470,7 @@ Correta: C`}
               value={textoQuestoes}
               onChange={(e) => setTextoQuestoes(e.target.value)}
               rows={15}
+              maxLength={1000000} // 🔥 Sem limite prático
               className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:border-purple-500/50 focus:outline-none font-mono text-sm"
               placeholder="Cole suas questões no formato indicado acima..."
             />
