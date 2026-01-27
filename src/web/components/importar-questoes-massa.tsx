@@ -151,10 +151,10 @@ export function ImportarQuestoesMassa({
           pergunta = texto_contexto.split('\n')[0] || `Questão ${idx + 1}`;
         }
         
-        // Validar
-        const temAlternativasValidas = alternativas.filter(a => !a.includes('não fornecida')).length >= 3;
+        // Validar - aceita se tiver pelo menos 2 alternativas válidas
+        const alternativasValidas = alternativas.filter(a => a && !a.includes('não fornecida') && a.length > 3);
         
-        if (temAlternativasValidas) {
+        if (alternativasValidas.length >= 2 && pergunta.length > 3) {
           questoes.push({
             pergunta: pergunta.trim() || `Questão ${idx + 1}`,
             alternativas: alternativas as [string, string, string, string],
@@ -163,9 +163,9 @@ export function ImportarQuestoesMassa({
             texto_contexto: texto_contexto || undefined
           });
           
-          console.log(`✅ Q${questoes.length}: ${pergunta.substring(0, 40)}... | Alt: ${alternativas.filter(a => !a.includes('não fornecida')).length}/4`);
+          console.log(`✅ Q${questoes.length}: "${pergunta.substring(0, 50)}..." | ${alternativasValidas.length} alt válidas`);
         } else {
-          console.log(`⚠️ Bloco ${idx} ignorado (alternativas insuficientes)`);
+          console.log(`❌ Bloco ${idx} IGNORADO: pergunta="${pergunta.substring(0, 30)}" | ${alternativasValidas.length} alt`);
         }
       } catch (e) {
         console.error(`❌ Erro no bloco ${idx}:`, e);
