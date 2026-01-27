@@ -53,8 +53,24 @@ export function ImportarQuestoesMassa({
   const parsearQuestoes = (texto: string): QuestaoImportada[] => {
     const questoes: QuestaoImportada[] = [];
     
-    // Dividir por linhas vazias (cada questão separada por linha vazia dupla)
-    const blocos = texto.split(/\n\s*\n/).filter(b => b.trim().length > 30);
+    // 🔥 PARSER INTELIGENTE: Detecta múltiplos formatos
+    
+    // Método 1: Tentar separar por padrão de questão (letra minúscula seguida de alternativas)
+    const padraoQuestao = /(?=(?:^|\n)(?:Questão|Analise|Assinale|Marque|Indique|Considere|Leia|Sobre|Com|De acordo|A respeito|Quanto|Em relação|Segundo|Na|No|O que|Qual|Quais|Quando|Onde|Como|Por que))/gi;
+    
+    let blocos = texto.split(padraoQuestao).filter(b => b.trim().length > 30);
+    
+    // Se não encontrou padrão, tenta por linha vazia dupla
+    if (blocos.length <= 1) {
+      blocos = texto.split(/\n\s*\n/).filter(b => b.trim().length > 30);
+    }
+    
+    // Se ainda não separou, tenta por numeração (1., 2., etc)
+    if (blocos.length <= 1) {
+      blocos = texto.split(/(?=\n\d+[\.\)])/g).filter(b => b.trim().length > 30);
+    }
+    
+    console.log(`📊 ${blocos.length} blocos detectados`);
     
     for (const bloco of blocos) {
       try {
@@ -68,38 +84,50 @@ export function ImportarQuestoesMassa({
         
         let i = 0;
         
-        // Pegar pergunta e texto contexto (tudo até achar A) ou Alternativas)
-        while (i < linhas.length && !linhas[i].match(/^(A[\)\.]|Alternativas)/i)) {
-          if (pergunta) {
-            texto_contexto += (texto_contexto ? '\n' : '') + linhas[i];
-          } else {
-            pergunta += (pergunta ? ' ' : '') + linhas[i];
+        // Pegar tudo até achar alternativas (A), a), A., a.)
+        while (i < linhas.length && !linhas[i].match(/^[A-Ea-e][\)\.]?\s/)) {
+          const linha = linhas[i];
+          
+          // Se já tem pergunta e linha começa com "Alternativas", pula
+          if (linha.match(/^Alternativas$/i)) {
+            i++;
+            break;
+          }
+          
+          // Primeira linha não vazia é a pergunta
+          if (!pergunta && linha.length > 5) {
+            pergunta = linha;
+          } else if (pergunta) {
+            // Resto é texto contexto
+            texto_contexto += (texto_contexto ? '\n' : '') + linha;
           }
           i++;
         }
         
-        // Pular linha "Alternativas" se existir
-        if (i < linhas.length && linhas[i].match(/^Alternativas/i)) {
-          i++;
-        }
-        
-        // Pegar alternativas A), B), C), D), E)
-        while (i < linhas.length && linhas[i].match(/^[A-E][\)\.]/) && alternativas.length < 5) {
-          const texto = linhas[i].replace(/^[A-E][\)\.]?\s*/, '').trim();
-          alternativas.push(texto);
-          i++;
-        }
-        
-        // Se tem menos de 4, não é válida
-        if (alternativas.length < 4) {
-          console.log('⚠️ Questão ignorada (menos de 4 alternativas):', pergunta.substring(0, 50));
-          continue;
-        }
-        
-        // Pegar correta (procura linha com "Correta:" ou "Gabarito:")
+        // Pegar alternativas (aceita A-E, a-e, com ) ou .)
         while (i < linhas.length) {
           const linha = linhas[i];
-          if (linha.match(/Correta:|Gabarito:|Resposta:/i)) {
+          const match = linha.match(/^([A-Ea-e])[\)\.]?\s+(.+)/);
+          
+          if (match && alternativas.length < 5) {
+            alternativas.push(match[2].trim());
+            i++;
+          } else if (linha.match(/Correta:|Gabarito:|Resposta:|Marque:/i)) {
+            // Achou linha da resposta
+            break;
+          } else if (alternativas.length > 0 && alternativas.length < 5) {
+            // Continua a última alternativa (quebra de linha)
+            alternativas[alternativas.length - 1] += ' ' + linha;
+            i++;
+          } else {
+            i++;
+          }
+        }
+        
+        // Pegar correta
+        while (i < linhas.length) {
+          const linha = linhas[i];
+          if (linha.match(/Correta:|Gabarito:|Resposta:|Marque:/i)) {
             const match = linha.match(/[A-E]/i);
             if (match) {
               const letra = match[0].toUpperCase();
@@ -112,17 +140,17 @@ export function ImportarQuestoesMassa({
           i++;
         }
         
-        // Pegar comentário (resto)
+        // Pegar comentário (resto após correta)
         if (i < linhas.length) {
           comentario = linhas.slice(i).join(' ').replace(/Comentário:|Explicação:/i, '').trim();
         }
         
         if (!comentario) {
-          comentario = 'Resposta correta: ' + ['A', 'B', 'C', 'D', 'E'][correta];
+          comentario = 'Resposta: ' + ['A', 'B', 'C', 'D'][correta];
         }
         
-        if (pergunta && alternativas.length >= 4) {
-          // Garantir sempre 4 alternativas
+        // Validar questão
+        if (pergunta.length > 5 && alternativas.length >= 4) {
           questoes.push({
             pergunta: pergunta.trim(),
             alternativas: [
@@ -132,8 +160,15 @@ export function ImportarQuestoesMassa({
               alternativas[3] || ''
             ] as [string, string, string, string],
             correta: Math.min(correta, 3) as 0 | 1 | 2 | 3,
-            comentario: comentario || 'Sem comentário.',
-            texto_contexto: texto_contexto.trim() || undefined
+            comentario: comentario.substring(0, 500),
+            texto_contexto: texto_contexto.trim().substring(0, 2000) || undefined
+          });
+          
+          console.log(`✅ Questão ${questoes.length} parseada:`, pergunta.substring(0, 50));
+        } else {
+          console.log(`⚠️ Questão inválida ignorada:`, {
+            pergunta: pergunta.substring(0, 50),
+            alternativas: alternativas.length
           });
         }
       } catch (e) {
@@ -141,6 +176,7 @@ export function ImportarQuestoesMassa({
       }
     }
     
+    console.log(`📊 Total parseado: ${questoes.length} questões`);
     return questoes;
   };
 
