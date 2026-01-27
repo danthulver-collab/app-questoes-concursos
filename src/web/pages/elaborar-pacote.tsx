@@ -195,6 +195,9 @@ export default function ElaborarPacote() {
       setQuizData(newData);
       setPacote(updatedPacote);
       
+      // 🔥 Forçar sincronização para atualizar página Admin
+      await syncSupabaseToLocalStorage();
+      
       alert("✅ Pacote salvo no Supabase!");
     } catch (error) {
       console.error("Erro ao salvar:", error);
