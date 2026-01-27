@@ -282,11 +282,20 @@ export default function PlanosPage() {
                   ✨
                 </span>
                 <h2 className="text-xl font-bold text-amber-400 mb-2">Plano Plus</h2>
+                
+                {/* 🔥 PREÇO PROMOCIONAL */}
+                <div className="mb-2">
+                  <div className="flex items-center justify-center gap-2">
+                    <span className="text-lg text-gray-500 line-through">R$ 197</span>
+                    <span className="px-2 py-1 bg-red-500 text-white text-xs font-bold rounded">-35%</span>
+                  </div>
+                </div>
+                
                 <div className="flex items-baseline justify-center gap-1">
-                  <span className="text-3xl font-black text-white">R$ {PLAN_LIMITS.plus.price}</span>
+                  <span className="text-4xl font-black text-amber-400">R$ {PLAN_LIMITS.plus.price}</span>
                   <span className="text-gray-400">/mês</span>
                 </div>
-                <p className="text-gray-400 text-sm mt-2">Acesso total</p>
+                <p className="text-emerald-400 text-sm mt-1 font-bold">🎉 Promoção especial!</p>
               </div>
               
               <ul className="space-y-2 mb-6">

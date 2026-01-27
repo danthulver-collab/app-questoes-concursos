@@ -85,7 +85,8 @@ export const PLAN_LIMITS = {
     hasNotes: true, // Com anotações
     aiMessagesPerMonth: 200, // ⚠️ LIMITE: 200 mensagens IA por mês (bem generoso)
     name: "Plus",
-    price: 197,
+    price: 127, // 🔥 PREÇO PROMOCIONAL (de R$ 197)
+    oldPrice: 197, // Preço antigo para mostrar riscado
     features: [
       "Questões ilimitadas",
       "Acesso TOTAL a todos os concursos",
