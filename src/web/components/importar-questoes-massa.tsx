@@ -49,23 +49,28 @@ export function ImportarQuestoesMassa({
   const [textoQuestoes, setTextoQuestoes] = useState('');
   const [processando, setProcessando] = useState(false);
   const [resultado, setResultado] = useState('');
+  const [sobrescrever, setSobrescrever] = useState(false); // 🔥 Opção sobrescrever
 
   const parsearQuestoes = (texto: string): QuestaoImportada[] => {
     const questoes: QuestaoImportada[] = [];
     
     // 🔥 PARSER INTELIGENTE: Detecta múltiplos formatos
     
-    // Método 1: Tentar separar por padrão de questão (letra minúscula seguida de alternativas)
-    const padraoQuestao = /(?=(?:^|\n)(?:Questão|Analise|Assinale|Marque|Indique|Considere|Leia|Sobre|Com|De acordo|A respeito|Quanto|Em relação|Segundo|Na|No|O que|Qual|Quais|Quando|Onde|Como|Por que))/gi;
+    // Método 1: Tentar separar por "Comentário:" (mais confiável para esse formato)
+    let blocos = texto.split(/(?=Comentário:)/gi).filter(b => b.trim().length > 30);
     
-    let blocos = texto.split(padraoQuestao).filter(b => b.trim().length > 30);
+    // Método 2: Por padrão de questão
+    if (blocos.length <= 1) {
+      const padraoQuestao = /(?=(?:^|\n)(?:Questão|Analise|Assinale|Marque|Indique|Considere|Leia|Sobre|Com|De acordo|A respeito|Quanto|Em relação|Segundo|Na|No|O que|Qual|Quais|Quando|Onde|Como|Por que))/gi;
+      blocos = texto.split(padraoQuestao).filter(b => b.trim().length > 30);
+    }
     
-    // Se não encontrou padrão, tenta por linha vazia dupla
+    // Método 3: Por linha vazia dupla
     if (blocos.length <= 1) {
       blocos = texto.split(/\n\s*\n/).filter(b => b.trim().length > 30);
     }
     
-    // Se ainda não separou, tenta por numeração (1., 2., etc)
+    // Método 4: Por numeração (1., 2., etc)
     if (blocos.length <= 1) {
       blocos = texto.split(/(?=\n\d+[\.\)])/g).filter(b => b.trim().length > 30);
     }
@@ -199,6 +204,20 @@ export function ImportarQuestoesMassa({
       }
       
       setResultado(`✅ ${questoesParseadas.length} questões identificadas. Inserindo no banco...`);
+      
+      // 🔥 Se sobrescrever, deletar questões antigas da matéria primeiro
+      if (sobrescrever) {
+        setResultado(`🗑️ Removendo questões antigas de ${materia}...`);
+        try {
+          await supabase
+            .from('questoes')
+            .delete()
+            .eq('disciplina', materia);
+          console.log(`✅ Questões antigas de ${materia} removidas`);
+        } catch (e) {
+          console.error('Erro ao remover antigas:', e);
+        }
+      }
       
       let sucesso = 0;
       let erros = 0;
@@ -357,6 +376,23 @@ Correta: C`}
             <p className="text-xs text-gray-500 mt-2">
               💡 Separe cada questão com uma linha vazia. Use "Correta: A/B/C/D" para indicar a resposta.
             </p>
+          </div>
+
+          {/* 🔥 Opção Sobrescrever */}
+          <div className="flex items-center gap-3 p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl">
+            <input
+              type="checkbox"
+              id="sobrescrever"
+              checked={sobrescrever}
+              onChange={(e) => setSobrescrever(e.target.checked)}
+              className="w-5 h-5 rounded border-2 border-amber-500 bg-white/5 checked:bg-amber-500 cursor-pointer"
+            />
+            <label htmlFor="sobrescrever" className="text-white font-medium cursor-pointer flex-1">
+              🗑️ Sobrescrever questões existentes de {materia}
+            </label>
+            <span className="text-xs text-gray-400">
+              {sobrescrever ? 'Remove antigas e adiciona novas' : 'Adiciona às existentes'}
+            </span>
           </div>
 
           {/* Caixa de texto */}
