@@ -14,6 +14,7 @@ import { supabase } from "../lib/supabase";
 import { getPacoteStatus, renovarPacote, isPacoteAccessible } from "../lib/pacote-expiration";
 import { savePacoteToSupabase, saveQuestaoToSupabase, deleteQuestaoFromSupabase, getPacotesFromSupabase, getQuestoesFromSupabase } from "../lib/supabase-pacotes";
 import { syncSupabaseToLocalStorage } from "../lib/supabase-sync";
+import { ImportarQuestoesMassa } from "../components/importar-questoes-massa";
 
 export default function ElaborarPacote() {
   const params = useParams<{ id: string }>();
@@ -52,6 +53,9 @@ export default function ElaborarPacote() {
     correta: 0,
     comentario: ""
   });
+  
+  // 🔥 Modal de importação em massa
+  const [showImportModal, setShowImportModal] = useState(false);
   
   // Verificar se é admin
   const isUserAdmin = isSuperAdmin(userId) || 
@@ -629,7 +633,7 @@ export default function ElaborarPacote() {
                 <p className="text-sm text-gray-500">{totalQuestoes} questões criadas</p>
               </div>
               
-              <div className="flex gap-3">
+              <div className="flex flex-wrap gap-3">
                 <select
                   value={selectedMateria}
                   onChange={(e) => setSelectedMateria(e.target.value)}
@@ -640,6 +644,20 @@ export default function ElaborarPacote() {
                     <option key={m} value={m}>{m} ({getQuestoesByMateria(m).length})</option>
                   ))}
                 </select>
+                
+                <button
+                  onClick={() => {
+                    if (!selectedMateria) {
+                      alert("Selecione uma matéria primeiro!");
+                      return;
+                    }
+                    setShowImportModal(true);
+                  }}
+                  disabled={!selectedMateria}
+                  className="px-4 py-2 bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-400 hover:to-indigo-400 disabled:opacity-50 text-white rounded-xl text-sm font-medium flex items-center gap-2"
+                >
+                  <span>📥</span> Importar em Massa
+                </button>
                 
                 <button
                   onClick={() => {
@@ -907,6 +925,11 @@ export default function ElaborarPacote() {
           )}
         </div>
       </div>
+      
+      {/* 🔥 Modal de Importação em Massa */}
+      {showImportModal && (
+        <ImportarQuestoesMassa onClose={() => setShowImportModal(false)} />
+      )}
     </div>
   );
 }
