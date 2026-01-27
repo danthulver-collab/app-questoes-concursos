@@ -119,7 +119,7 @@ export const deletePacoteFromSupabase = async (pacoteId: string) => {
 // QUESTÕES
 // ============================================
 
-export const saveQuestaoToSupabase = async (questao: Question) => {
+export const saveQuestaoToSupabase = async (questao: any) => {
   try {
     const { data, error } = await supabase
       .from('questoes')
@@ -135,6 +135,7 @@ export const saveQuestaoToSupabase = async (questao: Question) => {
         ano: questao.ano,
         comentario: questao.comentario,
         dificuldade: questao.dificuldade,
+        texto_contexto: questao.texto_contexto || null,
         updated_at: new Date().toISOString()
       })
       .select()

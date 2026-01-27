@@ -75,6 +75,7 @@ import {
 } from "../lib/access-control";
 import { ProgressTimeline, MiniTimeline } from "../components/progress-timeline";
 import { AdminNotifications } from "../components/admin-notifications";
+import { ImportarQuestoesMassa } from "../components/importar-questoes-massa";
 
 import { getPackageRequests as getPackageRequestsLocal, updatePackageRequestStatus as updatePackageRequestStatusLocal, updatePackageExtrasResponse as updatePackageExtrasResponseLocal, linkPackageToRequest, getLinkedPackageId } from "./onboarding";
 import { getPackageRequests as getPackageRequestsSupabase, updatePackageRequestStatus as updatePackageRequestStatusSupabase, updatePackageExtrasResponse as updatePackageExtrasResponseSupabase, type PackageRequest } from "../lib/supabase-package-requests";
@@ -875,6 +876,11 @@ function QuestoesAreasEditor({ showSaveMessage }: { showSaveMessage: (msg?: stri
             </div>
           </div>
         </div>
+      )}
+      
+      {/* 🔥 Modal de Importação em Massa */}
+      {showImportModal && (
+        <ImportarQuestoesMassa onClose={() => setShowImportModal(false)} />
       )}
     </div>
   );
@@ -1775,6 +1781,11 @@ function AccessManagementSection({
           </div>
         </div>
       )}
+      
+      {/* 🔥 Modal de Importação em Massa */}
+      {showImportModal && (
+        <ImportarQuestoesMassa onClose={() => setShowImportModal(false)} />
+      )}
     </div>
   );
 }
@@ -1836,6 +1847,9 @@ function AdminPage() {
   // Import/Export
   const [importText, setImportText] = useState("");
   const [importError, setImportError] = useState("");
+  
+  // 🔥 Importação em massa
+  const [showImportModal, setShowImportModal] = useState(false);
   
   // Task 126: Refresh counter for in-place updates
   const [refreshCounter, setRefreshCounter] = useState(0);
@@ -3842,12 +3856,20 @@ function AdminPage() {
                   <h1 className="text-3xl font-extrabold mb-2">Banco de Questões</h1>
                   <p className="text-gray-500">{filteredQuestions.length} questões encontradas</p>
                 </div>
-                <button
-                  onClick={handleAddQuestion}
-                  className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl font-bold text-sm hover:scale-105 transition-transform"
-                >
-                  + Nova Questão
-                </button>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setShowImportModal(true)}
+                    className="px-6 py-3 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-xl font-bold text-sm hover:scale-105 transition-transform flex items-center gap-2"
+                  >
+                    <span>📥</span> Importar em Massa
+                  </button>
+                  <button
+                    onClick={handleAddQuestion}
+                    className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl font-bold text-sm hover:scale-105 transition-transform"
+                  >
+                    + Nova Questão
+                  </button>
+                </div>
               </div>
 
               {/* Filters */}
@@ -5873,6 +5895,11 @@ function AdminPage() {
             </div>
           </div>
         </div>
+      )}
+      
+      {/* 🔥 Modal de Importação em Massa */}
+      {showImportModal && (
+        <ImportarQuestoesMassa onClose={() => setShowImportModal(false)} />
       )}
     </div>
   );
