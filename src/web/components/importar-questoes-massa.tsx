@@ -83,93 +83,30 @@ export function ImportarQuestoesMassa({
       const comMatch = blocoDepois.match(/Comentário:\s*(.+?)(?=\n\d+\.|$)/is);
       const comentario = comMatch ? comMatch[1].trim() : `Gabarito: ${gabarito}`;
       
-      // 🔥 TIPO 1: QUESTÃO V/F COM ( )
-      if (blocoAntes.match(/\(\s*\)/g)?.length >= 2) {
-        
-        // Extrair linha de comando (assinale, marque, indique)
-        const comandoMatch = blocoAntes.match(/(assinale|marque|indique|considere).+?(?=\n\(|$)/is);
-        const comando = comandoMatch ? comandoMatch[0].trim() : 'Assinale V (verdadeiro) ou F (falso):';
-        
-        // Extrair enunciado (primeira linha longa)
-        const linhasIniciais = blocoAntes.split(/\(\s*\)/)[0].split('\n')
-          .filter(l => l.trim().length > 30);
-        const enunciado = linhasIniciais.filter(l => !l.match(/assinale|marque/i)).join('\n');
-        
-        // Extrair assertivas com ( )
-        const afirmativasBruto = blocoAntes.split(/\(\s*\)/).slice(1);
-        let assertivas = '';
-        afirmativasBruto.forEach((af, idx) => {
-          const texto = af.split(/\n[A-E][\)\.]?\s/i)[0].trim();
-          if (texto.length > 10) {
-            assertivas += `${['I','II','III','IV','V','VI'][idx]}. ${texto}\n`;
-          }
-        });
-        
-        // Extrair alternativas V-F
-        const altMatch = [...blocoAntes.matchAll(/([A-E])[\)\.]?\s*([VF\s–\-]+)/gi)];
-        const altMap: any = {};
-        altMatch.forEach(m => altMap[m[1].toUpperCase()] = m[2].trim());
-        
-        // 🔥 JUNTA TUDO NO CAMPO PERGUNTA
-        const perguntaCompleta = [enunciado, comando, assertivas, 'A sequência correta é:'].filter(p => p).join('\n\n').trim();
-        
+      // 🔥 EXTRAIR ALTERNATIVAS
+      const altMatch = [...blocoAntes.matchAll(/\n\s*([A-E])[\)\.]?\s+([^\n]+)/gi)];
+      const altMap: any = {};
+      altMatch.forEach(m => altMap[m[1].toUpperCase()] = m[2].trim());
+      
+      const alternativas = [altMap.A||'',altMap.B||'',altMap.C||'',altMap.D||''];
+      
+      // 🔥 PERGUNTA = TUDO antes das alternativas (SEM SEPARAR NADA)
+      let perguntaCompleta = blocoAntes.split(/\n\s*[A-E][\)\.]?\s/i)[0];
+      
+      // Remove número da questão no início
+      perguntaCompleta = perguntaCompleta.replace(/^\s*\d+[\.\)]\s*/,'').trim();
+      
+      // Remove linhas vazias extras
+      perguntaCompleta = perguntaCompleta.replace(/\n{3,}/g, '\n\n').trim();
+      
+      if (alternativas.filter(a=>a.length>2).length >= 2) {
         questoes.push({
-          pergunta: perguntaCompleta.replace(/^\d+\.\s*/,''), // 🔥 TUDO JUNTO
-          alternativas: [altMap.A||'',altMap.B||'',altMap.C||'',altMap.D||''] as any,
+          pergunta: perguntaCompleta, // 🔥 TUDO - enunciado + assertivas + comando
+          alternativas: alternativas as any,
           correta: correta as any,
           comentario
         });
-        
-        console.log(`✅ V/F: ${perguntaCompleta.substring(0,40)}`);
-        
-      } else {
-        // 🔥 TIPO 2: QUESTÃO NORMAL OU ASSERTIVAS I, II, III
-        
-        // Alternativas
-        const altMatch = [...blocoAntes.matchAll(/([A-E])[\)\.]?\s+([^\n]+(?:\n(?![A-E][\)\.])[^\n]+)*)/gi)];
-        const altMap: any = {};
-        altMatch.forEach(m => altMap[m[1].toUpperCase()] = m[2].trim().replace(/\s+/g,' ')); // 🔥 SEM LIMITE
-        
-        const alternativas = [altMap.A||'',altMap.B||'',altMap.C||'',altMap.D||''];
-        
-        // Pergunta (procura linha com ?, :, EXCETO, correta, assinale)
-        const linhas = blocoAntes.split(/\n[A-E][\)\.]?\s/i)[0].split('\n')
-          .map(l=>l.trim())
-          .filter(l=>l.length>10 && !l.match(/^\d+\.?\s*$/));
-        
-        let indicePergunta = -1;
-        for (let j = linhas.length - 1; j >= 0; j--) {
-          if (linhas[j].match(/[?:]$|EXCETO|incorreta|correta|assinale|marque|indique/i)) {
-            indicePergunta = j;
-            break;
-          }
-        }
-        
-        let pergunta = '';
-        let contexto = '';
-        
-        if (indicePergunta >= 0) {
-          pergunta = linhas[indicePergunta];
-          contexto = linhas.slice(0, indicePergunta).join('\n');
-        } else {
-          pergunta = linhas[linhas.length-1] || `Questão ${i/2}`;
-          contexto = linhas.slice(0,-1).join('\n');
-        }
-        
-        pergunta = pergunta.replace(/^\d+\.\s*/,'');
-        
-        // 🔥 JUNTA CONTEXTO + PERGUNTA (tudo no campo pergunta)
-        const perguntaCompleta = contexto ? `${contexto}\n\n${pergunta}` : pergunta;
-        
-        if (alternativas.filter(a=>a.length>2).length >= 2) {
-          questoes.push({
-            pergunta: perguntaCompleta, // 🔥 TUDO JUNTO
-            alternativas: alternativas as any,
-            correta: correta as any,
-            comentario
-          });
-          console.log(`✅ Normal: ${perguntaCompleta.substring(0,50)}`);
-        }
+        console.log(`✅ Questão ${questoes.length}: ${perguntaCompleta.substring(0,60)}...`);
       }
     }
     
