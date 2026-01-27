@@ -85,7 +85,7 @@ export function ImportarQuestoesMassa({
         
         // Extrair linha de comando (assinale, marque, indique)
         const comandoMatch = blocoAntes.match(/(assinale|marque|indique|considere).+?(?=\n\(|$)/is);
-        const pergunta = comandoMatch ? comandoMatch[0].trim() : 'Assinale V (verdadeiro) ou F (falso):';
+        const comando = comandoMatch ? comandoMatch[0].trim() : 'Assinale V (verdadeiro) ou F (falso):';
         
         // Extrair enunciado (primeira linha longa)
         const linhasIniciais = blocoAntes.split(/\(\s*\)/)[0].split('\n')
@@ -107,15 +107,17 @@ export function ImportarQuestoesMassa({
         const altMap: any = {};
         altMatch.forEach(m => altMap[m[1].toUpperCase()] = m[2].trim());
         
+        // 🔥 JUNTA TUDO NO CAMPO PERGUNTA
+        const perguntaCompleta = [enunciado, comando, assertivas, 'A sequência correta é:'].filter(p => p).join('\n\n').trim();
+        
         questoes.push({
-          pergunta: pergunta.replace(/^\d+\.\s*/,''), // 🔥 SEM LIMITE
+          pergunta: perguntaCompleta.replace(/^\d+\.\s*/,''), // 🔥 TUDO JUNTO
           alternativas: [altMap.A||'',altMap.B||'',altMap.C||'',altMap.D||''] as any,
           correta: correta as any,
-          comentario, // 🔥 SEM LIMITE
-          texto_contexto: (enunciado + '\n\n' + assertivas).trim() // 🔥 SEM LIMITE
+          comentario
         });
         
-        console.log(`✅ V/F: ${pergunta.substring(0,40)}`);
+        console.log(`✅ V/F: ${perguntaCompleta.substring(0,40)}`);
         
       } else {
         // 🔥 TIPO 2: QUESTÃO NORMAL OU ASSERTIVAS I, II, III
@@ -153,15 +155,17 @@ export function ImportarQuestoesMassa({
         
         pergunta = pergunta.replace(/^\d+\.\s*/,'');
         
+        // 🔥 JUNTA CONTEXTO + PERGUNTA (tudo no campo pergunta)
+        const perguntaCompleta = contexto ? `${contexto}\n\n${pergunta}` : pergunta;
+        
         if (alternativas.filter(a=>a.length>2).length >= 2) {
           questoes.push({
-            pergunta, // 🔥 SEM LIMITE
+            pergunta: perguntaCompleta, // 🔥 TUDO JUNTO
             alternativas: alternativas as any,
             correta: correta as any,
-            comentario, // 🔥 SEM LIMITE  
-            texto_contexto: contexto||undefined // 🔥 SEM LIMITE
+            comentario
           });
-          console.log(`✅ Normal: ${pergunta.substring(0,50)}`);
+          console.log(`✅ Normal: ${perguntaCompleta.substring(0,50)}`);
         }
       }
     }
