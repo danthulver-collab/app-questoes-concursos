@@ -26,6 +26,7 @@ export default function SimuladoPage() {
   const [questoesRespondidas, setQuestoesRespondidas] = useState(0);
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
   const [currentUtterance, setCurrentUtterance] = useState<SpeechSynthesisUtterance | null>(null);
+  const [mostrarTextoContexto, setMostrarTextoContexto] = useState(false); // 🔥 Estado para expandir texto
   
   // Verificar plano para comentários - incluindo admin e individual
   const userId = user?.email || user?.username || '';
@@ -241,6 +242,26 @@ Responda de forma clara, didática e objetiva, focando em ajudar o aluno a enten
           {/* Coluna da Questão */}
           <div className="lg:col-span-2">
             <div className="bg-white/5 rounded-2xl p-8">
+              {/* 🔥 Botão para expandir texto contexto */}
+              {questao.texto_contexto && (
+                <button
+                  onClick={() => setMostrarTextoContexto(!mostrarTextoContexto)}
+                  className="mb-4 px-4 py-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 rounded-lg text-sm font-medium flex items-center gap-2 transition-all"
+                >
+                  <span className="text-lg">{mostrarTextoContexto ? '−' : '+'}</span>
+                  <span>{mostrarTextoContexto ? 'Ocultar' : 'Mostrar'} Texto da Questão</span>
+                </button>
+              )}
+              
+              {/* Texto contexto expandido */}
+              {mostrarTextoContexto && questao.texto_contexto && (
+                <div className="mb-6 p-4 bg-blue-500/10 border border-blue-500/30 rounded-xl">
+                  <p className="text-gray-300 text-sm whitespace-pre-wrap leading-relaxed">
+                    {questao.texto_contexto}
+                  </p>
+                </div>
+              )}
+              
               <h2 className="text-xl text-white font-semibold mb-6">{questao.title}</h2>
 
               <div className="space-y-3">
