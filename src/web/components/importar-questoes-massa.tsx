@@ -64,42 +64,40 @@ export function ImportarQuestoesMassa({
   const parsearQuestoes = (texto: string): QuestaoImportada[] => {
     const questoes: QuestaoImportada[] = [];
     
-    // 🔥 Normalizar Windows
-    const textoNorm = texto.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+    const norm = texto.replace(/\r\n/g, '\n');
+    const partes = norm.split('Gabarito:');
     
-    // Separar por Gabarito
-    const blocos = textoNorm.split(/(?=Gabarito:\s*[A-E])/gi)
-      .filter(b => b.trim().length > 50 && b.match(/Gabarito:\s*[A-E]/i));
+    console.log('Partes:', partes.length);
     
-    console.log(`📊 ${blocos.length} blocos`);
+    for (let i = 1; i < partes.length; i++) {
+      const bloco = partes[i];
+      const letra = bloco.trim()[0].toUpperCase();
+      const correta = {'A':0,'B':1,'C':2,'D':3,'E':4}[letra] || 0;
+      
+      const blocoAnterior = partes[i-1];
+      const linhasAnt = blocoAnterior.split('\n').reverse();
+      
+      const alts: any = {};
+      let pergunta = 'Questão ' + i;
+      
+      linhasAnt.forEach(l => {
+        const m = l.match(/^([A-E])[\)\.]?\s+(.+)/i);
+        if (m) alts[m[1].toUpperCase()] = m[2];
+        if (!alts.A && l.length > 20 && !l.match(/Comentário/i)) pergunta = l;
+      });
+      
+      const com = bloco.split('Comentário:')[1] || '';
+      
+      questoes.push({
+        pergunta: pergunta.replace(/^\d+\.\s*/,'').trim(),
+        alternativas: [alts.A||'A',alts.B||'B',alts.C||'C',alts.D||'D'] as any,
+        correta: correta as any,
+        comentario: com.trim().substring(0,5000) || 'Gab: '+letra,
+        texto_contexto: undefined
+      });
+    }
     
-    blocos.forEach((bloco, idx) => {
-      const gab = bloco.match(/Gabarito:\s*([A-E])/i);
-      const letra = gab ? gab[1].toUpperCase() : 'A';
-      const correta = {'A':0,'B':1,'C':2,'D':3,'E':4}[letra] as 0|1|2|3;
-      
-      const com = bloco.match(/Comentário:\s*(.+)$/is);
-      const comentario = com ? com[1].trim() : 'Gabarito ' + letra;
-      
-      const antes = bloco.split(/Gabarito:/i)[0];
-      const alts = [...antes.matchAll(/([A-E])[\)\.]?\s+(.+?)(?=\n[A-E][\)\.]|Gabarito|$)/gis)];
-      
-      const altMap: any = {};
-      alts.forEach(m => altMap[m[1].toUpperCase()] = m[2].trim().replace(/\n/g,' '));
-      
-      const alternativas = [altMap.A||'',altMap.B||'',altMap.C||'',altMap.D||''];
-      
-      const linhas = antes.split('\n').filter(l=>l.trim().length>5 && !l.match(/^[A-E]\)/));
-      const pergunta = linhas[linhas.length-1]?.replace(/^\d+\.\s*/,'') || 'Questão '+(idx+1);
-      const contexto = linhas.slice(0,-1).join('\n');
-      
-      if(alternativas.filter(a=>a.length>3).length>=2){
-        questoes.push({pergunta,alternativas:alternativas as any,correta,comentario,texto_contexto:contexto||undefined});
-        console.log(`✅ Q${questoes.length}`);
-      }
-    });
-    
-    console.log(`✅ TOTAL: ${questoes.length}`);
+    console.log(`TOTAL: ${questoes.length}`);
     return questoes;
   };
 
