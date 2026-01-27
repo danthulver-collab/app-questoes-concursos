@@ -393,9 +393,20 @@ Responda de forma clara, didática e objetiva, focando em ajudar o aluno a enten
                                 onChange={(e) => {
                                   const newSpeed = parseFloat(e.target.value);
                                   setAudioSpeed(newSpeed);
-                                  // 🔥 Atualiza velocidade do áudio tocando
+                                  // 🔥 Se áudio está tocando, reinicia com nova velocidade
                                   if (currentUtterance && speechSynthesis.speaking) {
-                                    currentUtterance.rate = newSpeed;
+                                    const text = questao.audio_comentario || questao.explanation || "Comentário não disponível";
+                                    speechSynthesis.cancel();
+                                    const newUtterance = new SpeechSynthesisUtterance(text);
+                                    newUtterance.lang = 'pt-BR';
+                                    newUtterance.rate = newSpeed;
+                                    newUtterance.onend = () => {
+                                      setIsAudioPlaying(false);
+                                      setCurrentUtterance(null);
+                                    };
+                                    setCurrentUtterance(newUtterance);
+                                    speechSynthesis.speak(newUtterance);
+                                    setIsAudioPlaying(true);
                                   }
                                 }}
                                 className="flex-1"
