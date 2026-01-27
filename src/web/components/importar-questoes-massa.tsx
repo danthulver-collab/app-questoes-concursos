@@ -67,7 +67,7 @@ export function ImportarQuestoesMassa({
     const norm = texto.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
     const blocosBrutos = norm.split(/Gabarito:\s*([A-E])/i);
     
-    console.log(`Blocos: ${blocosBrutos.length}`);
+    console.log(`📊 ${blocosBrutos.length} blocos`);
     
     for (let i = 2; i < blocosBrutos.length; i += 2) {
       const gabarito = blocosBrutos[i-1].toUpperCase();
@@ -76,85 +76,97 @@ export function ImportarQuestoesMassa({
       
       const correta = {'A':0,'B':1,'C':2,'D':3,'E':4}[gabarito] || 0;
       
-      // Comentário
+      // COMENTÁRIO
       const comMatch = blocoDepois.match(/Comentário:\s*(.+?)(?=\n\d+\.|$)/is);
       const comentario = comMatch ? comMatch[1].trim().substring(0,5000) : `Gabarito: ${gabarito}`;
       
-      // 🔥 DETECTAR SE É QUESTÃO V/F COM ( )
-      const temVouF = blocoAntes.match(/\(\s*\)/g);
-      
-      if (temVouF && temVouF.length >= 2) {
-        // 🔥 CONVERTER PARA FORMATO DE ASSERTIVAS
+      // 🔥 TIPO 1: QUESTÃO V/F COM ( )
+      if (blocoAntes.match(/\(\s*\)/g)?.length >= 2) {
         
-        // Extrair texto inicial (enunciado)
-        const primeiraLinha = blocoAntes.split('\n').find(l => l.trim().length > 20) || '';
+        // Extrair linha de comando (assinale, marque, indique)
+        const comandoMatch = blocoAntes.match(/(assinale|marque|indique|considere).+?(?=\n\(|$)/is);
+        const pergunta = comandoMatch ? comandoMatch[0].trim() : 'Assinale V (verdadeiro) ou F (falso):';
         
-        // Extrair afirmativas com ( )
-        const afirmativas = blocoAntes.split(/\(\s*\)/).slice(1);
-        let contexto = primeiraLinha;
+        // Extrair enunciado (primeira linha longa)
+        const linhasIniciais = blocoAntes.split(/\(\s*\)/)[0].split('\n')
+          .filter(l => l.trim().length > 30);
+        const enunciado = linhasIniciais.filter(l => !l.match(/assinale|marque/i)).join('\n');
+        
+        // Extrair assertivas com ( )
+        const afirmativasBruto = blocoAntes.split(/\(\s*\)/).slice(1);
         let assertivas = '';
-        
-        afirmativas.forEach((af, idx) => {
+        afirmativasBruto.forEach((af, idx) => {
           const texto = af.split(/\n[A-E][\)\.]?\s/i)[0].trim();
           if (texto.length > 10) {
-            const numeral = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII'][idx];
-            assertivas += `${numeral}. ${texto}\n`;
+            assertivas += `${['I','II','III','IV','V','VI'][idx]}. ${texto}\n`;
           }
         });
         
-        // Pergunta padrão para V/F
-        const pergunta = blocoAntes.match(/(assinale|marque).+?(V|verdadeiro).+(F|falso)/i) 
-          ? blocoAntes.match(/(assinale|marque).+/i)?.[0] || 'Assinale V (verdadeiro) ou F (falso):'
-          : 'Assinale V (verdadeiro) ou F (falso):';
-        
-        // Alternativas (sequências V-F)
+        // Extrair alternativas V-F
         const altMatch = [...blocoAntes.matchAll(/([A-E])[\)\.]?\s*([VF\s–\-]+)/gi)];
         const altMap: any = {};
         altMatch.forEach(m => altMap[m[1].toUpperCase()] = m[2].trim());
         
         questoes.push({
-          pergunta: pergunta.substring(0,1000),
+          pergunta: pergunta.replace(/^\d+\.\s*/,'').substring(0,2000),
           alternativas: [altMap.A||'',altMap.B||'',altMap.C||'',altMap.D||''] as any,
           correta: correta as any,
           comentario,
-          texto_contexto: (contexto + '\n\n' + assertivas).trim()
+          texto_contexto: (enunciado + '\n\n' + assertivas).trim()
         });
         
-        console.log(`✅ Q${questoes.length} (V/F convertida)`);
+        console.log(`✅ V/F: ${pergunta.substring(0,40)}`);
         
       } else {
-        // 🔥 QUESTÃO NORMAL (A, B, C, D com texto)
+        // 🔥 TIPO 2: QUESTÃO NORMAL OU ASSERTIVAS I, II, III
         
-        const alternativasMatch = [...blocoAntes.matchAll(/([A-E])[\)\.]?\s+([^\n]+(?:\n(?![A-E][\)\.])[^\n]+)*)/gi)];
+        // Alternativas
+        const altMatch = [...blocoAntes.matchAll(/([A-E])[\)\.]?\s+([^\n]+(?:\n(?![A-E][\)\.])[^\n]+)*)/gi)];
         const altMap: any = {};
-        alternativasMatch.forEach(m => {
-          altMap[m[1].toUpperCase()] = m[2].trim().replace(/\s+/g, ' ').substring(0,500);
-        });
+        altMatch.forEach(m => altMap[m[1].toUpperCase()] = m[2].trim().replace(/\s+/g,' ').substring(0,800));
         
         const alternativas = [altMap.A||'',altMap.B||'',altMap.C||'',altMap.D||''];
         
-        const antesAlternativas = blocoAntes.split(/\n[A-E][\)\.]?\s/i)[0];
-        const linhas = antesAlternativas.split('\n').map(l=>l.trim()).filter(l=>l.length>10 && !l.match(/^\d+\.?\s*$/));
+        // Pergunta (procura linha com ?, :, EXCETO, correta, assinale)
+        const linhas = blocoAntes.split(/\n[A-E][\)\.]?\s/i)[0].split('\n')
+          .map(l=>l.trim())
+          .filter(l=>l.length>10 && !l.match(/^\d+\.?\s*$/));
         
-        let pergunta = linhas[linhas.length-1] || `Questão ${i/2}`;
+        let indicePergunta = -1;
+        for (let j = linhas.length - 1; j >= 0; j--) {
+          if (linhas[j].match(/[?:]$|EXCETO|incorreta|correta|assinale|marque|indique/i)) {
+            indicePergunta = j;
+            break;
+          }
+        }
+        
+        let pergunta = '';
+        let contexto = '';
+        
+        if (indicePergunta >= 0) {
+          pergunta = linhas[indicePergunta];
+          contexto = linhas.slice(0, indicePergunta).join('\n');
+        } else {
+          pergunta = linhas[linhas.length-1] || `Questão ${i/2}`;
+          contexto = linhas.slice(0,-1).join('\n');
+        }
+        
         pergunta = pergunta.replace(/^\d+\.\s*/,'');
-        
-        const contexto = linhas.slice(0,-1).join('\n');
         
         if (alternativas.filter(a=>a.length>2).length >= 2) {
           questoes.push({
-            pergunta: pergunta.substring(0,1000),
+            pergunta: pergunta.substring(0,2000),
             alternativas: alternativas as any,
             correta: correta as any,
             comentario,
             texto_contexto: contexto||undefined
           });
-          console.log(`✅ Q${questoes.length}: ${pergunta.substring(0,50)}`);
+          console.log(`✅ Normal: ${pergunta.substring(0,50)}`);
         }
       }
     }
     
-    console.log(`✅ TOTAL: ${questoes.length}`);
+    console.log(`✅ TOTAL: ${questoes.length} questões`);
     return questoes;
   };
 
