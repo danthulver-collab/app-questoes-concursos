@@ -62,8 +62,45 @@ export function ImportarQuestoesMassa({
   const [sobrescrever, setSobrescrever] = useState(false); // 🔥 Opção sobrescrever
 
   const parsearQuestoes = (texto: string): QuestaoImportada[] => {
-    // 🔥 USA O PARSER UNIVERSAL
-    return parsearQuestoesUniversal(texto);
+    const questoes: QuestaoImportada[] = [];
+    
+    // 🔥 Normalizar Windows
+    const textoNorm = texto.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+    
+    // Separar por Gabarito
+    const blocos = textoNorm.split(/(?=Gabarito:\s*[A-E])/gi)
+      .filter(b => b.trim().length > 50 && b.match(/Gabarito:\s*[A-E]/i));
+    
+    console.log(`📊 ${blocos.length} blocos`);
+    
+    blocos.forEach((bloco, idx) => {
+      const gab = bloco.match(/Gabarito:\s*([A-E])/i);
+      const letra = gab ? gab[1].toUpperCase() : 'A';
+      const correta = {'A':0,'B':1,'C':2,'D':3,'E':4}[letra] as 0|1|2|3;
+      
+      const com = bloco.match(/Comentário:\s*(.+)$/is);
+      const comentario = com ? com[1].trim() : 'Gabarito ' + letra;
+      
+      const antes = bloco.split(/Gabarito:/i)[0];
+      const alts = [...antes.matchAll(/([A-E])[\)\.]?\s+(.+?)(?=\n[A-E][\)\.]|Gabarito|$)/gis)];
+      
+      const altMap: any = {};
+      alts.forEach(m => altMap[m[1].toUpperCase()] = m[2].trim().replace(/\n/g,' '));
+      
+      const alternativas = [altMap.A||'',altMap.B||'',altMap.C||'',altMap.D||''];
+      
+      const linhas = antes.split('\n').filter(l=>l.trim().length>5 && !l.match(/^[A-E]\)/));
+      const pergunta = linhas[linhas.length-1]?.replace(/^\d+\.\s*/,'') || 'Questão '+(idx+1);
+      const contexto = linhas.slice(0,-1).join('\n');
+      
+      if(alternativas.filter(a=>a.length>3).length>=2){
+        questoes.push({pergunta,alternativas:alternativas as any,correta,comentario,texto_contexto:contexto||undefined});
+        console.log(`✅ Q${questoes.length}`);
+      }
+    });
+    
+    console.log(`✅ TOTAL: ${questoes.length}`);
+    return questoes;
   };
 
   const handleImportar = async () => {
