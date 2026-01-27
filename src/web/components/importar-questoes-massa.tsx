@@ -65,10 +65,20 @@ export function ImportarQuestoesMassa({
     
     // 🔥 Separar por "Gabarito:" seguido de letra (mais preciso)
     let blocos = texto.split(/(?=Gabarito:\s*[A-E])/gi).filter(b => {
-      // Só válido se tiver Gabarito + letra E pelo menos 3 alternativas
-      const temGabarito = b.match(/Gabarito:\s*[A-E]/i);
-      const numAlternativas = (b.match(/^[A-E][\)\.]?\s/gm) || []).length;
-      return temGabarito && numAlternativas >= 3;
+      const trimmed = b.trim();
+      // Só válido se tiver Gabarito + letra E conteúdo mínimo
+      const temGabarito = trimmed.match(/Gabarito:\s*[A-E]/i);
+      const temConteudo = trimmed.length > 50;
+      // Contar alternativas com IGNORECASE
+      const numAlternativas = (trimmed.match(/^[A-E][\)\.]?\s/gim) || []).length;
+      
+      const valido = temGabarito && temConteudo && numAlternativas >= 3;
+      
+      if (!valido && temGabarito) {
+        console.log(`⚠️ Bloco filtrado: ${numAlternativas} alternativas encontradas`);
+      }
+      
+      return valido;
     });
     
     console.log(`📊 ${blocos.length} blocos detectados (por Gabarito:)`);
