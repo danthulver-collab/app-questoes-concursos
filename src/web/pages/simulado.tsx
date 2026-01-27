@@ -243,27 +243,43 @@ Responda de forma clara, didática e objetiva, focando em ajudar o aluno a enten
           {/* Coluna da Questão */}
           <div className="lg:col-span-2">
             <div className="bg-white/5 rounded-2xl p-8">
-              {/* 🔥 Botão para expandir texto contexto */}
-              {questao.texto_contexto && (
+              {/* 🔥 Botão "VER MAIS" para expandir texto contexto ou pergunta longa */}
+              {(questao.texto_contexto || (questao.title && questao.title.length > 150)) && (
                 <button
                   onClick={() => setMostrarTextoContexto(!mostrarTextoContexto)}
-                  className="mb-4 px-4 py-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 rounded-lg text-sm font-medium flex items-center gap-2 transition-all"
+                  className="mb-4 px-5 py-3 bg-gradient-to-r from-blue-500/30 to-purple-500/30 hover:from-blue-500/40 hover:to-purple-500/40 text-blue-300 rounded-xl text-sm font-bold flex items-center gap-3 transition-all border border-blue-500/30 hover:border-blue-400/50 shadow-lg shadow-blue-500/10"
                 >
-                  <span className="text-lg">{mostrarTextoContexto ? '−' : '+'}</span>
-                  <span>{mostrarTextoContexto ? 'Ocultar' : 'Mostrar'} Texto da Questão</span>
+                  <span className="text-xl">{mostrarTextoContexto ? '📖' : '📄'}</span>
+                  <span>{mostrarTextoContexto ? 'Ocultar Texto Completo' : '👁️ VER MAIS - Texto Completo da Questão'}</span>
+                  <span className="text-lg">{mostrarTextoContexto ? '▲' : '▼'}</span>
                 </button>
               )}
               
               {/* Texto contexto expandido */}
-              {mostrarTextoContexto && questao.texto_contexto && (
-                <div className="mb-6 p-4 bg-blue-500/10 border border-blue-500/30 rounded-xl">
-                  <p className="text-gray-300 text-sm whitespace-pre-wrap leading-relaxed">
-                    {questao.texto_contexto}
+              {mostrarTextoContexto && (questao.texto_contexto || questao.title) && (
+                <div className="mb-6 p-5 bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-blue-500/30 rounded-2xl">
+                  <div className="flex items-center gap-2 mb-3 pb-3 border-b border-white/10">
+                    <span className="text-lg">📋</span>
+                    <span className="text-blue-300 font-semibold text-sm">TEXTO COMPLETO DA QUESTÃO</span>
+                  </div>
+                  <p className="text-gray-200 text-base whitespace-pre-wrap leading-relaxed">
+                    {questao.texto_contexto || questao.title}
                   </p>
                 </div>
               )}
               
-              <h2 className="text-xl text-white font-semibold mb-6">{questao.title}</h2>
+              {/* Pergunta - mostra versão curta se texto_contexto existir, senão mostra completa */}
+              <h2 className="text-xl text-white font-semibold mb-6">
+                {questao.texto_contexto 
+                  ? questao.title 
+                  : (mostrarTextoContexto 
+                      ? questao.title 
+                      : (questao.title && questao.title.length > 200 
+                          ? questao.title.substring(0, 200) + '...' 
+                          : questao.title)
+                    )
+                }
+              </h2>
 
               <div className="space-y-3">
                 {['A', 'B', 'C', 'D'].map((opcao, index) => {
