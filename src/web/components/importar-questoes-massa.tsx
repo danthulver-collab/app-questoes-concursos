@@ -59,107 +59,82 @@ export function ImportarQuestoesMassa({
   const parsearQuestoes = (texto: string): QuestaoImportada[] => {
     const questoes: QuestaoImportada[] = [];
     
-    // 🔥 PARSER INTELIGENTE: Detecta múltiplos formatos
+    // 🔥 PARSER UNIVERSAL: Separa por múltiplos indicadores
+    const separadores = [
+      /(?=Gabarito:)/gi,
+      /(?=Comentário:)/gi,
+      /(?=^Questão \d+)/gm,
+      /(?=^Analise)/gm,
+      /(?=^Assinale)/gm,
+      /(?=^Marque)/gm
+    ];
     
-    // Método 1: Tentar separar por "Comentário:" (mais confiável para esse formato)
-    let blocos = texto.split(/(?=Comentário:)/gi).filter(b => b.trim().length > 30);
+    let blocos: string[] = [texto];
     
-    // Método 2: Por padrão de questão
-    if (blocos.length <= 1) {
-      const padraoQuestao = /(?=(?:^|\n)(?:Questão|Analise|Assinale|Marque|Indique|Considere|Leia|Sobre|Com|De acordo|A respeito|Quanto|Em relação|Segundo|Na|No|O que|Qual|Quais|Quando|Onde|Como|Por que))/gi;
-      blocos = texto.split(padraoQuestao).filter(b => b.trim().length > 30);
+    // Tenta cada separador até encontrar um que funcione
+    for (const sep of separadores) {
+      const tentativa = texto.split(sep).filter(b => b.trim().length > 50);
+      if (tentativa.length > blocos.length) {
+        blocos = tentativa;
+        console.log(`✅ Separador encontrado! ${tentativa.length} blocos`);
+        break;
+      }
     }
     
-    // Método 3: Por linha vazia dupla
-    if (blocos.length <= 1) {
-      blocos = texto.split(/\n\s*\n/).filter(b => b.trim().length > 30);
-    }
+    console.log(`📊 ${blocos.length} blocos detectados para processar`);
     
-    // Método 4: Por numeração (1., 2., etc)
-    if (blocos.length <= 1) {
-      blocos = texto.split(/(?=\n\d+[\.\)])/g).filter(b => b.trim().length > 30);
-    }
-    
-    console.log(`📊 ${blocos.length} blocos detectados`);
-    
-    for (const bloco of blocos) {
+    for (let idx = 0; idx < blocos.length; idx++) {
+      const bloco = blocos[idx];
+      
       try {
-        const linhas = bloco.split('\n').map(l => l.trim()).filter(l => l);
-        
+        // Extrair com REGEX mais robusto
         let pergunta = '';
         let alternativas: string[] = [];
         let correta: 0 | 1 | 2 | 3 = 0;
         let comentario = '';
         let texto_contexto = '';
         
-        let i = 0;
-        
-        // Pegar tudo até achar alternativas (A), a), A., a.)
-        while (i < linhas.length && !linhas[i].match(/^[A-Ea-e][\)\.]?\s/)) {
-          const linha = linhas[i];
-          
-          // Se já tem pergunta e linha começa com "Alternativas", pula
-          if (linha.match(/^Alternativas$/i)) {
-            i++;
-            break;
-          }
-          
-          // Primeira linha não vazia é a pergunta
-          if (!pergunta && linha.length > 5) {
-            pergunta = linha;
-          } else if (pergunta) {
-            // Resto é texto contexto
-            texto_contexto += (texto_contexto ? '\n' : '') + linha;
-          }
-          i++;
+        // Pegar Gabarito/Correta
+        const gabaritoMatch = bloco.match(/(Gabarito|Correta|Resposta):\s*([A-E])/i);
+        if (gabaritoMatch) {
+          const letra = gabaritoMatch[2].toUpperCase();
+          const mapa: Record<string, number> = {'A': 0, 'B': 1, 'C': 2, 'D': 3, 'E': 4};
+          correta = (mapa[letra] || 0) as 0 | 1 | 2 | 3;
         }
         
-        // Pegar alternativas (aceita A-E, a-e, com ) ou .)
-        while (i < linhas.length) {
-          const linha = linhas[i];
-          const match = linha.match(/^([A-Ea-e])[\)\.]?\s+(.+)/);
-          
-          if (match && alternativas.length < 5) {
+        // Separar em partes
+        const partes = bloco.split(/(Gabarito:|Comentário:)/i);
+        const antesGabarito = partes[0] || '';
+        const depoisComentario = partes[partes.length - 1] || '';
+        
+        // Extrair comentário
+        if (bloco.match(/Comentário:/i)) {
+          comentario = depoisComentario.replace(/Comentário:/i, '').trim().substring(0, 500);
+        }
+        
+        // Extrair alternativas usando regex
+        const regexAlternativas = /([A-Ea-e])[\)\.]?\s+([^A-Ea-e\n]+?)(?=\s*[A-Ea-e][\)\.]|\s*(?:Gabarito|Correta|Comentário|Marque):|\s*$)/gs;
+        const matchesAlt = [...antesGabarito.matchAll(regexAlternativas)];
+        
+        matchesAlt.forEach(match => {
+          if (alternativas.length < 4) {
             alternativas.push(match[2].trim());
-            i++;
-          } else if (linha.match(/Correta:|Gabarito:|Resposta:|Marque:/i)) {
-            // Achou linha da resposta
-            break;
-          } else if (alternativas.length > 0 && alternativas.length < 5) {
-            // Continua a última alternativa (quebra de linha)
-            alternativas[alternativas.length - 1] += ' ' + linha;
-            i++;
-          } else {
-            i++;
           }
-        }
+        });
         
-        // Pegar correta
-        while (i < linhas.length) {
-          const linha = linhas[i];
-          if (linha.match(/Correta:|Gabarito:|Resposta:|Marque:/i)) {
-            const match = linha.match(/[A-E]/i);
-            if (match) {
-              const letra = match[0].toUpperCase();
-              const mapa: Record<string, number> = {'A': 0, 'B': 1, 'C': 2, 'D': 3, 'E': 4};
-              correta = (mapa[letra] || 0) as 0 | 1 | 2 | 3;
+        // Extrair pergunta (primeira linha antes das alternativas)
+        const linhas = antesGabarito.split('\n').map(l => l.trim()).filter(l => l);
+        for (const linha of linhas) {
+          if (!linha.match(/^[A-Ea-e][\)\.]/) && linha.length > 10) {
+            if (!pergunta) {
+              pergunta = linha;
+            } else if (!linha.match(/^(I{1,3}V?|V?I{1,3})\./)) {
+              texto_contexto += (texto_contexto ? '\n' : '') + linha;
             }
-            i++;
-            break;
           }
-          i++;
         }
         
-        // Pegar comentário (resto após correta)
-        if (i < linhas.length) {
-          comentario = linhas.slice(i).join(' ').replace(/Comentário:|Explicação:/i, '').trim();
-        }
-        
-        if (!comentario) {
-          comentario = 'Resposta: ' + ['A', 'B', 'C', 'D'][correta];
-        }
-        
-        // Validar questão
+        // Validar e adicionar
         if (pergunta.length > 5 && alternativas.length >= 4) {
           questoes.push({
             pergunta: pergunta.trim(),
@@ -170,23 +145,18 @@ export function ImportarQuestoesMassa({
               alternativas[3] || ''
             ] as [string, string, string, string],
             correta: Math.min(correta, 3) as 0 | 1 | 2 | 3,
-            comentario: comentario.substring(0, 500),
+            comentario: comentario || 'Resposta: ' + ['A', 'B', 'C', 'D'][correta],
             texto_contexto: texto_contexto.trim().substring(0, 2000) || undefined
           });
           
-          console.log(`✅ Questão ${questoes.length} parseada:`, pergunta.substring(0, 50));
-        } else {
-          console.log(`⚠️ Questão inválida ignorada:`, {
-            pergunta: pergunta.substring(0, 50),
-            alternativas: alternativas.length
-          });
+          console.log(`✅ Q${questoes.length}: ${pergunta.substring(0, 40)}...`);
         }
       } catch (e) {
-        console.error('Erro ao parsear bloco:', e);
+        console.error(`❌ Erro no bloco ${idx}:`, e);
       }
     }
     
-    console.log(`📊 Total parseado: ${questoes.length} questões`);
+    console.log(`✅ TOTAL PARSEADO: ${questoes.length} questões`);
     return questoes;
   };
 
@@ -240,53 +210,58 @@ export function ImportarQuestoesMassa({
       for (let i = 0; i < questoesParseadas.length; i++) {
         const q = questoesParseadas[i];
         
-        // 🔥 Salvar na tabela correta baseado no contexto
-        if (areaId) {
-          // Salvar em questoes_areas (para Áreas e Carreiras)
-          const materiaIdFinal = materiaId || materia.toLowerCase().replace(/\s+/g, '-').replace(/ê/g, 'e').replace(/ã/g, 'a').replace(/ç/g, 'c');
-          
-          const questaoArea = {
-            id: `${areaId}_${materiaIdFinal}_${Date.now()}_${i}`,
-            area_id: areaId,
-            materia_id: materiaIdFinal,
-            title: q.pergunta,
-            options: q.alternativas,
-            correct_answer: q.correta,
-            explanation: q.comentario,
-            plano: plano,
-            texto_contexto: q.texto_contexto
-          };
-          
-          const result = await saveQuestaoSupabase(questaoArea);
-          
-          if (result) {
-            sucesso++;
+        try {
+          // 🔥 Salvar na tabela correta baseado no contexto
+          if (areaId) {
+            // Salvar em questoes_areas (para Áreas e Carreiras)
+            const materiaIdFinal = materiaId || materia.toLowerCase().replace(/\s+/g, '-').replace(/ê/g, 'e').replace(/ã/g, 'a').replace(/ç/g, 'c');
+            
+            const questaoArea = {
+              id: `${areaId}_${materiaIdFinal}_${Date.now()}_${i}`,
+              area_id: areaId,
+              materia_id: materiaIdFinal,
+              title: q.pergunta,
+              options: q.alternativas,
+              correct_answer: q.correta,
+              explanation: q.comentario,
+              plano: plano,
+              texto_contexto: q.texto_contexto
+            };
+            
+            const result = await saveQuestaoSupabase(questaoArea);
+            
+            if (result) {
+              sucesso++;
+            } else {
+              erros++;
+            }
           } else {
-            erros++;
+            // Salvar em questoes (banco geral)
+            const questao = {
+              id: `${materia.toLowerCase()}_${Date.now()}_${i}`,
+              pergunta: q.pergunta,
+              alternativas: q.alternativas,
+              correta: q.correta,
+              disciplina: materia,
+              banca: banca,
+              concurso: concurso,
+              ano: ano,
+              comentario: q.comentario,
+              dificuldade: dificuldade,
+              texto_contexto: q.texto_contexto
+            };
+            
+            const result = await saveQuestaoToSupabase(questao);
+            
+            if (result.success) {
+              sucesso++;
+            } else {
+              erros++;
+            }
           }
-        } else {
-          // Salvar em questoes (banco geral)
-          const questao = {
-            id: `${materia.toLowerCase()}_${Date.now()}_${i}`,
-            pergunta: q.pergunta,
-            alternativas: q.alternativas,
-            correta: q.correta,
-            disciplina: materia,
-            banca: banca,
-            concurso: concurso,
-            ano: ano,
-            comentario: q.comentario,
-            dificuldade: dificuldade,
-            texto_contexto: q.texto_contexto
-          };
-          
-          const result = await saveQuestaoToSupabase(questao);
-          
-          if (result.success) {
-            sucesso++;
-          } else {
-            erros++;
-          }
+        } catch (err) {
+          console.error(`❌ Erro ao salvar questão ${i}:`, err);
+          erros++;
         }
         
         setResultado(`Processando... ${sucesso + erros}/${questoesParseadas.length}`);
