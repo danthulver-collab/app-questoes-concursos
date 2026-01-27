@@ -26,7 +26,7 @@ export default function SimuladoPage() {
   const [questoesRespondidas, setQuestoesRespondidas] = useState(0);
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
   const [currentUtterance, setCurrentUtterance] = useState<SpeechSynthesisUtterance | null>(null);
-  const [mostrarTextoContexto, setMostrarTextoContexto] = useState(false); // 🔥 Estado para expandir texto
+  const [textoExpandido, setTextoExpandido] = useState<Record<number, boolean>>({}); // 🔥 Estado por questão
   const [audioSpeed, setAudioSpeed] = useState(1.0); // 🔥 Velocidade do áudio
   
   // Verificar plano para comentários - incluindo admin e individual
@@ -249,16 +249,16 @@ Responda de forma clara, didática e objetiva, focando em ajudar o aluno a enten
                 <div className="mb-6">
                   {/* Versão curta ou completa */}
                   <div className="text-xl text-white font-semibold leading-relaxed whitespace-pre-wrap">
-                    {mostrarTextoContexto ? questao.title : questao.title.substring(0, 150) + '...'}
+                    {textoExpandido[currentIndex] ? questao.title : questao.title.substring(0, 150) + '...'}
                   </div>
                   
                   {/* Botão VER MAIS / VER MENOS */}
                   <button
-                    onClick={() => setMostrarTextoContexto(!mostrarTextoContexto)}
+                    onClick={() => setTextoExpandido({...textoExpandido, [currentIndex]: !textoExpandido[currentIndex]})}
                     className="mt-4 px-5 py-2.5 bg-gradient-to-r from-emerald-500/20 to-blue-500/20 hover:from-emerald-500/30 hover:to-blue-500/30 text-emerald-400 rounded-xl text-sm font-bold flex items-center gap-2 transition-all border border-emerald-500/30 hover:border-emerald-400/50"
                   >
-                    <span>{mostrarTextoContexto ? '▲' : '▼'}</span>
-                    <span>{mostrarTextoContexto ? 'VER MENOS' : '👁️ VER MAIS'}</span>
+                    <span>{textoExpandido[currentIndex] ? '▲' : '▼'}</span>
+                    <span>{textoExpandido[currentIndex] ? 'VER MENOS' : '👁️ VER MAIS'}</span>
                   </button>
                 </div>
               ) : (
