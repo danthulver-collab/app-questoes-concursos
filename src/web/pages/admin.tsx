@@ -3985,7 +3985,7 @@ function AdminPage() {
           {activeSection === "areas" && (
             <GerenciarAreasHierarquico 
               showSaveMessage={showSaveMessage} 
-              onGoToQuestoes={() => setActiveSection("questoes-areas" as any)}
+              onGoToQuestoes={() => setActiveSection("questoes")}
             />
           )}
 

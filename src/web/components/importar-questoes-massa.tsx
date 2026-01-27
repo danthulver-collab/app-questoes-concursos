@@ -289,21 +289,34 @@ export function ImportarQuestoesMassa({
           <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-4">
             <p className="text-blue-400 font-bold mb-2">📋 Formato aceito:</p>
             <pre className="text-xs text-gray-300 whitespace-pre-wrap">
-{`Qual a capital do Brasil?
+{`Formato 1 - Simples:
+Qual a capital?
 A) São Paulo
 B) Brasília
-C) Rio de Janeiro
+C) Rio
 D) Salvador
 Correta: B
-Brasília é a capital federal desde 1960.
 
-Segunda pergunta aqui?
-A) Alternativa A
-B) Alternativa B
-C) Alternativa C
-D) Alternativa D
+Formato 2 - Com afirmativas:
+Analise as afirmativas:
+I. Afirmativa 1
+II. Afirmativa 2
+Alternativas
+A I e II
+B I e III
+C Apenas I
+D Todas
 Correta: A
-Explicação da resposta correta.`}
+
+Formato 3 - Com texto:
+Leia o texto:
+(texto longo...)
+Pergunta aqui?
+A) Alt A
+B) Alt B
+C) Alt C
+D) Alt D
+Correta: C`}
             </pre>
             <p className="text-xs text-gray-500 mt-2">
               💡 Separe cada questão com uma linha vazia. Use "Correta: A/B/C/D" para indicar a resposta.
