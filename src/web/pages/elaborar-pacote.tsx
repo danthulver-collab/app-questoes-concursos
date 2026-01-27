@@ -56,6 +56,7 @@ export default function ElaborarPacote() {
   
   // 🔥 Modal de importação em massa
   const [showImportModal, setShowImportModal] = useState(false);
+  const [sobrescreverImport, setSobrescreverImport] = useState(false);
   
   // Verificar se é admin
   const isUserAdmin = isSuperAdmin(userId) || 
@@ -672,6 +673,50 @@ export default function ElaborarPacote() {
                 >
                   ➕ Nova Questão
                 </button>
+                
+                {/* 🔥 Botão Excluir Todas */}
+                {selectedMateria && getQuestoesByMateria(selectedMateria).length > 0 && (
+                  <button
+                    onClick={async () => {
+                      if (!confirm(`Excluir TODAS as ${getQuestoesByMateria(selectedMateria).length} questões de ${selectedMateria}?`)) return;
+                      
+                      try {
+                        const questoesDaMateria = getQuestoesByMateria(selectedMateria);
+                        
+                        // Deletar do Supabase
+                        for (const q of questoesDaMateria) {
+                          await deleteQuestaoFromSupabase(q.id);
+                        }
+                        
+                        // Remover do pacote
+                        const idsParaRemover = questoesDaMateria.map(q => q.id);
+                        const updatedPacote = {
+                          ...pacote,
+                          questionsIds: pacote.questionsIds?.filter(id => !idsParaRemover.includes(id)) || []
+                        };
+                        
+                        await savePacoteToSupabase(updatedPacote);
+                        setPacote(updatedPacote);
+                        
+                        const newData = {
+                          ...quizData,
+                          questions: quizData.questions.filter(q => !idsParaRemover.includes(q.id)),
+                          pacotes: quizData.pacotes.map(p => p.id === pacote.id ? updatedPacote : p)
+                        };
+                        await saveQuizData(newData);
+                        setQuizData(newData);
+                        
+                        alert(`✅ ${idsParaRemover.length} questões de ${selectedMateria} excluídas!`);
+                      } catch (e) {
+                        console.error('Erro ao excluir:', e);
+                        alert('❌ Erro ao excluir questões');
+                      }
+                    }}
+                    className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-xl text-sm font-medium flex items-center gap-2"
+                  >
+                    <span>🗑️</span> Excluir Todas
+                  </button>
+                )}
               </div>
             </div>
             
@@ -929,27 +974,30 @@ export default function ElaborarPacote() {
       {/* 🔥 Modal de Importação em Massa - Contextual */}
       {showImportModal && pacote && quizData && (
         <ImportarQuestoesMassa 
-          onClose={async () => {
+          onClose={() => {
             setShowImportModal(false);
-            // Recarregar
-            window.location.reload();
+            // NÃO recarrega - evita deslogar
           }}
           onQuestoesImportadas={async (questoesIds) => {
             // 🔥 Vincular questões ao pacote
             try {
               const updatedPacote = {
                 ...pacote,
-                questionsIds: [...(pacote.questionsIds || []), ...questoesIds],
+                questionsIds: sobrescreverImport 
+                  ? questoesIds // Sobrescreve
+                  : [...(pacote.questionsIds || []), ...questoesIds], // Adiciona
                 updatedAt: new Date().toISOString()
               };
               
               await savePacoteToSupabase(updatedPacote);
+              setPacote(updatedPacote);
               
               const newData = {
                 ...quizData,
                 pacotes: quizData.pacotes.map(p => p.id === pacote.id ? updatedPacote : p)
               };
               await saveQuizData(newData);
+              setQuizData(newData);
               
               console.log(`✅ ${questoesIds.length} questões vinculadas ao pacote`);
             } catch (e) {

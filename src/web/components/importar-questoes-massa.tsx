@@ -116,14 +116,29 @@ export function ImportarQuestoesMassa({
           alternativasMap['D'] || '(Alternativa não fornecida)'
         ];
         
-        // 4. Extrair PERGUNTA (primeira linha antes das alternativas OU primeira frase)
-        const antesAlternativas = bloco.split(/[A-E][\)\.]?\s/)[0];
-        const linhasPergunta = antesAlternativas.split('\n').filter(l => l.trim().length > 10);
+        // 4. Extrair PERGUNTA (tudo antes da primeira alternativa)
+        const blocoAntes = bloco.split(/\n[A-E][\)\.]?\s/i)[0];
+        const linhasPergunta = blocoAntes.split('\n').filter(l => {
+          const trimmed = l.trim();
+          return trimmed.length > 5 && 
+                 !trimmed.match(/^Gabarito:/i) && 
+                 !trimmed.match(/^Comentário:/i) &&
+                 !trimmed.match(/^\d+\.?\s*$/); // Ignora linha com só número
+        });
+        
         if (linhasPergunta.length > 0) {
-          pergunta = linhasPergunta[0].trim();
+          // Primeira linha é a pergunta
+          pergunta = linhasPergunta[0].trim().replace(/^\d+\.\s*/, ''); // Remove número inicial
+          
+          // Resto é contexto
           if (linhasPergunta.length > 1) {
             texto_contexto = linhasPergunta.slice(1).join('\n').trim();
           }
+        }
+        
+        // Se pergunta ainda está vazia ou é só número, usar texto padrão
+        if (!pergunta || pergunta.match(/^Questão \d+$/)) {
+          pergunta = texto_contexto.split('\n')[0] || `Questão ${idx + 1}`;
         }
         
         // Validar
@@ -171,25 +186,33 @@ export function ImportarQuestoesMassa({
       
       setResultado(`✅ ${questoesParseadas.length} questões identificadas. Inserindo no banco...`);
       
-      // 🔥 Se sobrescrever, deletar questões antigas da matéria primeiro
+      // 🔥 Se sobrescrever, deletar questões antigas da matéria ANTES de importar
       if (sobrescrever) {
         setResultado(`🗑️ Removendo questões antigas de ${materia}...`);
         try {
           if (areaId) {
             // Remover de questoes_areas
-            await supabase
+            const { error } = await supabase
               .from('questoes_areas')
               .delete()
               .eq('area_id', areaId)
               .eq('materia_id', materiaId || materia.toLowerCase().replace(/\s+/g, '-'));
+            
+            if (error) console.error('Erro ao deletar:', error);
+            else console.log(`✅ Questões antigas de ${materia} removidas de questoes_areas`);
           } else {
             // Remover de questoes
-            await supabase
+            const { error } = await supabase
               .from('questoes')
               .delete()
               .eq('disciplina', materia);
+            
+            if (error) console.error('Erro ao deletar:', error);
+            else console.log(`✅ Questões antigas de ${materia} removidas de questoes`);
           }
-          console.log(`✅ Questões antigas de ${materia} removidas`);
+          
+          // Aguardar 1 segundo para garantir que deletou
+          await new Promise(resolve => setTimeout(resolve, 1000));
         } catch (e) {
           console.error('Erro ao remover antigas:', e);
         }
