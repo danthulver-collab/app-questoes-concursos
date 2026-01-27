@@ -107,15 +107,23 @@ export function ImportarQuestoesMassa({
           comentario = comentarioMatch[1].trim().substring(0, 5000); // 🔥 Aumentado para 5000
         }
         
-        // 3. Extrair ALTERNATIVAS (aceita A-E com qualquer formato)
-        const regexAlt = /([A-E])[\)\.]?\s+(.+?)(?=\s*[A-E][\)\.]|Gabarito:|Comentário:|$)/gis;
-        const matchesAlt = [...bloco.matchAll(regexAlt)];
+        // 3. Extrair ALTERNATIVAS com REGEX mais robusto
+        // Pega tudo entre A) e B), B) e C), etc
+        const partesBloco = bloco.split(/(Gabarito:|Comentário:)/i);
+        const blocoSemGabaritoComentario = partesBloco[0];
+        
+        const regexAlt = /([A-E])[\)\.]?\s+(.+?)(?=\n\s*[A-E][\)\.]|\nGabarito:|\nComentário:|$)/gis;
+        const matchesAlt = [...blocoSemGabaritoComentario.matchAll(regexAlt)];
         
         const alternativasMap: Record<string, string> = {};
         matchesAlt.forEach(match => {
           const letra = match[1].toUpperCase();
-          const texto = match[2].trim().replace(/\n/g, ' ').substring(0, 1000); // 🔥 Aumentado para 1000
-          alternativasMap[letra] = texto;
+          let texto = match[2].trim().replace(/\s+/g, ' ');
+          // Limpar quebras de linha excessivas
+          texto = texto.substring(0, 1000);
+          if (texto.length > 10) { // Só aceita se tiver conteúdo real
+            alternativasMap[letra] = texto;
+          }
         });
         
         // Garantir ordem A, B, C, D
