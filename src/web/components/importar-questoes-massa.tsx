@@ -7,6 +7,7 @@ import { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { saveQuestaoToSupabase } from '../lib/supabase-pacotes';
 import { saveQuestaoSupabase } from '../lib/supabase-questoes';
+import { parsearQuestoesUniversal } from '../lib/parser-questoes-universal';
 
 const MATERIAS = [
   'Portugues', 'Matematica', 'Informatica', 
@@ -61,127 +62,8 @@ export function ImportarQuestoesMassa({
   const [sobrescrever, setSobrescrever] = useState(false); // 🔥 Opção sobrescrever
 
   const parsearQuestoes = (texto: string): QuestaoImportada[] => {
-    const questoes: QuestaoImportada[] = [];
-    
-    // 🔥 Separar por "Gabarito:" seguido de letra (mais preciso)
-    let blocos = texto.split(/(?=Gabarito:\s*[A-E])/gi).filter(b => {
-      const trimmed = b.trim();
-      // Só válido se tiver Gabarito + letra E conteúdo mínimo
-      const temGabarito = trimmed.match(/Gabarito:\s*[A-E]/i);
-      const temConteudo = trimmed.length > 50;
-      // Contar alternativas com IGNORECASE
-      const numAlternativas = (trimmed.match(/^[A-E][\)\.]?\s/gim) || []).length;
-      
-      const valido = temGabarito && temConteudo && numAlternativas >= 3;
-      
-      if (!valido && temGabarito) {
-        console.log(`⚠️ Bloco filtrado: ${numAlternativas} alternativas encontradas`);
-      }
-      
-      return valido;
-    });
-    
-    console.log(`📊 ${blocos.length} blocos detectados (por Gabarito:)`);
-    
-    for (let idx = 0; idx < blocos.length; idx++) {
-      const bloco = blocos[idx];
-      
-      try {
-        let pergunta = 'Questão ' + (idx + 1); // Pergunta padrão
-        let alternativas: string[] = [];
-        let correta: 0 | 1 | 2 | 3 = 0;
-        let comentario = '';
-        let texto_contexto = '';
-        
-        // 1. Extrair GABARITO
-        const gabaritoMatch = bloco.match(/Gabarito:\s*([A-E])/i);
-        if (gabaritoMatch) {
-          const letra = gabaritoMatch[1].toUpperCase();
-          const mapa: Record<string, number> = {'A': 0, 'B': 1, 'C': 2, 'D': 3, 'E': 4};
-          correta = (mapa[letra] || 0) as 0 | 1 | 2 | 3;
-        }
-        
-        // 2. Extrair COMENTÁRIO
-        const comentarioMatch = bloco.match(/Comentário:\s*(.+?)(?=\n[A-E][\)\.]|$)/is);
-        if (comentarioMatch) {
-          comentario = comentarioMatch[1].trim().substring(0, 5000); // 🔥 Aumentado para 5000
-        }
-        
-        // 3. Extrair ALTERNATIVAS - versão simplificada e confiável
-        const regexAlt = /([A-E])[\)\.]?\s+(.+?)(?=\s+[A-E][\)\.]|Gabarito:|Comentário:|$)/gis;
-        const matchesAlt = [...bloco.matchAll(regexAlt)];
-        
-        const alternativasMap: Record<string, string> = {};
-        matchesAlt.forEach(match => {
-          const letra = match[1].toUpperCase();
-          const texto = match[2].trim().replace(/\n/g, ' ').substring(0, 1000);
-          alternativasMap[letra] = texto;
-        });
-        
-        // Garantir ordem A, B, C, D
-        alternativas = [
-          alternativasMap['A'] || '(Alternativa não fornecida)',
-          alternativasMap['B'] || '(Alternativa não fornecida)',
-          alternativasMap['C'] || '(Alternativa não fornecida)',
-          alternativasMap['D'] || '(Alternativa não fornecida)'
-        ];
-        
-        // 4. Extrair PERGUNTA E CONTEXTO - LÓGICA CORRETA
-        const antesAlternativas = bloco.split(/\n\s*[A-E][\)\.]?\s+/i)[0];
-        const todasLinhas = antesAlternativas.split('\n')
-          .map(l => l.trim())
-          .filter(l => l.length > 0 && 
-                      !l.match(/^Gabarito:/i) && 
-                      !l.match(/^Comentário/i) &&
-                      !l.match(/^\d+\.?\s*$/)); // Remove número sozinho
-        
-        // Remove número inicial da primeira linha
-        if (todasLinhas.length > 0 && todasLinhas[0].match(/^\d+\./)) {
-          todasLinhas[0] = todasLinhas[0].replace(/^\d+\.\s*/, '');
-        }
-        
-        // LÓGICA: A última linha antes das alternativas É A PERGUNTA
-        // Tudo antes é CONTEXTO
-        if (todasLinhas.length > 0) {
-          if (todasLinhas.length === 1) {
-            // Só tem uma linha = é a pergunta
-            pergunta = todasLinhas[0];
-          } else {
-            // Última linha = pergunta, resto = contexto
-            pergunta = todasLinhas[todasLinhas.length - 1];
-            texto_contexto = todasLinhas.slice(0, -1).join('\n');
-          }
-        }
-        
-        // Fallback se pergunta ainda vazia
-        if (!pergunta || pergunta.length < 10) {
-          pergunta = texto_contexto || `Questão ${idx + 1}`;
-          texto_contexto = '';
-        }
-        
-        // Validar - aceita se tiver pelo menos 2 alternativas válidas
-        const alternativasValidas = alternativas.filter(a => a && !a.includes('não fornecida') && a.length > 3);
-        
-        if (alternativasValidas.length >= 2 && pergunta.length > 3) {
-          questoes.push({
-            pergunta: pergunta.trim() || `Questão ${idx + 1}`,
-            alternativas: alternativas as [string, string, string, string],
-            correta: Math.min(correta, 3) as 0 | 1 | 2 | 3,
-            comentario: comentario || 'Gabarito: ' + ['A', 'B', 'C', 'D'][correta],
-            texto_contexto: texto_contexto || undefined
-          });
-          
-          console.log(`✅ Q${questoes.length}: "${pergunta.substring(0, 50)}..." | ${alternativasValidas.length} alt válidas`);
-        } else {
-          console.log(`❌ Bloco ${idx} IGNORADO: pergunta="${pergunta.substring(0, 30)}" | ${alternativasValidas.length} alt`);
-        }
-      } catch (e) {
-        console.error(`❌ Erro no bloco ${idx}:`, e);
-      }
-    }
-    
-    console.log(`✅ TOTAL PARSEADO: ${questoes.length} de ${blocos.length} blocos`);
-    return questoes;
+    // 🔥 USA O PARSER UNIVERSAL
+    return parsearQuestoesUniversal(texto);
   };
 
   const handleImportar = async () => {
