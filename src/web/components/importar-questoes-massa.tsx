@@ -67,12 +67,20 @@ export function ImportarQuestoesMassa({
     const norm = texto.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
     const blocosBrutos = norm.split(/Gabarito:\s*([A-E])/i);
     
-    console.log(`📊 ${blocosBrutos.length} blocos`);
+    console.log(`📊 ${blocosBrutos.length} partes após split`);
+    console.log(`📊 Esperado: ${Math.floor((blocosBrutos.length - 1) / 2)} questões`);
+    
+    let questoesIgnoradas = 0;
     
     for (let i = 2; i < blocosBrutos.length; i += 2) {
+      const numeroQuestao = Math.floor(i / 2);
       const gabarito = blocosBrutos[i-1].toUpperCase();
       const blocoDepois = blocosBrutos[i] || '';
       const blocoAntes = blocosBrutos[i-2] || '';
+      
+      console.log(`\n🔍 Processando Q${numeroQuestao} (índice ${i}):`);
+      console.log(`   Gabarito: ${gabarito}`);
+      console.log(`   Bloco antes: ${blocoAntes.substring(0,100)}...`);
       
       const correta = {'A':0,'B':1,'C':2,'D':3,'E':4}[gabarito] || 0;
       
@@ -87,6 +95,8 @@ export function ImportarQuestoesMassa({
       
       const alternativas = [altMap.A||'',altMap.B||'',altMap.C||'',altMap.D||''];
       
+      console.log(`   Alternativas encontradas: A=${!!altMap.A} B=${!!altMap.B} C=${!!altMap.C} D=${!!altMap.D}`);
+      
       // 🔥 PERGUNTA COMPLETA = TUDO antes das alternativas
       let perguntaCompleta = blocoAntes.split(/\n\s*[A-E][\)\.]?\s/i)[0];
       
@@ -96,18 +106,27 @@ export function ImportarQuestoesMassa({
       // Remove linhas vazias extras
       perguntaCompleta = perguntaCompleta.replace(/\n{3,}/g, '\n\n').trim();
       
-      if (alternativas.filter(a=>a.length>2).length >= 2 && perguntaCompleta.length > 10) {
+      console.log(`   Pergunta: ${perguntaCompleta.length} chars - "${perguntaCompleta.substring(0,60)}..."`);
+      
+      const alternativasValidas = alternativas.filter(a=>a.length>2).length;
+      
+      if (alternativasValidas >= 2 && perguntaCompleta.length > 10) {
         questoes.push({
-          pergunta: perguntaCompleta, // 🔥 TEXTO COMPLETO
+          pergunta: perguntaCompleta,
           alternativas: alternativas as any,
           correta: correta as any,
           comentario
         });
-        console.log(`✅ Questão ${questoes.length}: ${perguntaCompleta.substring(0,50)}...`);
+        console.log(`✅ Q${numeroQuestao} ACEITA! Total agora: ${questoes.length}`);
+      } else {
+        questoesIgnoradas++;
+        console.log(`❌ Q${numeroQuestao} IGNORADA - Alternativas válidas: ${alternativasValidas}, Pergunta: ${perguntaCompleta.length} chars`);
       }
     }
     
-    console.log(`✅ TOTAL: ${questoes.length} questões`);
+    console.log(`\n📊 RESULTADO FINAL:`);
+    console.log(`✅ Questões parseadas: ${questoes.length}`);
+    console.log(`❌ Questões ignoradas: ${questoesIgnoradas}`);
     return questoes;
   };
 
