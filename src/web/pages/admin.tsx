@@ -109,6 +109,7 @@ function GerenciarAreasHierarquico({ showSaveMessage, onGoToQuestoes }: { showSa
   const [selectedAreaId, setSelectedAreaId] = useState<string>("");
   const [selectedCarreiraId, setSelectedCarreiraId] = useState<string>("");
   const [refreshKey, setRefreshKey] = useState(0);
+  const [showImportModal, setShowImportModal] = useState(false); // 🔥 Modal importação
   
   const refresh = () => setRefreshKey(prev => prev + 1);
   
@@ -309,30 +310,38 @@ function GerenciarAreasHierarquico({ showSaveMessage, onGoToQuestoes }: { showSa
         <div className="glass-card rounded-2xl p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-2xl font-bold text-white">📚 Matérias desta Área</h3>
-            <button
-              onClick={() => {
-                const nome = prompt("Nome da nova Matéria:");
-                if (!nome) return;
-                const data = getQuizData();
-                const newMateria = {
-                  id: nome.toLowerCase().replace(/\s+/g, '-'),
-                  nome: nome.trim()
-                };
-                data.disciplinas.push(newMateria);
-                
-                const area = data.areas.find(a => a.id === selectedAreaId);
-                if (area && !area.materias.includes(newMateria.id)) {
-                  area.materias.push(newMateria.id);
-                }
-                
-                saveQuizData(data);
-                showSaveMessage("Matéria criada!");
-                refresh();
-              }}
-              className="px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl font-bold hover:scale-105 transition-transform"
-            >
-              ➕ Nova Matéria
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowImportModal(true)}
+                className="px-4 py-2 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-xl font-bold hover:scale-105 transition-transform flex items-center gap-2"
+              >
+                <span>📥</span> Importar Questões
+              </button>
+              <button
+                onClick={() => {
+                  const nome = prompt("Nome da nova Matéria:");
+                  if (!nome) return;
+                  const data = getQuizData();
+                  const newMateria = {
+                    id: nome.toLowerCase().replace(/\s+/g, '-'),
+                    nome: nome.trim()
+                  };
+                  data.disciplinas.push(newMateria);
+                  
+                  const area = data.areas.find(a => a.id === selectedAreaId);
+                  if (area && !area.materias.includes(newMateria.id)) {
+                    area.materias.push(newMateria.id);
+                  }
+                  
+                  saveQuizData(data);
+                  showSaveMessage("Matéria criada!");
+                  refresh();
+                }}
+                className="px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl font-bold hover:scale-105 transition-transform"
+              >
+                ➕ Nova Matéria
+              </button>
+            </div>
           </div>
 
           <div className="grid md:grid-cols-3 gap-4">
@@ -399,6 +408,12 @@ function GerenciarAreasHierarquico({ showSaveMessage, onGoToQuestoes }: { showSa
           </div>
         </div>
       </div>
+      
+      {/* 🔥 Modal de Importação em Massa para Áreas */}
+      {showImportModal && (
+        <ImportarQuestoesMassa onClose={() => setShowImportModal(false)} />
+      )}
+    </div>
     );
   }
 
