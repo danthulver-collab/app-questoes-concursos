@@ -53,19 +53,12 @@ export function ImportarQuestoesMassa({
   const parsearQuestoes = (texto: string): QuestaoImportada[] => {
     const questoes: QuestaoImportada[] = [];
     
-    // Dividir por linhas vazias (cada questão separada por linha vazia)
-    const blocos = texto.split('\n\n').filter(b => b.trim());
+    // Dividir por linhas vazias (cada questão separada por linha vazia dupla)
+    const blocos = texto.split(/\n\s*\n/).filter(b => b.trim().length > 30);
     
     for (const bloco of blocos) {
       try {
         const linhas = bloco.split('\n').map(l => l.trim()).filter(l => l);
-        
-        // Formato esperado:
-        // Linha 1: Pergunta
-        // Linha 2-5: A) ... B) ... C) ... D) ...
-        // Linha 6: Correta: B (ou apenas B)
-        // Linha 7: Comentário
-        // Linha 8+ (opcional): Texto contexto
         
         let pergunta = '';
         let alternativas: string[] = [];
@@ -75,27 +68,43 @@ export function ImportarQuestoesMassa({
         
         let i = 0;
         
-        // Pegar pergunta (pode ter várias linhas até achar A))
-        while (i < linhas.length && !linhas[i].match(/^[A-D]\)/)) {
-          pergunta += (pergunta ? ' ' : '') + linhas[i];
+        // Pegar pergunta e texto contexto (tudo até achar A) ou Alternativas)
+        while (i < linhas.length && !linhas[i].match(/^(A[\)\.]|Alternativas)/i)) {
+          if (pergunta) {
+            texto_contexto += (texto_contexto ? '\n' : '') + linhas[i];
+          } else {
+            pergunta += (pergunta ? ' ' : '') + linhas[i];
+          }
           i++;
         }
         
-        // Pegar alternativas A), B), C), D)
-        while (i < linhas.length && linhas[i].match(/^[A-D]\)/)) {
-          const texto = linhas[i].replace(/^[A-D]\)\s*/, '').trim();
+        // Pular linha "Alternativas" se existir
+        if (i < linhas.length && linhas[i].match(/^Alternativas/i)) {
+          i++;
+        }
+        
+        // Pegar alternativas A), B), C), D), E)
+        while (i < linhas.length && linhas[i].match(/^[A-E][\)\.]/) && alternativas.length < 5) {
+          const texto = linhas[i].replace(/^[A-E][\)\.]?\s*/, '').trim();
           alternativas.push(texto);
           i++;
+        }
+        
+        // Se tem menos de 4, não é válida
+        if (alternativas.length < 4) {
+          console.log('⚠️ Questão ignorada (menos de 4 alternativas):', pergunta.substring(0, 50));
+          continue;
         }
         
         // Pegar correta (procura linha com "Correta:" ou "Gabarito:")
         while (i < linhas.length) {
           const linha = linhas[i];
           if (linha.match(/Correta:|Gabarito:|Resposta:/i)) {
-            const match = linha.match(/[A-D]/i);
+            const match = linha.match(/[A-E]/i);
             if (match) {
               const letra = match[0].toUpperCase();
-              correta = ({'A': 0, 'B': 1, 'C': 2, 'D': 3}[letra] || 0) as 0 | 1 | 2 | 3;
+              const mapa: Record<string, number> = {'A': 0, 'B': 1, 'C': 2, 'D': 3, 'E': 4};
+              correta = (mapa[letra] || 0) as 0 | 1 | 2 | 3;
             }
             i++;
             break;
@@ -103,28 +112,32 @@ export function ImportarQuestoesMassa({
           i++;
         }
         
-        // Pegar comentário
-        if (i < linhas.length && !linhas[i].match(/Texto:|Contexto:/i)) {
-          comentario = linhas[i];
-          i++;
-        }
-        
-        // Pegar texto contexto (resto)
+        // Pegar comentário (resto)
         if (i < linhas.length) {
-          texto_contexto = linhas.slice(i).join('\n').replace(/Texto:|Contexto:/i, '').trim();
+          comentario = linhas.slice(i).join(' ').replace(/Comentário:|Explicação:/i, '').trim();
         }
         
-        if (pergunta && alternativas.length === 4) {
+        if (!comentario) {
+          comentario = 'Resposta correta: ' + ['A', 'B', 'C', 'D', 'E'][correta];
+        }
+        
+        if (pergunta && alternativas.length >= 4) {
+          // Garantir sempre 4 alternativas
           questoes.push({
             pergunta: pergunta.trim(),
-            alternativas: alternativas as [string, string, string, string],
-            correta,
+            alternativas: [
+              alternativas[0] || '',
+              alternativas[1] || '',
+              alternativas[2] || '',
+              alternativas[3] || ''
+            ] as [string, string, string, string],
+            correta: Math.min(correta, 3) as 0 | 1 | 2 | 3,
             comentario: comentario || 'Sem comentário.',
-            texto_contexto: texto_contexto || undefined
+            texto_contexto: texto_contexto.trim() || undefined
           });
         }
       } catch (e) {
-        console.error('Erro ao parsear bloco:', bloco, e);
+        console.error('Erro ao parsear bloco:', e);
       }
     }
     
@@ -308,7 +321,14 @@ Explicação da resposta correta.`}
               placeholder="Cole suas questões no formato indicado acima..."
             />
             <p className="text-gray-500 text-xs mt-2">
-              {textoQuestoes.split('\n\n').filter(b => b.trim()).length} questões detectadas
+              {(() => {
+                try {
+                  const parsed = parsearQuestoes(textoQuestoes);
+                  return `${parsed.length} questões válidas detectadas`;
+                } catch {
+                  return '0 questões detectadas';
+                }
+              })()}
             </p>
           </div>
 
@@ -328,11 +348,19 @@ Explicação da resposta correta.`}
               disabled={processando || !textoQuestoes.trim()}
               className="flex-1 py-4 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-400 hover:to-emerald-400 disabled:opacity-50 rounded-xl text-white font-bold text-lg"
             >
-              {processando ? '⏳ Importando...' : `📥 Importar ${textoQuestoes.split('\n\n').filter(b => b.trim()).length} Questões`}
+              {processando ? '⏳ Importando...' : (() => {
+                try {
+                  const count = parsearQuestoes(textoQuestoes).length;
+                  return `📥 Importar ${count} ${count === 1 ? 'Questão' : 'Questões'}`;
+                } catch {
+                  return '📥 Importar Questões';
+                }
+              })()}
             </button>
             <button
               onClick={onClose}
-              className="px-6 py-4 bg-white/10 hover:bg-white/20 rounded-xl text-white font-bold"
+              disabled={processando}
+              className="px-6 py-4 bg-white/10 hover:bg-white/20 rounded-xl text-white font-bold disabled:opacity-50"
             >
               Cancelar
             </button>
