@@ -108,11 +108,11 @@ export function ImportarQuestoesMassa({
         altMatch.forEach(m => altMap[m[1].toUpperCase()] = m[2].trim());
         
         questoes.push({
-          pergunta: pergunta.replace(/^\d+\.\s*/,'').substring(0,2000),
+          pergunta: pergunta.replace(/^\d+\.\s*/,''), // 🔥 SEM LIMITE
           alternativas: [altMap.A||'',altMap.B||'',altMap.C||'',altMap.D||''] as any,
           correta: correta as any,
-          comentario,
-          texto_contexto: (enunciado + '\n\n' + assertivas).trim()
+          comentario, // 🔥 SEM LIMITE
+          texto_contexto: (enunciado + '\n\n' + assertivas).trim() // 🔥 SEM LIMITE
         });
         
         console.log(`✅ V/F: ${pergunta.substring(0,40)}`);
@@ -123,7 +123,7 @@ export function ImportarQuestoesMassa({
         // Alternativas
         const altMatch = [...blocoAntes.matchAll(/([A-E])[\)\.]?\s+([^\n]+(?:\n(?![A-E][\)\.])[^\n]+)*)/gi)];
         const altMap: any = {};
-        altMatch.forEach(m => altMap[m[1].toUpperCase()] = m[2].trim().replace(/\s+/g,' ').substring(0,800));
+        altMatch.forEach(m => altMap[m[1].toUpperCase()] = m[2].trim().replace(/\s+/g,' ')); // 🔥 SEM LIMITE
         
         const alternativas = [altMap.A||'',altMap.B||'',altMap.C||'',altMap.D||''];
         
@@ -155,11 +155,11 @@ export function ImportarQuestoesMassa({
         
         if (alternativas.filter(a=>a.length>2).length >= 2) {
           questoes.push({
-            pergunta: pergunta.substring(0,2000),
+            pergunta, // 🔥 SEM LIMITE
             alternativas: alternativas as any,
             correta: correta as any,
-            comentario,
-            texto_contexto: contexto||undefined
+            comentario, // 🔥 SEM LIMITE  
+            texto_contexto: contexto||undefined // 🔥 SEM LIMITE
           });
           console.log(`✅ Normal: ${pergunta.substring(0,50)}`);
         }

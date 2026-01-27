@@ -27,6 +27,7 @@ export default function SimuladoPage() {
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
   const [currentUtterance, setCurrentUtterance] = useState<SpeechSynthesisUtterance | null>(null);
   const [mostrarTextoContexto, setMostrarTextoContexto] = useState(false); // 🔥 Estado para expandir texto
+  const [audioSpeed, setAudioSpeed] = useState(1.0); // 🔥 Velocidade do áudio
   
   // Verificar plano para comentários - incluindo admin e individual
   const userId = user?.email || user?.username || '';
@@ -382,6 +383,21 @@ Responda de forma clara, didática e objetiva, focando em ajudar o aluno a enten
                           
                           {/* Botões Plus - Áudio e ChatGPT GRANDES E CHAMATIVOS */}
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-5">
+                            {/* 🔥 Controle de velocidade do áudio */}
+                            <div className="sm:col-span-2 flex items-center gap-3 p-3 bg-white/5 rounded-xl">
+                              <span className="text-sm text-gray-400">Velocidade:</span>
+                              <input
+                                type="range"
+                                min="0.5"
+                                max="2"
+                                step="0.1"
+                                value={audioSpeed}
+                                onChange={(e) => setAudioSpeed(parseFloat(e.target.value))}
+                                className="flex-1"
+                              />
+                              <span className="text-white font-bold w-12 text-center">{audioSpeed.toFixed(1)}x</span>
+                            </div>
+                            
                             <button
                               onClick={() => {
                                 const text = questao.audio_comentario || questao.explanation || "Comentário não disponível";
@@ -396,7 +412,7 @@ Responda de forma clara, didática e objetiva, focando em ajudar o aluno a enten
                                     speechSynthesis.cancel();
                                     const utterance = new SpeechSynthesisUtterance(text);
                                     utterance.lang = 'pt-BR';
-                                    utterance.rate = 0.85;
+                                    utterance.rate = audioSpeed; // 🔥 Usa velocidade configurada
                                     utterance.onend = () => {
                                       setIsAudioPlaying(false);
                                       setCurrentUtterance(null);
