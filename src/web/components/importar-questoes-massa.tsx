@@ -6,6 +6,7 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { saveQuestaoToSupabase } from '../lib/supabase-pacotes';
+import { saveQuestaoSupabase } from '../lib/supabase-questoes';
 
 const MATERIAS = [
   'Portugues', 'Matematica', 'Informatica', 
@@ -31,6 +32,8 @@ interface ImportarQuestoesMassaProps {
   bancaPadrao?: string; // 🔥 Banca pré-selecionada
   concursoPadrao?: string; // 🔥 Concurso pré-selecionado
   materiaSelecionada?: string; // 🔥 Matéria já selecionada (pacotes exclusivos)
+  areaId?: string; // 🔥 Se vier de Áreas, salva em questoes_areas
+  materiaId?: string; // 🔥 ID da matéria para questoes_areas
 }
 
 export function ImportarQuestoesMassa({ 
@@ -38,7 +41,9 @@ export function ImportarQuestoesMassa({
   materiasFiltradas,
   bancaPadrao,
   concursoPadrao,
-  materiaSelecionada
+  materiaSelecionada,
+  areaId,
+  materiaId
 }: ImportarQuestoesMassaProps) {
   const [materia, setMateria] = useState(materiaSelecionada || materiasFiltradas?.[0] || 'Portugues');
   const [banca, setBanca] = useState(bancaPadrao || 'CESPE');
@@ -209,10 +214,20 @@ export function ImportarQuestoesMassa({
       if (sobrescrever) {
         setResultado(`🗑️ Removendo questões antigas de ${materia}...`);
         try {
-          await supabase
-            .from('questoes')
-            .delete()
-            .eq('disciplina', materia);
+          if (areaId) {
+            // Remover de questoes_areas
+            await supabase
+              .from('questoes_areas')
+              .delete()
+              .eq('area_id', areaId)
+              .eq('materia_id', materiaId || materia.toLowerCase().replace(/\s+/g, '-'));
+          } else {
+            // Remover de questoes
+            await supabase
+              .from('questoes')
+              .delete()
+              .eq('disciplina', materia);
+          }
           console.log(`✅ Questões antigas de ${materia} removidas`);
         } catch (e) {
           console.error('Erro ao remover antigas:', e);
@@ -225,26 +240,53 @@ export function ImportarQuestoesMassa({
       for (let i = 0; i < questoesParseadas.length; i++) {
         const q = questoesParseadas[i];
         
-        const questao = {
-          id: `${materia.toLowerCase()}_${Date.now()}_${i}`,
-          pergunta: q.pergunta,
-          alternativas: q.alternativas,
-          correta: q.correta,
-          disciplina: materia,
-          banca: banca,
-          concurso: concurso,
-          ano: ano,
-          comentario: q.comentario,
-          dificuldade: dificuldade,
-          texto_contexto: q.texto_contexto
-        };
-        
-        const result = await saveQuestaoToSupabase(questao);
-        
-        if (result.success) {
-          sucesso++;
+        // 🔥 Salvar na tabela correta baseado no contexto
+        if (areaId) {
+          // Salvar em questoes_areas (para Áreas e Carreiras)
+          const materiaIdFinal = materiaId || materia.toLowerCase().replace(/\s+/g, '-').replace(/ê/g, 'e').replace(/ã/g, 'a').replace(/ç/g, 'c');
+          
+          const questaoArea = {
+            id: `${areaId}_${materiaIdFinal}_${Date.now()}_${i}`,
+            area_id: areaId,
+            materia_id: materiaIdFinal,
+            title: q.pergunta,
+            options: q.alternativas,
+            correct_answer: q.correta,
+            explanation: q.comentario,
+            plano: plano,
+            texto_contexto: q.texto_contexto
+          };
+          
+          const result = await saveQuestaoSupabase(questaoArea);
+          
+          if (result) {
+            sucesso++;
+          } else {
+            erros++;
+          }
         } else {
-          erros++;
+          // Salvar em questoes (banco geral)
+          const questao = {
+            id: `${materia.toLowerCase()}_${Date.now()}_${i}`,
+            pergunta: q.pergunta,
+            alternativas: q.alternativas,
+            correta: q.correta,
+            disciplina: materia,
+            banca: banca,
+            concurso: concurso,
+            ano: ano,
+            comentario: q.comentario,
+            dificuldade: dificuldade,
+            texto_contexto: q.texto_contexto
+          };
+          
+          const result = await saveQuestaoToSupabase(questao);
+          
+          if (result.success) {
+            sucesso++;
+          } else {
+            erros++;
+          }
         }
         
         setResultado(`Processando... ${sucesso + erros}/${questoesParseadas.length}`);

@@ -413,6 +413,7 @@ function GerenciarAreasHierarquico({ showSaveMessage, onGoToQuestoes }: { showSa
           <ImportarQuestoesMassa 
             onClose={() => setShowImportModal(false)}
             materiasFiltradas={materias.map(m => m.nome)} // Apenas matérias desta área
+            areaId={selectedAreaId} // 🔥 ID da área para salvar em questoes_areas
           />
         )}
       </div>
