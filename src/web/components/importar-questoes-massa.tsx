@@ -126,35 +126,37 @@ export function ImportarQuestoesMassa({
           alternativasMap['D'] || '(Alternativa não fornecida)'
         ];
         
-        // 4. Extrair PERGUNTA (ANTES das alternativas, EXCLUINDO linhas de número/gabarito/comentário)
-        const blocoAntes = bloco.split(/\n[A-E][\)\.]?\s/i)[0];
-        const linhasPergunta = blocoAntes.split('\n').filter(l => {
-          const trimmed = l.trim();
-          return trimmed.length > 5 && 
-                 !trimmed.match(/^Gabarito:/i) && 
-                 !trimmed.match(/^Comentário:/i) &&
-                 !trimmed.match(/^Comentário Elaborado:/i) && // 🔥 IGNORAR essa linha
-                 !trimmed.match(/^\d+\.?\s*$/); // Ignora linha com só número
-        });
+        // 4. Extrair PERGUNTA E CONTEXTO - LÓGICA CORRETA
+        const antesAlternativas = bloco.split(/\n\s*[A-E][\)\.]?\s+/i)[0];
+        const todasLinhas = antesAlternativas.split('\n')
+          .map(l => l.trim())
+          .filter(l => l.length > 0 && 
+                      !l.match(/^Gabarito:/i) && 
+                      !l.match(/^Comentário/i) &&
+                      !l.match(/^\d+\.?\s*$/)); // Remove número sozinho
         
-        if (linhasPergunta.length > 0) {
-          // PRIMEIRA linha válida é a pergunta (remove número se tiver)
-          pergunta = linhasPergunta[0].trim().replace(/^\d+\.\s*/, '');
-          
-          // RESTO é contexto
-          if (linhasPergunta.length > 1) {
-            texto_contexto = linhasPergunta.slice(1).join('\n').trim();
+        // Remove número inicial da primeira linha
+        if (todasLinhas.length > 0 && todasLinhas[0].match(/^\d+\./)) {
+          todasLinhas[0] = todasLinhas[0].replace(/^\d+\.\s*/, '');
+        }
+        
+        // LÓGICA: A última linha antes das alternativas É A PERGUNTA
+        // Tudo antes é CONTEXTO
+        if (todasLinhas.length > 0) {
+          if (todasLinhas.length === 1) {
+            // Só tem uma linha = é a pergunta
+            pergunta = todasLinhas[0];
+          } else {
+            // Última linha = pergunta, resto = contexto
+            pergunta = todasLinhas[todasLinhas.length - 1];
+            texto_contexto = todasLinhas.slice(0, -1).join('\n');
           }
         }
         
-        // Se pergunta ainda vazia ou é "Comentário", usar contexto como pergunta
-        if (!pergunta || pergunta.match(/^Comentário/i) || pergunta.length < 10) {
-          if (texto_contexto) {
-            pergunta = texto_contexto.split('\n')[0].substring(0, 200);
-            texto_contexto = texto_contexto.split('\n').slice(1).join('\n');
-          } else {
-            pergunta = `Questão ${idx + 1}`;
-          }
+        // Fallback se pergunta ainda vazia
+        if (!pergunta || pergunta.length < 10) {
+          pergunta = texto_contexto || `Questão ${idx + 1}`;
+          texto_contexto = '';
         }
         
         // Validar - aceita se tiver pelo menos 2 alternativas válidas
