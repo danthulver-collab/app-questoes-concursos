@@ -64,82 +64,109 @@ export function ImportarQuestoesMassa({
   const parsearQuestoes = (texto: string): QuestaoImportada[] => {
     const questoes: QuestaoImportada[] = [];
     
-    // Normalizar quebras de linha
-    let norm = texto.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-    
-    // 🔥 Garantir que termina com quebra de linha para capturar última questão
-    if (!norm.endsWith('\n')) norm += '\n';
-    
-    // 🔥 ESTRATÉGIA: Separar por "Gabarito: X" e processar cada bloco
+    const norm = texto.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
     const blocosBrutos = norm.split(/Gabarito:\s*([A-E])/i);
     
-    console.log(`📊 ${blocosBrutos.length} partes após split`);
-    console.log(`📊 Estimativa: ${Math.floor((blocosBrutos.length - 1) / 2)} questões`);
+    console.log(`📊 ${blocosBrutos.length} blocos`);
     
-    // blocosBrutos[0] = texto antes do primeiro Gabarito (primeira questão)
-    // blocosBrutos[1] = letra do gabarito (A, B, C, D, E)
-    // blocosBrutos[2] = texto após gabarito (comentário + próxima questão)
-    // ... e assim por diante
-    
-    for (let i = 1; i < blocosBrutos.length; i += 2) {
-      const gabarito = blocosBrutos[i].toUpperCase();
-      const blocoAntes = blocosBrutos[i-1] || '';
-      const blocoDepois = blocosBrutos[i+1] || '';
+    for (let i = 2; i < blocosBrutos.length; i += 2) {
+      const gabarito = blocosBrutos[i-1].toUpperCase();
+      const blocoDepois = blocosBrutos[i] || '';
+      const blocoAntes = blocosBrutos[i-2] || '';
       
       const correta = {'A':0,'B':1,'C':2,'D':3,'E':4}[gabarito] || 0;
       
-      // COMENTÁRIO - pega do bloco depois do gabarito até "Comentário:" ou próxima questão
-      let comentario = `Gabarito: ${gabarito}`;
-      const comMatch = blocoDepois.match(/Comentário:\s*(.+?)(?=\n\s*\d+[\.\)]|\n\s*$|$)/is);
-      if (comMatch) {
-        comentario = comMatch[1].trim();
-      }
+      // COMENTÁRIO
+      const comMatch = blocoDepois.match(/Comentário:\s*(.+?)(?=\n\d+\.|$)/is);
+      const comentario = comMatch ? comMatch[1].trim().substring(0,5000) : `Gabarito: ${gabarito}`;
       
-      // 🔥 EXTRAIR ALTERNATIVAS
-      const altMatch = [...blocoAntes.matchAll(/\n\s*([A-E])[\)\.]?\s+([^\n]+)/gi)];
-      const altMap: any = {};
-      altMatch.forEach(m => altMap[m[1].toUpperCase()] = m[2].trim());
-      
-      const alternativas = [altMap.A||'',altMap.B||'',altMap.C||'',altMap.D||''];
-      
-      // 🔥 PERGUNTA = TUDO antes das alternativas (texto COMPLETO)
-      let perguntaCompleta = blocoAntes.split(/\n\s*[A-E][\)\.]?\s/i)[0];
-      
-      // Remove número da questão no início (1. ou 01. ou Q1.)
-      perguntaCompleta = perguntaCompleta.replace(/^\s*\d+[\.\)]\s*/,'').trim();
-      
-      // Remove "Comentário:" da questão anterior que pode ter ficado grudado
-      perguntaCompleta = perguntaCompleta.replace(/^Comentário:[\s\S]*?\n\s*\d+[\.\)]\s*/i, '').trim();
-      perguntaCompleta = perguntaCompleta.replace(/^[\s\S]*?Comentário:[\s\S]*?\n(?=\d|\w)/i, '').trim();
-      
-      // Se ainda tem "Comentário:" no início, pega só depois dele
-      if (perguntaCompleta.toLowerCase().startsWith('comentário:')) {
-        const partes = perguntaCompleta.split(/\n\s*\d+[\.\)]\s*/);
-        if (partes.length > 1) {
-          perguntaCompleta = partes[partes.length - 1].trim();
-        }
-      }
-      
-      // Remove linhas vazias extras mas mantém quebras de linha
-      perguntaCompleta = perguntaCompleta.replace(/\n{3,}/g, '\n\n').trim();
-      
-      console.log(`📝 Q${questoes.length + 1} Pergunta (${perguntaCompleta.length} chars): ${perguntaCompleta.substring(0,60)}...`);
-      console.log(`   Gabarito: ${gabarito}, Alternativas: A=${alternativas[0].substring(0,20)}...`);
-      
-      if (alternativas.filter(a=>a.length>1).length >= 2 && perguntaCompleta.length > 5) {
-        questoes.push({
-          pergunta: perguntaCompleta,
-          alternativas: alternativas as any,
-          correta: correta as any,
-          comentario
+      // 🔥 TIPO 1: QUESTÃO V/F COM ( )
+      if (blocoAntes.match(/\(\s*\)/g)?.length >= 2) {
+        
+        // Extrair linha de comando (assinale, marque, indique)
+        const comandoMatch = blocoAntes.match(/(assinale|marque|indique|considere).+?(?=\n\(|$)/is);
+        const pergunta = comandoMatch ? comandoMatch[0].trim() : 'Assinale V (verdadeiro) ou F (falso):';
+        
+        // Extrair enunciado (primeira linha longa)
+        const linhasIniciais = blocoAntes.split(/\(\s*\)/)[0].split('\n')
+          .filter(l => l.trim().length > 30);
+        const enunciado = linhasIniciais.filter(l => !l.match(/assinale|marque/i)).join('\n');
+        
+        // Extrair assertivas com ( )
+        const afirmativasBruto = blocoAntes.split(/\(\s*\)/).slice(1);
+        let assertivas = '';
+        afirmativasBruto.forEach((af, idx) => {
+          const texto = af.split(/\n[A-E][\)\.]?\s/i)[0].trim();
+          if (texto.length > 10) {
+            assertivas += `${['I','II','III','IV','V','VI'][idx]}. ${texto}\n`;
+          }
         });
-        console.log(`✅ Questão ${questoes.length} registrada!`);
+        
+        // Extrair alternativas V-F
+        const altMatch = [...blocoAntes.matchAll(/([A-E])[\)\.]?\s*([VF\s–\-]+)/gi)];
+        const altMap: any = {};
+        altMatch.forEach(m => altMap[m[1].toUpperCase()] = m[2].trim());
+        
+        questoes.push({
+          pergunta: pergunta.replace(/^\d+\.\s*/,''), // 🔥 SEM LIMITE
+          alternativas: [altMap.A||'',altMap.B||'',altMap.C||'',altMap.D||''] as any,
+          correta: correta as any,
+          comentario, // 🔥 SEM LIMITE
+          texto_contexto: (enunciado + '\n\n' + assertivas).trim() // 🔥 SEM LIMITE
+        });
+        
+        console.log(`✅ V/F: ${pergunta.substring(0,40)}`);
+        
       } else {
-        console.log(`⚠️ Questão ignorada - alternativas: ${alternativas.filter(a=>a.length>1).length}, pergunta: ${perguntaCompleta.length} chars`);
+        // 🔥 TIPO 2: QUESTÃO NORMAL OU ASSERTIVAS I, II, III
+        
+        // Alternativas
+        const altMatch = [...blocoAntes.matchAll(/([A-E])[\)\.]?\s+([^\n]+(?:\n(?![A-E][\)\.])[^\n]+)*)/gi)];
+        const altMap: any = {};
+        altMatch.forEach(m => altMap[m[1].toUpperCase()] = m[2].trim().replace(/\s+/g,' ')); // 🔥 SEM LIMITE
+        
+        const alternativas = [altMap.A||'',altMap.B||'',altMap.C||'',altMap.D||''];
+        
+        // Pergunta (procura linha com ?, :, EXCETO, correta, assinale)
+        const linhas = blocoAntes.split(/\n[A-E][\)\.]?\s/i)[0].split('\n')
+          .map(l=>l.trim())
+          .filter(l=>l.length>10 && !l.match(/^\d+\.?\s*$/));
+        
+        let indicePergunta = -1;
+        for (let j = linhas.length - 1; j >= 0; j--) {
+          if (linhas[j].match(/[?:]$|EXCETO|incorreta|correta|assinale|marque|indique/i)) {
+            indicePergunta = j;
+            break;
+          }
+        }
+        
+        let pergunta = '';
+        let contexto = '';
+        
+        if (indicePergunta >= 0) {
+          pergunta = linhas[indicePergunta];
+          contexto = linhas.slice(0, indicePergunta).join('\n');
+        } else {
+          pergunta = linhas[linhas.length-1] || `Questão ${i/2}`;
+          contexto = linhas.slice(0,-1).join('\n');
+        }
+        
+        pergunta = pergunta.replace(/^\d+\.\s*/,'');
+        
+        if (alternativas.filter(a=>a.length>2).length >= 2) {
+          questoes.push({
+            pergunta, // 🔥 SEM LIMITE
+            alternativas: alternativas as any,
+            correta: correta as any,
+            comentario, // 🔥 SEM LIMITE  
+            texto_contexto: contexto||undefined // 🔥 SEM LIMITE
+          });
+          console.log(`✅ Normal: ${pergunta.substring(0,50)}`);
+        }
       }
     }
     
-    console.log(`✅ TOTAL: ${questoes.length} questões parseadas`);
+    console.log(`✅ TOTAL: ${questoes.length} questões`);
     return questoes;
   };
 
