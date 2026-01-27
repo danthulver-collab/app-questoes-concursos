@@ -64,40 +64,65 @@ export function ImportarQuestoesMassa({
   const parsearQuestoes = (texto: string): QuestaoImportada[] => {
     const questoes: QuestaoImportada[] = [];
     
-    const norm = texto.replace(/\r\n/g, '\n');
-    const partes = norm.split('Gabarito:');
+    // Normaliza
+    const norm = texto.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
     
-    console.log('Partes:', partes.length);
+    // Split por Gabarito: X (X = A-E)
+    const blocosBrutos = norm.split(/Gabarito:\s*([A-E])/i);
     
-    for (let i = 1; i < partes.length; i++) {
-      const bloco = partes[i];
-      const letra = bloco.trim()[0].toUpperCase();
-      const correta = {'A':0,'B':1,'C':2,'D':3,'E':4}[letra] || 0;
+    console.log(`Blocos brutos: ${blocosBrutos.length}`);
+    
+    // Processar pares (bloco anterior + gabarito atual)
+    for (let i = 2; i < blocosBrutos.length; i += 2) {
+      const gabarito = blocosBrutos[i-1].toUpperCase(); // Letra do gabarito
+      const blocoDepois = blocosBrutos[i] || ''; // Parte após gabarito (comentário)
+      const blocoAntes = blocosBrutos[i-2] || ''; // Parte antes do gabarito (pergunta + alternativas)
       
-      const blocoAnterior = partes[i-1];
-      const linhasAnt = blocoAnterior.split('\n').reverse();
+      const correta = {'A':0,'B':1,'C':2,'D':3,'E':4}[gabarito] || 0;
       
-      const alts: any = {};
-      let pergunta = 'Questão ' + i;
+      // Comentário
+      const comMatch = blocoDepois.match(/Comentário:\s*(.+?)(?=\n\d+\.|$)/is);
+      const comentario = comMatch ? comMatch[1].trim().substring(0,5000) : `Gabarito: ${gabarito}`;
       
-      linhasAnt.forEach(l => {
-        const m = l.match(/^([A-E])[\)\.]?\s+(.+)/i);
-        if (m) alts[m[1].toUpperCase()] = m[2];
-        if (!alts.A && l.length > 20 && !l.match(/Comentário/i)) pergunta = l;
+      // Extrair alternativas do bloco ANTES
+      const alternativasMatch = [...blocoAntes.matchAll(/([A-E])[\)\.]?\s+([^\n]+(?:\n(?![A-E][\)\.])[^\n]+)*)/gi)];
+      const altMap: any = {};
+      alternativasMatch.forEach(m => {
+        altMap[m[1].toUpperCase()] = m[2].trim().replace(/\s+/g, ' ').substring(0,500);
       });
       
-      const com = bloco.split('Comentário:')[1] || '';
+      const alternativas = [
+        altMap.A || '',
+        altMap.B || '',
+        altMap.C || '',
+        altMap.D || ''
+      ];
       
-      questoes.push({
-        pergunta: pergunta.replace(/^\d+\.\s*/,'').trim(),
-        alternativas: [alts.A||'A',alts.B||'B',alts.C||'C',alts.D||'D'] as any,
-        correta: correta as any,
-        comentario: com.trim().substring(0,5000) || 'Gab: '+letra,
-        texto_contexto: undefined
-      });
+      // Extrair pergunta (última linha significativa ANTES das alternativas)
+      const antesAlternativas = blocoAntes.split(/\n[A-E][\)\.]?\s/i)[0];
+      const linhas = antesAlternativas.split('\n')
+        .map(l => l.trim())
+        .filter(l => l.length > 10 && !l.match(/^\d+\.?\s*$/));
+      
+      let pergunta = linhas[linhas.length - 1] || `Questão ${(i/2)}`;
+      pergunta = pergunta.replace(/^\d+\.\s*/, '');
+      
+      const contexto = linhas.slice(0, -1).join('\n');
+      
+      // Validar
+      if (alternativas.filter(a => a.length > 2).length >= 2) {
+        questoes.push({
+          pergunta: pergunta.substring(0, 1000),
+          alternativas: alternativas as any,
+          correta: correta as any,
+          comentario,
+          texto_contexto: contexto || undefined
+        });
+        console.log(`✅ Q${questoes.length}: ${pergunta.substring(0,50)}`);
+      }
     }
     
-    console.log(`TOTAL: ${questoes.length}`);
+    console.log(`✅ TOTAL: ${questoes.length}`);
     return questoes;
   };
 
