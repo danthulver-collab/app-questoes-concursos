@@ -244,15 +244,15 @@ Responda de forma clara, didática e objetiva, focando em ajudar o aluno a enten
           <div className="lg:col-span-2">
             <div className="bg-white/5 rounded-2xl p-8">
               
-              {/* 🔥 PERGUNTA - Com botão VER MAIS se for longa */}
-              {questao.title && questao.title.length > 150 ? (
-                <div className="mb-6">
-                  {/* Versão curta ou completa */}
-                  <div className="text-xl text-white font-semibold leading-relaxed whitespace-pre-wrap">
-                    {textoExpandido[currentIndex] ? questao.title : questao.title.substring(0, 150) + '...'}
-                  </div>
-                  
-                  {/* Botão VER MAIS / VER MENOS */}
+              {/* 🔥 PERGUNTA - SEMPRE com botão VER MAIS */}
+              <div className="mb-6">
+                {/* Versão curta ou completa */}
+                <div className="text-xl text-white font-semibold leading-relaxed whitespace-pre-wrap">
+                  {textoExpandido[currentIndex] ? questao.title : (questao.title.length > 100 ? questao.title.substring(0, 100) + '...' : questao.title)}
+                </div>
+                
+                {/* Botão VER MAIS - aparece se pergunta > 100 chars */}
+                {questao.title && questao.title.length > 100 && (
                   <button
                     onClick={() => setTextoExpandido({...textoExpandido, [currentIndex]: !textoExpandido[currentIndex]})}
                     className="mt-4 px-5 py-2.5 bg-gradient-to-r from-emerald-500/20 to-blue-500/20 hover:from-emerald-500/30 hover:to-blue-500/30 text-emerald-400 rounded-xl text-sm font-bold flex items-center gap-2 transition-all border border-emerald-500/30 hover:border-emerald-400/50"
@@ -260,11 +260,8 @@ Responda de forma clara, didática e objetiva, focando em ajudar o aluno a enten
                     <span>{textoExpandido[currentIndex] ? '▲' : '▼'}</span>
                     <span>{textoExpandido[currentIndex] ? 'VER MENOS' : '👁️ VER MAIS'}</span>
                   </button>
-                </div>
-              ) : (
-                /* Pergunta curta - mostra normal */
-                <h2 className="text-xl text-white font-semibold mb-6 whitespace-pre-wrap">{questao.title}</h2>
-              )}
+                )}
+              </div>
 
               <div className="space-y-3">
                 {['A', 'B', 'C', 'D'].map((opcao, index) => {
