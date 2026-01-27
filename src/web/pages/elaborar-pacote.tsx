@@ -926,9 +926,15 @@ export default function ElaborarPacote() {
         </div>
       </div>
       
-      {/* 🔥 Modal de Importação em Massa */}
+      {/* 🔥 Modal de Importação em Massa - Contextual */}
       {showImportModal && (
-        <ImportarQuestoesMassa onClose={() => setShowImportModal(false)} />
+        <ImportarQuestoesMassa 
+          onClose={() => setShowImportModal(false)}
+          materiasFiltradas={materias} // Apenas matérias do pacote
+          bancaPadrao={banca} // Banca do aluno
+          concursoPadrao={concurso} // Concurso do aluno
+          materiaSelecionada={selectedMateria} // Matéria já selecionada
+        />
       )}
     </div>
   );

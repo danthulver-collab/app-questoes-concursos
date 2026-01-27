@@ -25,10 +25,24 @@ interface QuestaoImportada {
   texto_contexto?: string;
 }
 
-export function ImportarQuestoesMassa({ onClose }: { onClose: () => void }) {
-  const [materia, setMateria] = useState('Portugues');
-  const [banca, setBanca] = useState('CESPE');
-  const [concurso, setConcurso] = useState('TRF');
+interface ImportarQuestoesMassaProps {
+  onClose: () => void;
+  materiasFiltradas?: string[]; // 🔥 Se passar, mostra apenas essas matérias
+  bancaPadrao?: string; // 🔥 Banca pré-selecionada
+  concursoPadrao?: string; // 🔥 Concurso pré-selecionado
+  materiaSelecionada?: string; // 🔥 Matéria já selecionada (pacotes exclusivos)
+}
+
+export function ImportarQuestoesMassa({ 
+  onClose, 
+  materiasFiltradas,
+  bancaPadrao,
+  concursoPadrao,
+  materiaSelecionada
+}: ImportarQuestoesMassaProps) {
+  const [materia, setMateria] = useState(materiaSelecionada || materiasFiltradas?.[0] || 'Portugues');
+  const [banca, setBanca] = useState(bancaPadrao || 'CESPE');
+  const [concurso, setConcurso] = useState(concursoPadrao || 'TRF');
   const [ano, setAno] = useState(2024);
   const [dificuldade, setDificuldade] = useState<'facil' | 'medio' | 'dificil'>('medio');
   const [plano, setPlano] = useState<'free' | 'plus'>('free');
@@ -205,9 +219,13 @@ export function ImportarQuestoesMassa({ onClose }: { onClose: () => void }) {
                 value={materia} 
                 onChange={(e) => setMateria(e.target.value)}
                 className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm"
+                disabled={!!materiaSelecionada}
               >
-                {MATERIAS.map(m => <option key={m} value={m}>{m}</option>)}
+                {(materiasFiltradas || MATERIAS).map(m => <option key={m} value={m}>{m}</option>)}
               </select>
+              {materiaSelecionada && (
+                <p className="text-xs text-purple-400 mt-1">✓ Matéria do pacote</p>
+              )}
             </div>
             
             <div>
@@ -216,9 +234,13 @@ export function ImportarQuestoesMassa({ onClose }: { onClose: () => void }) {
                 value={banca} 
                 onChange={(e) => setBanca(e.target.value)}
                 className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm"
+                disabled={!!bancaPadrao}
               >
                 {BANCAS.map(b => <option key={b} value={b}>{b}</option>)}
               </select>
+              {bancaPadrao && (
+                <p className="text-xs text-purple-400 mt-1">✓ Banca do aluno</p>
+              )}
             </div>
             
             <div>
@@ -227,9 +249,13 @@ export function ImportarQuestoesMassa({ onClose }: { onClose: () => void }) {
                 value={concurso} 
                 onChange={(e) => setConcurso(e.target.value)}
                 className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm"
+                disabled={!!concursoPadrao}
               >
                 {CONCURSOS.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
+              {concursoPadrao && (
+                <p className="text-xs text-purple-400 mt-1">✓ Concurso do aluno</p>
+              )}
             </div>
             
             <div>
