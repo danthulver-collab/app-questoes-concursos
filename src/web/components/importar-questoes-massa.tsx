@@ -126,29 +126,35 @@ export function ImportarQuestoesMassa({
           alternativasMap['D'] || '(Alternativa não fornecida)'
         ];
         
-        // 4. Extrair PERGUNTA (tudo antes da primeira alternativa)
+        // 4. Extrair PERGUNTA (ANTES das alternativas, EXCLUINDO linhas de número/gabarito/comentário)
         const blocoAntes = bloco.split(/\n[A-E][\)\.]?\s/i)[0];
         const linhasPergunta = blocoAntes.split('\n').filter(l => {
           const trimmed = l.trim();
           return trimmed.length > 5 && 
                  !trimmed.match(/^Gabarito:/i) && 
                  !trimmed.match(/^Comentário:/i) &&
+                 !trimmed.match(/^Comentário Elaborado:/i) && // 🔥 IGNORAR essa linha
                  !trimmed.match(/^\d+\.?\s*$/); // Ignora linha com só número
         });
         
         if (linhasPergunta.length > 0) {
-          // Primeira linha é a pergunta
-          pergunta = linhasPergunta[0].trim().replace(/^\d+\.\s*/, ''); // Remove número inicial
+          // PRIMEIRA linha válida é a pergunta (remove número se tiver)
+          pergunta = linhasPergunta[0].trim().replace(/^\d+\.\s*/, '');
           
-          // Resto é contexto
+          // RESTO é contexto
           if (linhasPergunta.length > 1) {
             texto_contexto = linhasPergunta.slice(1).join('\n').trim();
           }
         }
         
-        // Se pergunta ainda está vazia ou é só número, usar texto padrão
-        if (!pergunta || pergunta.match(/^Questão \d+$/)) {
-          pergunta = texto_contexto.split('\n')[0] || `Questão ${idx + 1}`;
+        // Se pergunta ainda vazia ou é "Comentário", usar contexto como pergunta
+        if (!pergunta || pergunta.match(/^Comentário/i) || pergunta.length < 10) {
+          if (texto_contexto) {
+            pergunta = texto_contexto.split('\n')[0].substring(0, 200);
+            texto_contexto = texto_contexto.split('\n').slice(1).join('\n');
+          } else {
+            pergunta = `Questão ${idx + 1}`;
+          }
         }
         
         // Validar - aceita se tiver pelo menos 2 alternativas válidas
