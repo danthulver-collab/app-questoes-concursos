@@ -199,32 +199,54 @@ export function ImportarQuestoesMassa({
       // 🔥 Se sobrescrever, deletar questões antigas da matéria ANTES de importar
       if (sobrescrever) {
         setResultado(`🗑️ Removendo questões antigas de ${materia}...`);
+        
         try {
+          let deleted = 0;
+          
           if (areaId) {
             // Remover de questoes_areas
-            const { error } = await supabase
+            const materiaIdFinal = materiaId || materia.toLowerCase().replace(/\s+/g, '-').replace(/ê/g, 'e').replace(/ã/g, 'a').replace(/ç/g, 'c');
+            
+            console.log(`🗑️ Deletando: area_id=${areaId}, materia_id=${materiaIdFinal}`);
+            
+            const { data, error } = await supabase
               .from('questoes_areas')
               .delete()
               .eq('area_id', areaId)
-              .eq('materia_id', materiaId || materia.toLowerCase().replace(/\s+/g, '-'));
+              .eq('materia_id', materiaIdFinal)
+              .select();
             
-            if (error) console.error('Erro ao deletar:', error);
-            else console.log(`✅ Questões antigas de ${materia} removidas de questoes_areas`);
+            if (error) {
+              console.error('❌ Erro ao deletar:', error);
+            } else {
+              deleted = data?.length || 0;
+              console.log(`✅ ${deleted} questões antigas DELETADAS de questoes_areas`);
+            }
           } else {
-            // Remover de questoes
-            const { error } = await supabase
+            // Remover de questoes (banco geral)
+            console.log(`🗑️ Deletando: disciplina=${materia}`);
+            
+            const { data, error } = await supabase
               .from('questoes')
               .delete()
-              .eq('disciplina', materia);
+              .eq('disciplina', materia)
+              .select();
             
-            if (error) console.error('Erro ao deletar:', error);
-            else console.log(`✅ Questões antigas de ${materia} removidas de questoes`);
+            if (error) {
+              console.error('❌ Erro ao deletar:', error);
+            } else {
+              deleted = data?.length || 0;
+              console.log(`✅ ${deleted} questões antigas DELETADAS de questoes`);
+            }
           }
           
-          // Aguardar 1 segundo para garantir que deletou
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          setResultado(`🗑️ ${deleted} questões antigas removidas. Inserindo novas...`);
+          
+          // Aguardar 2 segundos para garantir que deletou
+          await new Promise(resolve => setTimeout(resolve, 2000));
         } catch (e) {
           console.error('Erro ao remover antigas:', e);
+          alert(`Erro ao deletar antigas: ${e}`);
         }
       }
       
