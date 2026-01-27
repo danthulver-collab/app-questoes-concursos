@@ -243,33 +243,28 @@ Responda de forma clara, didática e objetiva, focando em ajudar o aluno a enten
           {/* Coluna da Questão */}
           <div className="lg:col-span-2">
             <div className="bg-white/5 rounded-2xl p-8">
-              {/* 🔥 Botão "VER MAIS" - SEMPRE APARECE se tem texto_contexto */}
-              {questao.texto_contexto && (
-                <button
-                  onClick={() => setMostrarTextoContexto(!mostrarTextoContexto)}
-                  className="mb-4 px-5 py-3 bg-gradient-to-r from-blue-500/30 to-purple-500/30 hover:from-blue-500/40 hover:to-purple-500/40 text-blue-300 rounded-xl text-sm font-bold flex items-center gap-3 transition-all border border-blue-500/30 hover:border-blue-400/50 shadow-lg shadow-blue-500/10"
-                >
-                  <span className="text-xl">{mostrarTextoContexto ? '📖' : '📄'}</span>
-                  <span>{mostrarTextoContexto ? 'Ocultar Texto Completo' : '👁️ VER MAIS - Texto Completo da Questão'}</span>
-                  <span className="text-lg">{mostrarTextoContexto ? '▲' : '▼'}</span>
-                </button>
-              )}
               
-              {/* Texto contexto expandido */}
-              {mostrarTextoContexto && questao.texto_contexto && (
-                <div className="mb-6 p-5 bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-blue-500/30 rounded-2xl">
-                  <div className="flex items-center gap-2 mb-3 pb-3 border-b border-white/10">
-                    <span className="text-lg">📋</span>
-                    <span className="text-blue-300 font-semibold text-sm">TEXTO COMPLETO DA QUESTÃO</span>
+              {/* 🔥 PERGUNTA - Com botão VER MAIS se for longa */}
+              {questao.title && questao.title.length > 150 ? (
+                <div className="mb-6">
+                  {/* Versão curta ou completa */}
+                  <div className="text-xl text-white font-semibold leading-relaxed whitespace-pre-wrap">
+                    {mostrarTextoContexto ? questao.title : questao.title.substring(0, 150) + '...'}
                   </div>
-                  <p className="text-gray-200 text-base whitespace-pre-wrap leading-relaxed">
-                    {questao.texto_contexto}
-                  </p>
+                  
+                  {/* Botão VER MAIS / VER MENOS */}
+                  <button
+                    onClick={() => setMostrarTextoContexto(!mostrarTextoContexto)}
+                    className="mt-4 px-5 py-2.5 bg-gradient-to-r from-emerald-500/20 to-blue-500/20 hover:from-emerald-500/30 hover:to-blue-500/30 text-emerald-400 rounded-xl text-sm font-bold flex items-center gap-2 transition-all border border-emerald-500/30 hover:border-emerald-400/50"
+                  >
+                    <span>{mostrarTextoContexto ? '▲' : '▼'}</span>
+                    <span>{mostrarTextoContexto ? 'VER MENOS' : '👁️ VER MAIS'}</span>
+                  </button>
                 </div>
+              ) : (
+                /* Pergunta curta - mostra normal */
+                <h2 className="text-xl text-white font-semibold mb-6 whitespace-pre-wrap">{questao.title}</h2>
               )}
-              
-              {/* Pergunta */}
-              <h2 className="text-xl text-white font-semibold mb-6">{questao.title}</h2>
 
               <div className="space-y-3">
                 {['A', 'B', 'C', 'D'].map((opcao, index) => {
