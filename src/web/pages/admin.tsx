@@ -370,9 +370,12 @@ function GerenciarAreasHierarquico({ showSaveMessage, onGoToQuestoes }: { showSa
                     saveQuizData(data);
                     alert("✅ Matéria criada e salva no Supabase!");
                     
-                    // Forçar reload
+                    // 🔥 BROADCAST - força TODOS navegadores atualizarem
+                    localStorage.setItem('force_reload_timestamp', Date.now().toString());
+                    
+                    // Forçar reload IMEDIATO
                     await syncSupabaseToLocalStorage();
-                    refresh();
+                    window.location.reload();
                   } catch (error) {
                     console.error('❌ ERRO:', error);
                     alert(`ERRO: ${error}`);
@@ -1959,8 +1962,18 @@ function AdminPage() {
       }
     });
     
-    // Iniciar auto-sync a cada 10 segundos
+    // Iniciar auto-sync a cada 3 segundos
     startAutoSync();
+    
+    // 🔥 LISTENER - detecta quando outro navegador cria algo
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'force_reload_timestamp') {
+        console.log('🔄 Detectou mudança - recarregando...');
+        syncSupabaseToLocalStorage().then(() => {
+          window.location.reload();
+        });
+      }
+    });
     
     // Load config
     const storedConfig = localStorage.getItem(CONFIG_STORAGE_KEY);
