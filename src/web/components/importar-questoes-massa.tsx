@@ -165,6 +165,8 @@ export function ImportarQuestoesMassa({
           if (areaId) {
             const materiaIdFinal = materiaId || materia.toLowerCase().replace(/\s+/g, '-').replace(/ê/g, 'e').replace(/ã/g, 'a').replace(/ç/g, 'c');
             
+            console.log(`🔥 Salvando questão: area_id=${areaId}, materia_id=${materiaIdFinal}`);
+            
             const questaoArea = {
               id: `${areaId}_${materiaIdFinal}_${Date.now()}_${i}`,
               area_id: areaId,
@@ -179,8 +181,10 @@ export function ImportarQuestoesMassa({
             const result = await saveQuestaoSupabase(questaoArea);
             
             if (result) {
+              console.log(`✅ Questão salva: ${questaoArea.id}`);
               sucesso++;
             } else {
+              console.log(`❌ Falha ao salvar questão ${i}`);
               erros++;
             }
           } else {
