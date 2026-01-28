@@ -153,6 +153,7 @@ export function ImportarQuestoesMassa({
             // Salvar em questoes_areas (para Áreas e Carreiras)
             const materiaIdFinal = materiaId || materia.toLowerCase().replace(/\s+/g, '-').replace(/ê/g, 'e').replace(/ã/g, 'a').replace(/ç/g, 'c');
             
+            console.log("🔥 Q parseada:", { pergunta: q.pergunta.substring(0,50), tem_contexto: !!q.texto_contexto, contexto: q.texto_contexto?.substring(0,100) });
             const questaoArea = {
               id: `${areaId}_${materiaIdFinal}_${Date.now()}_${i}`,
               area_id: areaId,
