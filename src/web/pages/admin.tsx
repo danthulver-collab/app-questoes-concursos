@@ -355,7 +355,7 @@ function GerenciarAreasHierarquico({ showSaveMessage, onGoToQuestoes }: { showSa
                   <span className="font-bold text-white flex-1">{mat.nome}</span>
                   <div className="flex gap-2">
                     <button
-                      onClick={() => {
+                      onClick={async () => {
                         const nome = prompt("Novo nome:", mat.nome);
                         if (nome) {
                           const data = getQuizData();
@@ -371,7 +371,7 @@ function GerenciarAreasHierarquico({ showSaveMessage, onGoToQuestoes }: { showSa
                       ✏️
                     </button>
                     <button
-                      onClick={() => {
+                      onClick={async () => {
                         if (confirm(`Deletar "${mat.nome}"?`)) {
                           const data = getQuizData();
                           data.disciplinas = data.disciplinas.filter(d => d.id !== mat.id);
@@ -587,7 +587,7 @@ function QuestoesAreasEditor({ showSaveMessage }: { showSaveMessage: (msg?: stri
             </div>
             <div className="flex gap-3">
               <button 
-                onClick={() => {
+                onClick={async () => {
                   const nome = prompt("Nome da nova matéria:");
                   if (!nome) return;
                   const data = getQuizData();
@@ -4031,7 +4031,7 @@ function AdminPage() {
                   <span>➕</span> Adicionar Carreira
                 </button>
                 <button
-                  onClick={() => {
+                  onClick={async () => {
                     const nome = prompt("Nome da Matéria:");
                     if (!nome) return;
                     const data = getQuizData();
@@ -4158,7 +4158,7 @@ function AdminPage() {
                         <span className="font-bold text-white text-xs truncate flex-1">{mat.nome}</span>
                         <div className="flex gap-1 flex-shrink-0">
                           <button
-                            onClick={() => {
+                            onClick={async () => {
                               const nome = prompt("Novo nome:", mat.nome);
                               if (nome) {
                                 const data = getQuizData();
@@ -4173,7 +4173,7 @@ function AdminPage() {
                             ✏️
                           </button>
                           <button
-                            onClick={() => {
+                            onClick={async () => {
                               if (confirm(`Deletar "${mat.nome}"?`)) {
                                 const data = getQuizData();
                                 data.disciplinas = data.disciplinas.filter(d => d.id !== mat.id);
