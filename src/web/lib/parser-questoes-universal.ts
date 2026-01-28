@@ -48,10 +48,9 @@ export function parsearQuestoesUniversal(textoOriginal: string): QuestaoParseada
     const comentMatch = bloco.match(/Comentário:\s*([\s\S]+?)$/i);
     let comentario = comentMatch ? comentMatch[1].trim() : '';
     
-    // 🔥 CORTE NO PRIMEIRO PONTO FINAL + NOVA LINHA
-    comentario = comentario.split(/\.\s*\n/)[0] + '.';
-    comentario = comentario.split(/\n\nQUESTÃO/i)[0];
-    comentario = comentario.split(/\n\d+\.\s+[A-Z]/)[0];
+    // 🔥 CORTE SUPER AGRESSIVO: Só PRIMEIRA frase (até ponto final)
+    const primeiraFrase = comentario.split(/\.\s+[A-Z]|\.\s*\n/)[0];
+    comentario = primeiraFrase + (primeiraFrase.endsWith('.') ? '' : '.');
     comentario = comentario.trim();
     
     // ALTERNATIVAS (COMPLETAS, preserva quebras de linha)
