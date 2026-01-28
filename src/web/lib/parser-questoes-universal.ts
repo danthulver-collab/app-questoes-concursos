@@ -1,5 +1,5 @@
 /**
- * 🔥 PARSER DEFINITIVO - TESTADO COM SUAS 4 QUESTÕES
+ * PARSER DEFINITIVO - SALVA TUDO NO TITLE
  */
 
 export interface QuestaoParseada {
@@ -14,29 +14,28 @@ export function parsearQuestoesUniversal(textoOriginal: string): QuestaoParseada
   const questoes: QuestaoParseada[] = [];
   let texto = textoOriginal.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
   
-  // SEPARAR POR "Gabarito:" usando lookahead
+  // Separar por "Gabarito:"
   const blocos = texto.split(/(?=Gabarito:\s*[A-E])/i).filter(b => b.match(/Gabarito:\s*[A-E]/i));
   
-  console.log(`📊 ${blocos.length} questões detectadas por Gabarito:`);
+  console.log(`📊 ${blocos.length} questões detectadas`);
   
   for (let i = 0; i < blocos.length; i++) {
     const bloco = blocos[i];
     
-    // Pegar conteúdo ANTERIOR a este Gabarito (é a questão)
-    let questaoCompleta = '';
+    // Buscar início desta questão
+    let questaoTexto = '';
     if (i === 0) {
-      // Primeira questão: pegar tudo antes do primeiro Gabarito
       const posGab = texto.indexOf('Gabarito:');
-      questaoCompleta = texto.substring(0, posGab);
+      questaoTexto = texto.substring(0, posGab);
     } else {
-      // Demais: pegar entre o Comentário anterior e este Gabarito
-      const blocoAnterior = blocos[i-1];
-      const posComentAnterior = texto.indexOf(blocoAnterior) + blocoAnterior.indexOf('Comentário:');
+      const blocoAnt = blocos[i-1];
+      const posComentAnt = texto.indexOf(blocoAnt) + blocoAnt.lastIndexOf('Comentário:');
+      const fimComentAnt = texto.indexOf('QUESTÃO', posComentAnt);
       const posGabAtual = texto.indexOf(bloco);
-      questaoCompleta = texto.substring(posComentAnterior, posGabAtual);
-      // Limpar o "Comentário: texto" do anterior
-      questaoCompleta = questaoCompleta.replace(/Comentário:[\s\S]+?(?=QUESTÃO|$)/i, '').trim();
+      questaoTexto = texto.substring(fimComentAnt > 0 ? fimComentAnt : posComentAnt, posGabAtual);
     }
+    
+    questaoTexto = questaoTexto.replace(/Comentário:[\s\S]*/, '').trim();
     
     // GABARITO
     const gabMatch = bloco.match(/Gabarito:\s*([A-E])/i);
@@ -47,8 +46,8 @@ export function parsearQuestoesUniversal(textoOriginal: string): QuestaoParseada
     const comentMatch = bloco.match(/Comentário:\s*([\s\S]+?)$/i);
     const comentario = comentMatch ? comentMatch[1].trim() : '';
     
-    // EXTRAIR ALTERNATIVAS
-    const altMatches = [...questaoCompleta.matchAll(/([A-E])\)\s+([^\n]+(?:\n(?![A-E]\))[^\n]+)*)/gi)];
+    // ALTERNATIVAS
+    const altMatches = [...questaoTexto.matchAll(/([A-E])\)\s+([^\n]+(?:\n(?![A-E]\))[^\n]+)*)/gi)];
     const altMap: any = {};
     altMatches.forEach(m => altMap[m[1].toUpperCase()] = m[2].trim().replace(/\s+/g, ' '));
     
@@ -56,56 +55,23 @@ export function parsearQuestoesUniversal(textoOriginal: string): QuestaoParseada
       altMap.A || '', altMap.B || '', altMap.C || '', altMap.D || ''
     ];
     
-    // EXTRAIR ASSERTIVAS (I. II. III. IV. V.)
-    const assertivasMatch = questaoCompleta.match(/(I\.\s+.+?)(?=\n[A-E]\))/s);
-    const assertivas = assertivasMatch ? assertivasMatch[1].trim() : '';
-    
-    // EXTRAIR PERGUNTA (tudo até as assertivas ou até as alternativas)
-    let pergunta = questaoCompleta;
-    pergunta = pergunta.replace(/^QUESTÃO\s+\d+\s*[–-]\s*/i, '');
-    
-    if (assertivas) {
-      pergunta = pergunta.substring(0, pergunta.indexOf('I.')).trim();
-    } else {
-      pergunta = pergunta.split(/\n[A-E]\)/)[0].trim();
-    }
-    
-    // Separar enunciado e comando
-    const linhas = pergunta.split('\n').filter(l => l.trim().length > 5);
-    let comando = '';
-    let enunciado = '';
-    
-    for (let j = linhas.length - 1; j >= 0; j--) {
-      if (linhas[j].match(/analise|assinale|considere|acerca/i)) {
-        comando = linhas[j];
-        enunciado = linhas.slice(0, j).join('\n');
-        break;
-      }
-    }
-    
-    if (!comando) {
-      comando = linhas[linhas.length - 1];
-      enunciado = linhas.slice(0, -1).join('\n');
-    }
-    
-    // MONTAR CONTEXTO
-    let texto_contexto = '';
-    if (enunciado) texto_contexto += enunciado;
-    if (assertivas) texto_contexto += (texto_contexto ? '\n\n' : '') + assertivas;
+    // 🔥 PERGUNTA = TUDO até a primeira alternativa (SEM SEPARAR!)
+    let perguntaCompleta = questaoTexto.split(/\n[A-E]\)/)[0].trim();
+    perguntaCompleta = perguntaCompleta.replace(/^QUESTÃO\s+\d+\s*[–-]\s*/i, '');
     
     const altValidas = alternativas.filter(a => a.length > 3).length;
-    if (altValidas >= 2) {
+    if (altValidas >= 2 && perguntaCompleta.length > 10) {
       questoes.push({
-        pergunta: comando,
+        pergunta: perguntaCompleta, // 🔥 TUDO AQUI (enunciado + assertivas + comando)
         alternativas,
         correta: correta as 0|1|2|3,
         comentario,
-        texto_contexto: texto_contexto.trim() || undefined
+        texto_contexto: undefined // Não usar mais
       });
-      console.log(`✅ Q${questoes.length}: ${comando.substring(0,50)} | Contexto: ${!!texto_contexto}`);
+      console.log(`✅ Q${questoes.length} com ${perguntaCompleta.length} chars`);
     }
   }
   
-  console.log(`\n🎯 TOTAL: ${questoes.length} questões parseadas`);
+  console.log(`🎯 TOTAL: ${questoes.length} questões`);
   return questoes;
 }
