@@ -322,24 +322,34 @@ function GerenciarAreasHierarquico({ showSaveMessage, onGoToQuestoes }: { showSa
                 onClick={async () => {
                   const nome = prompt("Nome da nova Matéria:");
                   if (!nome) return;
-                  const data = getQuizData();
-                  const newMateria = {
-                    id: nome.toLowerCase().replace(/\s+/g, '-'),
-                    nome: nome.trim()
-                  };
-                  data.disciplinas.push(newMateria);
                   
-                  const area = data.areas.find(a => a.id === selectedAreaId);
-                  if (area && !area.materias.includes(newMateria.id)) {
-                    area.materias.push(newMateria.id);
+                  try {
+                    const data = getQuizData();
+                    const newMateria = {
+                      id: nome.toLowerCase().replace(/\s+/g, '-'),
+                      nome: nome.trim()
+                    };
+                    data.disciplinas.push(newMateria);
                     
-                    // 🔥 Salvar área atualizada no Supabase
-                    await saveAreaSupabase(area);
+                    const area = data.areas.find(a => a.id === selectedAreaId);
+                    if (area && !area.materias.includes(newMateria.id)) {
+                      area.materias.push(newMateria.id);
+                      
+                      console.log('🔥 Salvando área no Supabase:', area);
+                      const resultArea = await saveAreaSupabase(area);
+                      console.log('✅ Área salva:', resultArea);
+                    }
+                    
+                    console.log('🔥 Salvando tudo no Supabase...');
+                    await salvarTudoSupabase(data);
+                    console.log('✅ Tudo salvo!');
+                    
+                    showSaveMessage("Matéria criada e salva no Supabase!");
+                    refresh();
+                  } catch (error) {
+                    console.error('❌ ERRO ao salvar matéria:', error);
+                    alert(`Erro ao salvar: ${error}`);
                   }
-                  
-                  await salvarTudoSupabase(data);
-                  showSaveMessage("Matéria criada e salva no Supabase!");
-                  refresh();
                 }}
                 className="px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl font-bold hover:scale-105 transition-transform"
               >
