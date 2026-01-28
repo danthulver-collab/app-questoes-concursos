@@ -369,6 +369,15 @@ function GerenciarAreasHierarquico({ showSaveMessage, onGoToQuestoes }: { showSa
                   }
                   
                   saveQuizData(data);
+                  
+                  // 🔥 Salvar no Supabase
+                  (async () => {
+                    const { saveMateriaSupabase } = await import("../lib/supabase-materias");
+                    const { saveAreaSupabase } = await import("../lib/supabase-areas");
+                    await saveMateriaSupabase({ id: newMateria.id, nome: newMateria.nome, area_id: selectedAreaId });
+                    if (area) await saveAreaSupabase(area);
+                    console.log("✅ Matéria salva no Supabase");
+                  })();
                   showSaveMessage("Matéria criada!");
                   refresh();
                 }}
