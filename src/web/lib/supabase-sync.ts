@@ -6,6 +6,7 @@
 import { supabase } from './supabase';
 import { savePacoteToSupabase, saveQuestaoToSupabase, getPacotesFromSupabase, getQuestoesFromSupabase } from './supabase-pacotes';
 import { getAreasFromSupabase, getCarreirasFromSupabase } from './supabase-areas';
+import { getMateriasFromSupabase } from './supabase-materias';
 import { getQuizData, saveQuizData, type QuizData, type Pacote, type Question } from './quiz-store';
 
 /**
@@ -58,6 +59,10 @@ export const syncSupabaseToLocalStorage = async () => {
     const carreirasSupabase = await getCarreirasFromSupabase();
     console.log(`👔 ${carreirasSupabase.length} carreiras do Supabase`);
     
+    // Buscar MATÉRIAS do Supabase
+    const materiasSupabase = await getMateriasFromSupabase();
+    console.log(`📚 ${materiasSupabase.length} matérias do Supabase`);
+    
     // Buscar PACOTES do Supabase
     const pacotesSupabase = await getPacotesFromSupabase();
     console.log(`📦 ${pacotesSupabase.length} pacotes do Supabase`);
@@ -66,11 +71,18 @@ export const syncSupabaseToLocalStorage = async () => {
     const questoesSupabase = await getQuestoesFromSupabase();
     console.log(`📝 ${questoesSupabase.length} questões do Supabase`);
     
+    // Converter matérias para formato do quiz-store
+    const disciplinas = materiasSupabase.map(m => ({
+      id: m.id,
+      nome: m.nome
+    }));
+    
     // Atualizar com dados do Supabase (Supabase é source of truth)
     const newData = {
       ...quizData,
       areas: areasSupabase.length > 0 ? areasSupabase : quizData.areas,
       carreiras: carreirasSupabase.length > 0 ? carreirasSupabase : quizData.carreiras,
+      disciplinas: disciplinas.length > 0 ? disciplinas : quizData.disciplinas,
       pacotes: pacotesSupabase,
       questions: questoesSupabase
     };

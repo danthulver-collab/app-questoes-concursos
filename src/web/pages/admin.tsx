@@ -36,7 +36,7 @@ import {
   updateCarreira,
   deleteCarreira
 } from "../lib/quiz-store";
-import { salvarTudoSupabase } from "../lib/sync-tudo-supabase";
+import { saveMateriaSupabase } from './supabase-materias';
 import { AppHeader } from "../components/app-header";
 import { NotificationBell } from "../components/notification-bell";
 import { loadAIConfig, saveAIConfig } from "../components/ai-chat-panel";
@@ -338,7 +338,14 @@ function GerenciarAreasHierarquico({ showSaveMessage, onGoToQuestoes }: { showSa
                       
                       console.log('🔥 Salvando área DIRETAMENTE:', area);
                       
-                      // 🔥 SALVAR DIRETO NO SUPABASE (não usar salvarTudoSupabase)
+                      // 🔥 SALVAR MATÉRIA NO SUPABASE
+                      await saveMateriaSupabase({
+                        id: newMateria.id,
+                        nome: newMateria.nome,
+                        area_id: selectedAreaId
+                      });
+                      
+                      // 🔥 SALVAR ÁREA ATUALIZADA
                       const { error } = await supabase
                         .from('areas')
                         .upsert({
