@@ -99,13 +99,29 @@ export const syncSupabaseToLocalStorage = async () => {
 
 /**
  * Auto-sync a cada 3 segundos (para múltiplos admins/PCs)
+ * APENAS NA PÁGINA ADMIN
  */
+let syncInterval: any = null;
+
 export const startAutoSync = () => {
+  // Limpar intervalo anterior se existir
+  if (syncInterval) {
+    clearInterval(syncInterval);
+  }
+  
   // Sincronização inicial
   syncSupabaseToLocalStorage();
   
   // Auto-sync a cada 3 segundos
-  setInterval(() => {
+  syncInterval = setInterval(() => {
     syncSupabaseToLocalStorage();
   }, 3000);
+};
+
+// Parar auto-sync (quando sai da página admin)
+export const stopAutoSync = () => {
+  if (syncInterval) {
+    clearInterval(syncInterval);
+    syncInterval = null;
+  }
 };
