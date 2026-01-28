@@ -7,7 +7,6 @@ import { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { saveQuestaoToSupabase } from '../lib/supabase-pacotes';
 import { saveQuestaoSupabase } from '../lib/supabase-questoes';
-import { parsearQuestoesUniversal } from '../lib/parser-questoes-universal';
 
 const MATERIAS = [
   'Portugues', 'Matematica', 'Informatica', 
@@ -24,19 +23,18 @@ interface QuestaoImportada {
   alternativas: [string, string, string, string];
   correta: 0 | 1 | 2 | 3;
   comentario: string;
-  texto_contexto?: string;
 }
 
 interface ImportarQuestoesMassaProps {
   onClose: () => void;
-  materiasFiltradas?: string[]; // 🔥 Se passar, mostra apenas essas matérias
-  bancaPadrao?: string; // 🔥 Banca pré-selecionada
-  concursoPadrao?: string; // 🔥 Concurso pré-selecionado
-  materiaSelecionada?: string; // 🔥 Matéria já selecionada (pacotes exclusivos)
-  areaId?: string; // 🔥 Se vier de Áreas, salva em questoes_areas
-  materiaId?: string; // 🔥 ID da matéria para questoes_areas
-  pacoteId?: string; // 🔥 Se vier de Pacote, vincula questões ao pacote
-  onQuestoesImportadas?: (questoesIds: string[]) => void; // Callback com IDs criados
+  materiasFiltradas?: string[];
+  bancaPadrao?: string;
+  concursoPadrao?: string;
+  materiaSelecionada?: string;
+  areaId?: string;
+  materiaId?: string;
+  pacoteId?: string;
+  onQuestoesImportadas?: (questoesIds: string[]) => void;
 }
 
 export function ImportarQuestoesMassa({ 
@@ -59,7 +57,7 @@ export function ImportarQuestoesMassa({
   const [textoQuestoes, setTextoQuestoes] = useState('');
   const [processando, setProcessando] = useState(false);
   const [resultado, setResultado] = useState('');
-  const [sobrescrever, setSobrescrever] = useState(false); // 🔥 Opção sobrescrever
+  const [sobrescrever, setSobrescrever] = useState(false);
 
   const parsearQuestoes = (texto: string): QuestaoImportada[] => {
     const questoes: QuestaoImportada[] = [];
@@ -74,7 +72,7 @@ export function ImportarQuestoesMassa({
       const blocoDepois = blocosBrutos[i] || '';
       let blocoAntes = blocosBrutos[i-2] || '';
       
-      // 🔥 LIMPAR "Comentário:" da questão anterior que ficou grudado
+      // 🔥 Limpar "Comentário:" grudado da questão anterior
       blocoAntes = blocoAntes.replace(/^[\s\S]*?Comentário:[\s\S]*?\n\s*(\d+[\.\)])/i, '$1');
       
       const correta = {'A':0,'B':1,'C':2,'D':3,'E':4}[gabarito] || 0;
@@ -83,97 +81,33 @@ export function ImportarQuestoesMassa({
       const comMatch = blocoDepois.match(/Comentário:\s*(.+?)(?=\n\d+\.|$)/is);
       const comentario = comMatch ? comMatch[1].trim() : `Gabarito: ${gabarito}`;
       
-      // 🔥 TIPO 1: QUESTÃO V/F COM ( )
-      if (blocoAntes.match(/\(\s*\)/g)?.length >= 2) {
-        
-        // Extrair linha de comando (assinale, marque, indique)
-        const comandoMatch = blocoAntes.match(/(assinale|marque|indique|considere).+?(?=\n\(|$)/is);
-        const comando = comandoMatch ? comandoMatch[0].trim() : 'Assinale V (verdadeiro) ou F (falso):';
-        
-        // Extrair enunciado (primeira linha longa)
-        const linhasIniciais = blocoAntes.split(/\(\s*\)/)[0].split('\n')
-          .filter(l => l.trim().length > 30);
-        const enunciado = linhasIniciais.filter(l => !l.match(/assinale|marque/i)).join('\n');
-        
-        // Extrair assertivas com ( )
-        const afirmativasBruto = blocoAntes.split(/\(\s*\)/).slice(1);
-        let assertivas = '';
-        afirmativasBruto.forEach((af, idx) => {
-          const texto = af.split(/\n[A-E][\)\.]?\s/i)[0].trim();
-          if (texto.length > 10) {
-            assertivas += `${['I','II','III','IV','V','VI'][idx]}. ${texto}\n`;
-          }
-        });
-        
-        // Extrair alternativas V-F
-        const altMatch = [...blocoAntes.matchAll(/([A-E])[\)\.]?\s*([VF\s–\-]+)/gi)];
-        const altMap: any = {};
-        altMatch.forEach(m => altMap[m[1].toUpperCase()] = m[2].trim());
-        
-        // 🔥 JUNTA TUDO NO CAMPO PERGUNTA
-        const perguntaCompleta = [enunciado, comando, assertivas, 'A sequência correta é:'].filter(p => p).join('\n\n').trim();
-        
+      // 🔥 EXTRAIR ALTERNATIVAS (para saber onde termina a pergunta)
+      const altMatch = [...blocoAntes.matchAll(/\n\s*([A-E])[\)\.]?\s+([^\n]+)/gi)];
+      const altMap: any = {};
+      altMatch.forEach(m => altMap[m[1].toUpperCase()] = m[2].trim());
+      
+      const alternativas = [altMap.A||'',altMap.B||'',altMap.C||'',altMap.D||''];
+      
+      // 🔥 PERGUNTA = TUDO antes da primeira alternativa "A)"
+      // Não processa, não separa, só pega TUDO
+      let perguntaCompleta = blocoAntes.split(/\nA[\)\.]?\s/i)[0];
+      
+      // Remove número da questão no início (1. ou 01.)
+      perguntaCompleta = perguntaCompleta.replace(/^\s*\d+[\.\)]\s*/,'').trim();
+      
+      console.log(`✅ Q${questoes.length + 1} (${perguntaCompleta.length} chars): ${perguntaCompleta.substring(0,100)}...`);
+      
+      if (alternativas.filter(a=>a.length>2).length >= 2 && perguntaCompleta.length > 10) {
         questoes.push({
-          pergunta: perguntaCompleta.replace(/^\d+\.\s*/,''), // 🔥 TUDO JUNTO
-          alternativas: [altMap.A||'',altMap.B||'',altMap.C||'',altMap.D||''] as any,
+          pergunta: perguntaCompleta,
+          alternativas: alternativas as any,
           correta: correta as any,
           comentario
         });
-        
-        console.log(`✅ V/F: ${perguntaCompleta.substring(0,40)}`);
-        
-      } else {
-        // 🔥 TIPO 2: QUESTÃO NORMAL OU ASSERTIVAS I, II, III
-        
-        // Alternativas
-        const altMatch = [...blocoAntes.matchAll(/([A-E])[\)\.]?\s+([^\n]+(?:\n(?![A-E][\)\.])[^\n]+)*)/gi)];
-        const altMap: any = {};
-        altMatch.forEach(m => altMap[m[1].toUpperCase()] = m[2].trim().replace(/\s+/g,' ')); // 🔥 SEM LIMITE
-        
-        const alternativas = [altMap.A||'',altMap.B||'',altMap.C||'',altMap.D||''];
-        
-        // Pergunta (procura linha com ?, :, EXCETO, correta, assinale)
-        const linhas = blocoAntes.split(/\n[A-E][\)\.]?\s/i)[0].split('\n')
-          .map(l=>l.trim())
-          .filter(l=>l.length>10 && !l.match(/^\d+\.?\s*$/));
-        
-        let indicePergunta = -1;
-        for (let j = linhas.length - 1; j >= 0; j--) {
-          if (linhas[j].match(/[?:]$|EXCETO|incorreta|correta|assinale|marque|indique/i)) {
-            indicePergunta = j;
-            break;
-          }
-        }
-        
-        let pergunta = '';
-        let contexto = '';
-        
-        if (indicePergunta >= 0) {
-          pergunta = linhas[indicePergunta];
-          contexto = linhas.slice(0, indicePergunta).join('\n');
-        } else {
-          pergunta = linhas[linhas.length-1] || `Questão ${i/2}`;
-          contexto = linhas.slice(0,-1).join('\n');
-        }
-        
-        pergunta = pergunta.replace(/^\d+\.\s*/,'');
-        
-        // 🔥 JUNTA CONTEXTO + PERGUNTA (tudo no campo pergunta)
-        const perguntaCompleta = contexto ? `${contexto}\n\n${pergunta}` : pergunta;
-        
-        if (alternativas.filter(a=>a.length>2).length >= 2) {
-          questoes.push({
-            pergunta: perguntaCompleta, // 🔥 TUDO JUNTO
-            alternativas: alternativas as any,
-            correta: correta as any,
-            comentario
-          });
-          console.log(`✅ Normal: ${perguntaCompleta.substring(0,50)}`);
-        }
       }
     }
     
-    console.log(`✅ TOTAL: ${questoes.length} questões`);
+    console.log(`✅ TOTAL: ${questoes.length} questões parseadas`);
     return questoes;
   };
 
@@ -197,7 +131,6 @@ export function ImportarQuestoesMassa({
       
       setResultado(`✅ ${questoesParseadas.length} questões identificadas. Inserindo no banco...`);
       
-      // 🔥 Se sobrescrever, deletar questões antigas da matéria ANTES de importar
       if (sobrescrever) {
         setResultado(`🗑️ Removendo questões antigas de ${materia}...`);
         
@@ -205,10 +138,7 @@ export function ImportarQuestoesMassa({
           let deleted = 0;
           
           if (areaId) {
-            // Remover de questoes_areas
             const materiaIdFinal = materiaId || materia.toLowerCase().replace(/\s+/g, '-').replace(/ê/g, 'e').replace(/ã/g, 'a').replace(/ç/g, 'c');
-            
-            console.log(`🗑️ Deletando: area_id=${areaId}, materia_id=${materiaIdFinal}`);
             
             const { data, error } = await supabase
               .from('questoes_areas')
@@ -221,12 +151,8 @@ export function ImportarQuestoesMassa({
               console.error('❌ Erro ao deletar:', error);
             } else {
               deleted = data?.length || 0;
-              console.log(`✅ ${deleted} questões antigas DELETADAS de questoes_areas`);
             }
           } else {
-            // Remover de questoes (banco geral)
-            console.log(`🗑️ Deletando: disciplina=${materia}`);
-            
             const { data, error } = await supabase
               .from('questoes')
               .delete()
@@ -237,31 +163,25 @@ export function ImportarQuestoesMassa({
               console.error('❌ Erro ao deletar:', error);
             } else {
               deleted = data?.length || 0;
-              console.log(`✅ ${deleted} questões antigas DELETADAS de questoes`);
             }
           }
           
           setResultado(`🗑️ ${deleted} questões antigas removidas. Inserindo novas...`);
-          
-          // Aguardar 2 segundos para garantir que deletou
           await new Promise(resolve => setTimeout(resolve, 2000));
         } catch (e) {
           console.error('Erro ao remover antigas:', e);
-          alert(`Erro ao deletar antigas: ${e}`);
         }
       }
       
       let sucesso = 0;
       let erros = 0;
-      const questoesIdsImportados: string[] = []; // 🔥 Guardar IDs para vincular ao pacote
+      const questoesIdsImportados: string[] = [];
       
       for (let i = 0; i < questoesParseadas.length; i++) {
         const q = questoesParseadas[i];
         
         try {
-          // 🔥 Salvar na tabela correta baseado no contexto
           if (areaId) {
-            // Salvar em questoes_areas (para Áreas e Carreiras)
             const materiaIdFinal = materiaId || materia.toLowerCase().replace(/\s+/g, '-').replace(/ê/g, 'e').replace(/ã/g, 'a').replace(/ç/g, 'c');
             
             const questaoArea = {
@@ -272,8 +192,7 @@ export function ImportarQuestoesMassa({
               options: q.alternativas,
               correct_answer: q.correta,
               explanation: q.comentario,
-              plano: plano,
-              texto_contexto: q.texto_contexto
+              plano: plano
             };
             
             const result = await saveQuestaoSupabase(questaoArea);
@@ -284,7 +203,6 @@ export function ImportarQuestoesMassa({
               erros++;
             }
           } else {
-            // Salvar em questoes (banco geral)
             const questaoId = `${materia.toLowerCase()}_${Date.now()}_${i}`;
             const questao = {
               id: questaoId,
@@ -296,15 +214,14 @@ export function ImportarQuestoesMassa({
               concurso: concurso,
               ano: ano,
               comentario: q.comentario,
-              dificuldade: dificuldade,
-              texto_contexto: q.texto_contexto
+              dificuldade: dificuldade
             };
             
             const result = await saveQuestaoToSupabase(questao);
             
             if (result.success) {
               sucesso++;
-              questoesIdsImportados.push(questaoId); // Guardar ID
+              questoesIdsImportados.push(questaoId);
             } else {
               erros++;
             }
@@ -320,7 +237,6 @@ export function ImportarQuestoesMassa({
       setResultado(`✅ Importação concluída!\n\n${sucesso} questões inseridas\n${erros} erros`);
       
       if (sucesso > 0) {
-        // 🔥 Se tem callback, chama com os IDs (para vincular ao pacote)
         if (onQuestoesImportadas && questoesIdsImportados.length > 0) {
           onQuestoesImportadas(questoesIdsImportados);
         }
@@ -356,13 +272,11 @@ export function ImportarQuestoesMassa({
                 value={materia} 
                 onChange={(e) => setMateria(e.target.value)}
                 className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm"
-                disabled={!!materiaSelecionada}
               >
-                {(materiasFiltradas || MATERIAS).map(m => <option key={m} value={m}>{m}</option>)}
+                {(materiasFiltradas || MATERIAS).map(m => (
+                  <option key={m} value={m}>{m}</option>
+                ))}
               </select>
-              {materiaSelecionada && (
-                <p className="text-xs text-purple-400 mt-1">✓ Matéria do pacote</p>
-              )}
             </div>
             
             <div>
@@ -371,13 +285,11 @@ export function ImportarQuestoesMassa({
                 value={banca} 
                 onChange={(e) => setBanca(e.target.value)}
                 className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm"
-                disabled={!!bancaPadrao}
               >
-                {BANCAS.map(b => <option key={b} value={b}>{b}</option>)}
+                {BANCAS.map(b => (
+                  <option key={b} value={b}>{b}</option>
+                ))}
               </select>
-              {bancaPadrao && (
-                <p className="text-xs text-purple-400 mt-1">✓ Banca do aluno</p>
-              )}
             </div>
             
             <div>
@@ -386,13 +298,21 @@ export function ImportarQuestoesMassa({
                 value={concurso} 
                 onChange={(e) => setConcurso(e.target.value)}
                 className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm"
-                disabled={!!concursoPadrao}
               >
-                {CONCURSOS.map(c => <option key={c} value={c}>{c}</option>)}
+                {CONCURSOS.map(c => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
               </select>
-              {concursoPadrao && (
-                <p className="text-xs text-purple-400 mt-1">✓ Concurso do aluno</p>
-              )}
+            </div>
+            
+            <div>
+              <label className="text-gray-400 text-xs mb-2 block">Ano</label>
+              <input 
+                type="number" 
+                value={ano} 
+                onChange={(e) => setAno(Number(e.target.value))}
+                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm"
+              />
             </div>
             
             <div>
@@ -407,115 +327,79 @@ export function ImportarQuestoesMassa({
                 <option value="dificil">Difícil</option>
               </select>
             </div>
+            
+            <div>
+              <label className="text-gray-400 text-xs mb-2 block">Plano</label>
+              <select 
+                value={plano} 
+                onChange={(e) => setPlano(e.target.value as any)}
+                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm"
+              >
+                <option value="free">Gratuito</option>
+                <option value="plus">Plus</option>
+              </select>
+            </div>
           </div>
-
-          {/* Formato de exemplo */}
-          <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-4">
-            <p className="text-blue-400 font-bold mb-2">📋 Formato aceito:</p>
-            <pre className="text-xs text-gray-300 whitespace-pre-wrap">
-{`Formato 1 - Simples:
-Qual a capital?
-A) São Paulo
-B) Brasília
-C) Rio
-D) Salvador
-Correta: B
-
-Formato 2 - Com afirmativas:
-Analise as afirmativas:
-I. Afirmativa 1
-II. Afirmativa 2
-Alternativas
-A I e II
-B I e III
-C Apenas I
-D Todas
-Correta: A
-
-Formato 3 - Com texto:
-Leia o texto:
-(texto longo...)
-Pergunta aqui?
-A) Alt A
-B) Alt B
-C) Alt C
-D) Alt D
-Correta: C`}
-            </pre>
-            <p className="text-xs text-gray-500 mt-2">
-              💡 Separe cada questão com uma linha vazia. Use "Correta: A/B/C/D" para indicar a resposta.
-            </p>
-          </div>
-
-          {/* 🔥 Opção Sobrescrever */}
-          <div className="flex items-center gap-3 p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl">
-            <input
-              type="checkbox"
-              id="sobrescrever"
-              checked={sobrescrever}
-              onChange={(e) => setSobrescrever(e.target.checked)}
-              className="w-5 h-5 rounded border-2 border-amber-500 bg-white/5 checked:bg-amber-500 cursor-pointer"
-            />
-            <label htmlFor="sobrescrever" className="text-white font-medium cursor-pointer flex-1">
-              🗑️ Sobrescrever questões existentes de {materia}
-            </label>
-            <span className="text-xs text-gray-400">
-              {sobrescrever ? 'Remove antigas e adiciona novas' : 'Adiciona às existentes'}
-            </span>
-          </div>
-
-          {/* Caixa de texto */}
+          
+          {/* Área de Texto */}
           <div>
-            <label className="text-white font-bold mb-2 block">Cole suas questões aqui:</label>
+            <label className="text-gray-400 text-sm mb-2 block">📝 Cole as questões aqui</label>
             <textarea
               value={textoQuestoes}
               onChange={(e) => setTextoQuestoes(e.target.value)}
-              rows={15}
-              maxLength={1000000} // 🔥 Sem limite prático
-              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:border-purple-500/50 focus:outline-none font-mono text-sm"
-              placeholder="Cole suas questões no formato indicado acima..."
-            />
-            <p className="text-gray-500 text-xs mt-2">
-              {(() => {
-                try {
-                  const parsed = parsearQuestoes(textoQuestoes);
-                  return `${parsed.length} questões válidas detectadas`;
-                } catch {
-                  return '0 questões detectadas';
-                }
-              })()}
-            </p>
-          </div>
+              placeholder={`Cole suas questões aqui no formato:
 
+1. Pergunta da questão...
+
+A) Alternativa A
+B) Alternativa B
+C) Alternativa C
+D) Alternativa D
+
+Gabarito: A
+
+Comentário: Explicação...
+
+---
+
+2. Segunda questão...`}
+              className="w-full h-64 px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white font-mono text-sm resize-y"
+            />
+          </div>
+          
+          {/* Opções */}
+          <div className="flex items-center gap-4">
+            <label className="flex items-center gap-2 text-sm text-gray-300">
+              <input
+                type="checkbox"
+                checked={sobrescrever}
+                onChange={(e) => setSobrescrever(e.target.checked)}
+                className="w-4 h-4 rounded"
+              />
+              🗑️ Sobrescrever questões existentes da matéria
+            </label>
+          </div>
+          
           {/* Resultado */}
           {resultado && (
-            <div className={`p-4 rounded-xl ${
-              resultado.includes('✅') ? 'bg-green-500/10 border border-green-500/30' : 'bg-red-500/10 border border-red-500/30'
-            }`}>
-              <pre className="text-sm text-white whitespace-pre-wrap">{resultado}</pre>
+            <div className="bg-blue-500/20 border border-blue-500/30 rounded-xl p-4">
+              <pre className="text-blue-300 text-sm whitespace-pre-wrap">{resultado}</pre>
             </div>
           )}
-
+          
           {/* Botões */}
-          <div className="flex gap-3">
+          <div className="flex gap-4">
             <button
               onClick={handleImportar}
               disabled={processando || !textoQuestoes.trim()}
-              className="flex-1 py-4 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-400 hover:to-emerald-400 disabled:opacity-50 rounded-xl text-white font-bold text-lg"
+              className="flex-1 py-3 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 text-white font-semibold rounded-xl transition-colors"
             >
-              {processando ? '⏳ Importando...' : (() => {
-                try {
-                  const count = parsearQuestoes(textoQuestoes).length;
-                  return `📥 Importar ${count} ${count === 1 ? 'Questão' : 'Questões'}`;
-                } catch {
-                  return '📥 Importar Questões';
-                }
-              })()}
+              {processando ? '⏳ Importando...' : '✅ Importar Questões'}
             </button>
+            
             <button
               onClick={onClose}
-              disabled={processando}
-              className="px-6 py-4 bg-white/10 hover:bg-white/20 rounded-xl text-white font-bold disabled:opacity-50"
+              className="px-6 py-3 bg-white/10 hover:bg-white/20 text-gray-300 font-semibold rounded-xl transition-colors"
             >
               Cancelar
             </button>
@@ -525,3 +409,5 @@ Correta: C`}
     </div>
   );
 }
+
+export default ImportarQuestoesMassa;
