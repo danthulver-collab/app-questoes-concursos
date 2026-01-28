@@ -1,0 +1,16 @@
+// Na linha ~250 onde renderiza a questão, SUBSTITUA por isso:
+
+              {/* 🔥 EXIBIR PERGUNTA COMPLETA */}
+              <div className="mb-6">
+                {/* ENUNCIADO + ASSERTIVAS (se existir) */}
+                {(questao as any).texto_contexto && (
+                  <div className="text-lg text-gray-300 leading-relaxed whitespace-pre-line mb-4">
+                    {(questao as any).texto_contexto}
+                  </div>
+                )}
+                
+                {/* PERGUNTA PRINCIPAL */}
+                <div className="text-xl text-white font-bold leading-relaxed">
+                  {questao.title}
+                </div>
+              </div>
