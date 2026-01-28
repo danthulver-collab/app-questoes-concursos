@@ -4,7 +4,9 @@ import type { Area, Carreira } from './quiz-store';
 // Salvar área no Supabase
 export const saveAreaSupabase = async (area: Area): Promise<boolean> => {
   try {
-    const { error } = await supabase
+    console.log('🔥 saveAreaSupabase chamado:', area.id, area.nome, 'materias:', area.materias);
+    
+    const { data, error } = await supabase
       .from('areas')
       .upsert({
         id: area.id,
@@ -14,10 +16,20 @@ export const saveAreaSupabase = async (area: Area): Promise<boolean> => {
         carreiras: area.carreiras,
         materias: area.materias,
         updated_at: new Date().toISOString()
-      }, { onConflict: 'id' });
+      }, { onConflict: 'id' })
+      .select();
 
-    return !error;
-  } catch { return false; }
+    if (error) {
+      console.error('❌ Erro ao salvar área:', error);
+      return false;
+    }
+    
+    console.log('✅ Área salva no Supabase:', data);
+    return true;
+  } catch (e) {
+    console.error('❌ Exception ao salvar área:', e);
+    return false;
+  }
 };
 
 // Salvar carreira no Supabase
