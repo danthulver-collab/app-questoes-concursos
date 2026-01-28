@@ -5,6 +5,7 @@
 
 import { supabase } from './supabase';
 import { savePacoteToSupabase, saveQuestaoToSupabase, getPacotesFromSupabase, getQuestoesFromSupabase } from './supabase-pacotes';
+import { getAreasFromSupabase, getCarreirasFromSupabase } from './supabase-areas';
 import { getQuizData, saveQuizData, type QuizData, type Pacote, type Question } from './quiz-store';
 
 /**
@@ -44,10 +45,18 @@ export const syncLocalStorageToSupabase = async () => {
  */
 export const syncSupabaseToLocalStorage = async () => {
   try {
-    console.log('🔄 Carregando dados do Supabase...');
+    console.log('🔄 Carregando TUDO do Supabase...');
     
     const quizData = getQuizData();
     if (!quizData) return;
+    
+    // Buscar ÁREAS do Supabase
+    const areasSupabase = await getAreasFromSupabase();
+    console.log(`📋 ${areasSupabase.length} áreas do Supabase`);
+    
+    // Buscar CARREIRAS do Supabase
+    const carreirasSupabase = await getCarreirasFromSupabase();
+    console.log(`👔 ${carreirasSupabase.length} carreiras do Supabase`);
     
     // Buscar PACOTES do Supabase
     const pacotesSupabase = await getPacotesFromSupabase();
@@ -57,33 +66,17 @@ export const syncSupabaseToLocalStorage = async () => {
     const questoesSupabase = await getQuestoesFromSupabase();
     console.log(`📝 ${questoesSupabase.length} questões do Supabase`);
     
-    // Mesclar com dados locais (prioriza Supabase)
-    const mergedPacotes = [...pacotesSupabase];
-    const mergedQuestoes = [...questoesSupabase];
-    
-    // Adicionar pacotes locais que não existem no Supabase
-    quizData.pacotes.forEach(localPacote => {
-      if (!mergedPacotes.find(p => p.id === localPacote.id)) {
-        mergedPacotes.push(localPacote);
-      }
-    });
-    
-    // Adicionar questões locais que não existem no Supabase
-    quizData.questions.forEach(localQ => {
-      if (!mergedQuestoes.find(q => q.id === localQ.id)) {
-        mergedQuestoes.push(localQ);
-      }
-    });
-    
-    // Atualizar localStorage com dados mesclados
+    // Atualizar com dados do Supabase (Supabase é source of truth)
     const newData = {
       ...quizData,
-      pacotes: mergedPacotes,
-      questions: mergedQuestoes
+      areas: areasSupabase.length > 0 ? areasSupabase : quizData.areas,
+      carreiras: carreirasSupabase.length > 0 ? carreirasSupabase : quizData.carreiras,
+      pacotes: pacotesSupabase,
+      questions: questoesSupabase
     };
     
     await saveQuizData(newData);
-    console.log('✅ Dados sincronizados do Supabase!');
+    console.log('✅ Tudo sincronizado do Supabase!');
     
     return newData;
   } catch (error) {
