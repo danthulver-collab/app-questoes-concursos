@@ -86,14 +86,14 @@ export const syncSupabaseToLocalStorage = async () => {
 };
 
 /**
- * Auto-sync a cada 10 segundos (para múltiplos admins)
+ * Auto-sync a cada 3 segundos (para múltiplos admins/PCs)
  */
 export const startAutoSync = () => {
   // Sincronização inicial
   syncSupabaseToLocalStorage();
   
-  // Auto-sync a cada 10 segundos
+  // Auto-sync a cada 3 segundos
   setInterval(() => {
     syncSupabaseToLocalStorage();
-  }, 10000);
+  }, 3000);
 };
