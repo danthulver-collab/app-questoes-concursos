@@ -36,7 +36,7 @@ import {
   updateCarreira,
   deleteCarreira
 } from "../lib/quiz-store";
-import { saveMateriaSupabase } from './supabase-materias';
+import { saveMateriaSupabase } from '../lib/supabase-materias';
 import { AppHeader } from "../components/app-header";
 import { NotificationBell } from "../components/notification-bell";
 import { loadAIConfig, saveAIConfig } from "../components/ai-chat-panel";
