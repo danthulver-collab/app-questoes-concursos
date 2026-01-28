@@ -36,7 +36,6 @@ import {
   updateCarreira,
   deleteCarreira
 } from "../lib/quiz-store";
-import { saveMateriaSupabase } from '../lib/supabase-materias';
 import { AppHeader } from "../components/app-header";
 import { NotificationBell } from "../components/notification-bell";
 import { loadAIConfig, saveAIConfig } from "../components/ai-chat-panel";
@@ -316,24 +315,31 @@ function GerenciarAreasHierarquico({ showSaveMessage, onGoToQuestoes }: { showSa
                 onClick={async () => {
                   const btn = event?.target as HTMLButtonElement;
                   const originalText = btn?.innerHTML;
-                  
                   try {
                     if (btn) btn.innerHTML = '⏳ Sincronizando...';
+                    if (btn) btn.disabled = true;
                     
                     const syncedData = await syncSupabaseToLocalStorage();
                     if (syncedData) {
-                      setQuizData(syncedData);
                       if (btn) btn.innerHTML = '✅ Sincronizado!';
+                      showSaveMessage('✅ Dados sincronizados do Supabase!');
+                      refresh();
                       setTimeout(() => {
-                        if (btn && originalText) btn.innerHTML = originalText;
+                        if (btn) {
+                          btn.innerHTML = originalText || '🔄 Sincronizar';
+                          btn.disabled = false;
+                        }
                       }, 2000);
                     } else {
-                      throw new Error('Sync retornou null');
+                      throw new Error('Falha na sincronização');
                     }
                   } catch (e) {
                     console.error('Erro ao sincronizar:', e);
                     alert(`Erro ao sincronizar: ${e}`);
-                    if (btn && originalText) btn.innerHTML = originalText;
+                    if (btn) {
+                      btn.innerHTML = originalText || '🔄 Sincronizar';
+                      btn.disabled = false;
+                    }
                   }
                 }}
                 className="px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl font-bold hover:scale-105 transition-transform flex items-center gap-2"
@@ -347,66 +353,24 @@ function GerenciarAreasHierarquico({ showSaveMessage, onGoToQuestoes }: { showSa
                 <span>📥</span> Importar Questões
               </button>
               <button
-                onClick={async () => {
+                onClick={() => {
                   const nome = prompt("Nome da nova Matéria:");
                   if (!nome) return;
+                  const data = getQuizData();
+                  const newMateria = {
+                    id: nome.toLowerCase().replace(/\s+/g, '-'),
+                    nome: nome.trim()
+                  };
+                  data.disciplinas.push(newMateria);
                   
-                  try {
-                    const data = getQuizData();
-                    const newMateria = {
-                      id: nome.toLowerCase().replace(/\s+/g, '-').replace(/ê/g,'e').replace(/ã/g,'a').replace(/ç/g,'c'),
-                      nome: nome.trim()
-                    };
-                    data.disciplinas.push(newMateria);
-                    
-                    const area = data.areas.find(a => a.id === selectedAreaId);
-                    if (area && !area.materias.includes(newMateria.id)) {
-                      area.materias.push(newMateria.id);
-                      area.updatedAt = new Date().toISOString();
-                      
-                      console.log('🔥 Salvando área DIRETAMENTE:', area);
-                      
-                      // 🔥 SALVAR MATÉRIA NO SUPABASE
-                      await saveMateriaSupabase({
-                        id: newMateria.id,
-                        nome: newMateria.nome,
-                        area_id: selectedAreaId
-                      });
-                      
-                      // 🔥 SALVAR ÁREA ATUALIZADA
-                      const { error } = await supabase
-                        .from('areas')
-                        .upsert({
-                          id: area.id,
-                          nome: area.nome,
-                          descricao: area.descricao,
-                          icone: area.icone,
-                          carreiras: area.carreiras,
-                          materias: area.materias,
-                          updated_at: area.updatedAt
-                        }, { onConflict: 'id' });
-                      
-                      if (error) {
-                        console.error('❌ ERRO Supabase:', error);
-                        alert(`ERRO: ${error.message}`);
-                        return;
-                      }
-                      
-                      console.log('✅ Área salva no Supabase!');
-                    }
-                    
-                    saveQuizData(data);
-                    alert("✅ Matéria criada e salva no Supabase!");
-                    
-                    // 🔥 Atualizar estado sem recarregar página
-                    const syncedData = await syncSupabaseToLocalStorage();
-                    if (syncedData) {
-                      setQuizData(syncedData);
-                    }
-                  } catch (error) {
-                    console.error('❌ ERRO:', error);
-                    alert(`ERRO: ${error}`);
+                  const area = data.areas.find(a => a.id === selectedAreaId);
+                  if (area && !area.materias.includes(newMateria.id)) {
+                    area.materias.push(newMateria.id);
                   }
+                  
+                  saveQuizData(data);
+                  showSaveMessage("Matéria criada!");
+                  refresh();
                 }}
                 className="px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl font-bold hover:scale-105 transition-transform"
               >
@@ -422,26 +386,15 @@ function GerenciarAreasHierarquico({ showSaveMessage, onGoToQuestoes }: { showSa
                   <span className="font-bold text-white flex-1">{mat.nome}</span>
                   <div className="flex gap-2">
                     <button
-                      onClick={async () => {
+                      onClick={() => {
                         const nome = prompt("Novo nome:", mat.nome);
                         if (nome) {
                           const data = getQuizData();
                           const idx = data.disciplinas.findIndex(d => d.id === mat.id);
-                          if (idx >= 0) {
-                            data.disciplinas[idx].nome = nome.trim();
-                            
-                            // 🔥 Atualizar no Supabase
-                            await saveMateriaSupabase({
-                              id: mat.id,
-                              nome: nome.trim(),
-                              area_id: selectedAreaId
-                            });
-                          }
-                          
+                          if (idx >= 0) data.disciplinas[idx].nome = nome.trim();
                           saveQuizData(data);
-                          const syncedData = await syncSupabaseToLocalStorage();
-                          if (syncedData) setQuizData(syncedData);
-                          showSaveMessage("✅ Matéria atualizada!");
+                          showSaveMessage("Matéria atualizada!");
+                          refresh();
                         }
                       }}
                       className="px-2 py-1 bg-blue-500/20 text-blue-400 rounded hover:bg-blue-500/30 text-xs"
@@ -449,35 +402,18 @@ function GerenciarAreasHierarquico({ showSaveMessage, onGoToQuestoes }: { showSa
                       ✏️
                     </button>
                     <button
-                      onClick={async () => {
+                      onClick={() => {
                         if (confirm(`Deletar "${mat.nome}"?`)) {
                           const data = getQuizData();
                           data.disciplinas = data.disciplinas.filter(d => d.id !== mat.id);
-                          
                           // Remover da área
                           const area = data.areas.find(a => a.id === selectedAreaId);
                           if (area) {
                             area.materias = area.materias.filter(m => m !== mat.id);
-                            
-                            // 🔥 Atualizar área no Supabase
-                            await supabase.from('areas').upsert({
-                              id: area.id,
-                              nome: area.nome,
-                              descricao: area.descricao,
-                              icone: area.icone,
-                              carreiras: area.carreiras,
-                              materias: area.materias,
-                              updated_at: new Date().toISOString()
-                            }, { onConflict: 'id' });
                           }
-                          
-                          // 🔥 Deletar matéria do Supabase
-                          await supabase.from('materias').delete().eq('id', mat.id);
-                          
                           saveQuizData(data);
-                          const syncedData = await syncSupabaseToLocalStorage();
-                          if (syncedData) setQuizData(syncedData);
-                          showSaveMessage("✅ Matéria deletada!");
+                          showSaveMessage("Matéria deletada!");
+                          refresh();
                         }
                       }}
                       className="px-2 py-1 bg-red-500/20 text-red-400 rounded hover:bg-red-500/30 text-xs"
@@ -682,7 +618,7 @@ function QuestoesAreasEditor({ showSaveMessage }: { showSaveMessage: (msg?: stri
             </div>
             <div className="flex gap-3">
               <button 
-                onClick={async () => {
+                onClick={() => {
                   const nome = prompt("Nome da nova matéria:");
                   if (!nome) return;
                   const data = getQuizData();
@@ -698,7 +634,7 @@ function QuestoesAreasEditor({ showSaveMessage }: { showSaveMessage: (msg?: stri
                     area.materias.push(newMateria.id);
                   }
                   
-                  await salvarTudoSupabase(data);
+                  saveQuizData(data);
                   showSaveMessage("Matéria adicionada!");
                   refresh();
                 }}
@@ -2017,7 +1953,7 @@ function AdminPage() {
       }
     });
     
-    // Iniciar auto-sync a cada 3 segundos
+    // Iniciar auto-sync a cada 10 segundos
     startAutoSync();
     
     // Load config
@@ -2126,7 +2062,7 @@ function AdminPage() {
     showSaveMessage("Questão excluída!");
   };
 
-  const handleSaveQuestion = async () => {
+  const handleSaveQuestion = () => {
     if (!quizData || !editingQuestion) return;
     if (!editingQuestion.title.trim()) {
       alert("Por favor, preencha o enunciado da questão.");
@@ -2137,18 +2073,6 @@ function AdminPage() {
       return;
     }
 
-    // 🔥 Salvar no Supabase PRIMEIRO
-    await saveQuestaoSupabase({
-      id: editingQuestion.id,
-      area_id: 'geral', // questões gerais
-      materia_id: editingQuestion.disciplina?.toLowerCase().replace(/\s+/g, '-') || 'geral',
-      title: editingQuestion.title,
-      options: editingQuestion.options,
-      correct_answer: editingQuestion.correctAnswer,
-      explanation: editingQuestion.explanation || '',
-      plano: (editingQuestion as any).plano || 'free'
-    });
-
     let newQuestions: Question[];
     if (isNewQuestion) {
       newQuestions = [...quizData.questions, editingQuestion];
@@ -2158,9 +2082,9 @@ function AdminPage() {
 
     const newData = { ...quizData, questions: newQuestions };
     setQuizData(newData);
-    await salvarTudoSupabase(newData);
+    saveQuizData(newData);
     setEditingQuestion(null);
-    showSaveMessage("✅ Salvo no Supabase!");
+    showSaveMessage();
   };
 
   const updateEditingOption = (index: number, value: string) => {
@@ -4138,12 +4062,12 @@ function AdminPage() {
                   <span>➕</span> Adicionar Carreira
                 </button>
                 <button
-                  onClick={async () => {
+                  onClick={() => {
                     const nome = prompt("Nome da Matéria:");
                     if (!nome) return;
                     const data = getQuizData();
                     data.disciplinas.push({ id: nome.toLowerCase().replace(/\s+/g, '-'), nome: nome.trim() });
-                    await salvarTudoSupabase(data);
+                    saveQuizData(data);
                     showSaveMessage("Matéria criada!");
                   }}
                   className="p-4 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl font-bold hover:scale-105 transition-transform flex items-center justify-center gap-2"
@@ -4265,13 +4189,13 @@ function AdminPage() {
                         <span className="font-bold text-white text-xs truncate flex-1">{mat.nome}</span>
                         <div className="flex gap-1 flex-shrink-0">
                           <button
-                            onClick={async () => {
+                            onClick={() => {
                               const nome = prompt("Novo nome:", mat.nome);
                               if (nome) {
                                 const data = getQuizData();
                                 const idx = data.disciplinas.findIndex(d => d.id === mat.id);
                                 if (idx >= 0) data.disciplinas[idx].nome = nome.trim();
-                                await salvarTudoSupabase(data);
+                                saveQuizData(data);
                                 showSaveMessage("Matéria atualizada!");
                               }
                             }}
@@ -4280,11 +4204,11 @@ function AdminPage() {
                             ✏️
                           </button>
                           <button
-                            onClick={async () => {
+                            onClick={() => {
                               if (confirm(`Deletar "${mat.nome}"?`)) {
                                 const data = getQuizData();
                                 data.disciplinas = data.disciplinas.filter(d => d.id !== mat.id);
-                                await salvarTudoSupabase(data);
+                                saveQuizData(data);
                                 showSaveMessage("Matéria deletada!");
                               }
                             }}
