@@ -415,10 +415,21 @@ function GerenciarAreasHierarquico({ showSaveMessage, onGoToQuestoes }: { showSa
                         if (nome) {
                           const data = getQuizData();
                           const idx = data.disciplinas.findIndex(d => d.id === mat.id);
-                          if (idx >= 0) data.disciplinas[idx].nome = nome.trim();
-                          await salvarTudoSupabase(data);
-                          showSaveMessage("Matéria atualizada!");
-                          refresh();
+                          if (idx >= 0) {
+                            data.disciplinas[idx].nome = nome.trim();
+                            
+                            // 🔥 Atualizar no Supabase
+                            await saveMateriaSupabase({
+                              id: mat.id,
+                              nome: nome.trim(),
+                              area_id: selectedAreaId
+                            });
+                          }
+                          
+                          saveQuizData(data);
+                          const syncedData = await syncSupabaseToLocalStorage();
+                          if (syncedData) setQuizData(syncedData);
+                          showSaveMessage("✅ Matéria atualizada!");
                         }
                       }}
                       className="px-2 py-1 bg-blue-500/20 text-blue-400 rounded hover:bg-blue-500/30 text-xs"
@@ -430,14 +441,31 @@ function GerenciarAreasHierarquico({ showSaveMessage, onGoToQuestoes }: { showSa
                         if (confirm(`Deletar "${mat.nome}"?`)) {
                           const data = getQuizData();
                           data.disciplinas = data.disciplinas.filter(d => d.id !== mat.id);
+                          
                           // Remover da área
                           const area = data.areas.find(a => a.id === selectedAreaId);
                           if (area) {
                             area.materias = area.materias.filter(m => m !== mat.id);
+                            
+                            // 🔥 Atualizar área no Supabase
+                            await supabase.from('areas').upsert({
+                              id: area.id,
+                              nome: area.nome,
+                              descricao: area.descricao,
+                              icone: area.icone,
+                              carreiras: area.carreiras,
+                              materias: area.materias,
+                              updated_at: new Date().toISOString()
+                            }, { onConflict: 'id' });
                           }
-                          await salvarTudoSupabase(data);
-                          showSaveMessage("Matéria deletada!");
-                          refresh();
+                          
+                          // 🔥 Deletar matéria do Supabase
+                          await supabase.from('materias').delete().eq('id', mat.id);
+                          
+                          saveQuizData(data);
+                          const syncedData = await syncSupabaseToLocalStorage();
+                          if (syncedData) setQuizData(syncedData);
+                          showSaveMessage("✅ Matéria deletada!");
                         }
                       }}
                       className="px-2 py-1 bg-red-500/20 text-red-400 rounded hover:bg-red-500/30 text-xs"
