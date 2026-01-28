@@ -267,15 +267,21 @@ export default function EscolherSimulado() {
   };
 
   const handleMateriaSelect = (materiaId: string) => {
-    // 🔥 Buscar do Supabase (questoesSupabase) não do localStorage
+    // 🔥 Buscar do Supabase
+    console.log('🔍 selectedAreaId:', selectedAreaId);
+    console.log('🔍 materiaId:', materiaId);
+    console.log('🔍 questoesSupabase:', Object.keys(questoesSupabase));
+    
     const areaQuestoes = questoesSupabase[selectedAreaId] || {};
+    console.log('🔍 areaQuestoes keys:', Object.keys(areaQuestoes));
+    
     const questoes = areaQuestoes[materiaId] || [];
+    console.log('🔍 Questões encontradas:', questoes.length);
+    
     const materia = materias.find(m => m.id === materiaId);
     
-    console.log(`📊 Matéria ${materiaId}: ${questoes.length} questões encontradas`);
-    
-    if (questoes.length === 0 && !isAdmin) {
-      alert('Nenhuma questão encontrada para esta matéria.');
+    if (questoes.length === 0) {
+      alert(`Nenhuma questão encontrada.\n\nÁrea: ${selectedAreaId}\nMatéria: ${materiaId}\n\nImporte questões no Admin primeiro!`);
       return;
     }
     
