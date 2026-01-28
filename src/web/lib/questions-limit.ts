@@ -5,6 +5,31 @@
 import { getUserPlan, PLAN_LIMITS } from './access-control';
 
 const QUESTIONS_ANSWERED_KEY = 'total_questions_answered';
+const DAILY_QUESTIONS_KEY = 'daily_questions';
+
+/**
+ * Retorna quantas questões o usuário respondeu HOJE
+ */
+export const getDailyQuestionsAnswered = (userId: string): number => {
+  try {
+    const key = `${DAILY_QUESTIONS_KEY}_${userId}`;
+    const stored = localStorage.getItem(key);
+    if (!stored) return 0;
+    
+    const data = JSON.parse(stored);
+    const today = new Date().toDateString();
+    
+    // Se é de hoje, retorna contador
+    if (data.date === today) {
+      return data.count || 0;
+    }
+    
+    // Se é de outro dia, reseta
+    return 0;
+  } catch {
+    return 0;
+  }
+};
 
 /**
  * Retorna quantas questões o usuário já respondeu (total)
@@ -23,9 +48,20 @@ export const getTotalQuestionsAnswered = (userId: string): number => {
  * Incrementa contador de questões respondidas
  */
 export const incrementQuestionsAnswered = (userId: string): void => {
-  const key = `${QUESTIONS_ANSWERED_KEY}_${userId}`;
+  // Total
+  const totalKey = `${QUESTIONS_ANSWERED_KEY}_${userId}`;
   const current = getTotalQuestionsAnswered(userId);
-  localStorage.setItem(key, (current + 1).toString());
+  localStorage.setItem(totalKey, (current + 1).toString());
+  
+  // Diário
+  const dailyKey = `${DAILY_QUESTIONS_KEY}_${userId}`;
+  const today = new Date().toDateString();
+  const dailyCurrent = getDailyQuestionsAnswered(userId);
+  
+  localStorage.setItem(dailyKey, JSON.stringify({
+    date: today,
+    count: dailyCurrent + 1
+  }));
 };
 
 /**
@@ -34,6 +70,8 @@ export const incrementQuestionsAnswered = (userId: string): void => {
 export const resetQuestionsCounter = (userId: string): void => {
   const key = `${QUESTIONS_ANSWERED_KEY}_${userId}`;
   localStorage.removeItem(key);
+  const dailyKey = `${DAILY_QUESTIONS_KEY}_${userId}`;
+  localStorage.removeItem(dailyKey);
 };
 
 /**
@@ -47,9 +85,9 @@ export const hasReachedQuestionLimit = (userId: string): boolean => {
     return false;
   }
   
-  // Plano grátis: 10 questões no total
+  // Plano grátis: 10 questões POR DIA
   if (plan === 'free' || plan === 'gratuito') {
-    const answered = getTotalQuestionsAnswered(userId);
+    const answered = getDailyQuestionsAnswered(userId);
     return answered >= 10;
   }
   
@@ -67,9 +105,9 @@ export const getRemainingQuestions = (userId: string): number | null => {
     return null;
   }
   
-  // Plano grátis
+  // Plano grátis: 10 por dia
   if (plan === 'free' || plan === 'gratuito') {
-    const answered = getTotalQuestionsAnswered(userId);
+    const answered = getDailyQuestionsAnswered(userId);
     const remaining = 10 - answered;
     return remaining > 0 ? remaining : 0;
   }
@@ -89,10 +127,10 @@ export const canAnswerQuestion = (userId: string): boolean => {
  */
 export const getLimitMessage = (userId: string): string => {
   const plan = getUserPlan(userId);
-  const answered = getTotalQuestionsAnswered(userId);
+  const answered = getDailyQuestionsAnswered(userId);
   
   if (plan === 'free' || plan === 'gratuito') {
-    return `Você atingiu o limite de 10 questões do plano grátis. Faça upgrade para continuar estudando!`;
+    return `Você atingiu o limite de 10 questões por dia do plano grátis. Volte amanhã ou faça upgrade para continuar!`;
   }
   
   return 'Limite de questões atingido.';
