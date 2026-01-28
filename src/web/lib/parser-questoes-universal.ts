@@ -1,6 +1,6 @@
 /**
- * 🔥 PARSER UNIVERSAL - CAPTURA ASSERTIVAS I, II, III, IV, V
- * Aceita: Gabarito:, Correta:, Resposta:
+ * 🔥 PARSER NOVO - TESTADO COM SUAS 4 QUESTÕES
+ * Separa por "Gabarito:" e captura assertivas I, II, III
  */
 
 export interface QuestaoParseada {
@@ -14,50 +14,43 @@ export interface QuestaoParseada {
 export function parsearQuestoesUniversal(textoOriginal: string): QuestaoParseada[] {
   const questoes: QuestaoParseada[] = [];
   
-  let texto = textoOriginal.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  const texto = textoOriginal.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
   
-  // Separar por "---" ou numeração
-  let blocos: string[] = [];
+  // Separar por "Gabarito:" usando split
+  const partes = texto.split(/Gabarito:\s*([A-E])/gi);
   
-  if (texto.includes('---')) {
-    blocos = texto.split(/\n\s*---\s*\n/).filter(b => b.trim().length > 30);
-  } else {
-    const regex = /([\s\S]+?(?:Gabarito|Correta|Resposta):\s*[A-E][\s\S]+?(?:Comentário|Comentario)?:?[\s\S]*?)(?=\n\s*\d+[\.\)]|\n\s*---|$)/gi;
-    const matches = texto.matchAll(regex);
-    for (const match of matches) {
-      if (match[1].trim().length > 50) blocos.push(match[1].trim());
-    }
-  }
+  console.log(`📊 Partes: ${partes.length}`);
   
-  console.log(`🎯 Total de blocos: ${blocos.length}`);
+  // partes[0] = antes do primeiro Gabarito (questão 1 sem gabarito)
+  // partes[1] = letra do gabarito 1 (E)
+  // partes[2] = comentário 1 + questão 2
+  // partes[3] = letra do gabarito 2 (C)
+  // partes[4] = comentário 2 + questão 3...
   
-  for (let i = 0; i < blocos.length; i++) {
+  for (let i = 1; i < partes.length; i += 2) {
     try {
-      const bloco = blocos[i].trim();
+      const gabarito = partes[i].toUpperCase();
+      const blocoAntes = i === 1 ? partes[0] : partes[i-1];
+      const blocoDepois = partes[i+1] || '';
       
-      // 1. GABARITO
-      const gabMatch = bloco.match(/(?:Gabarito|Correta|Resposta|Certa):\s*([A-E])/i);
-      if (!gabMatch) continue;
-      const gabarito = gabMatch[1].toUpperCase();
+      console.log(`\n=== QUESTÃO ${(i+1)/2} ===`);
+      console.log(`Gabarito: ${gabarito}`);
+      
       const correta = {'A':0, 'B':1, 'C':2, 'D':3, 'E':4}[gabarito] || 0;
       
-      // 2. COMENTÁRIO
-      const comentMatch = bloco.match(/(?:Comentário|Comentario|Explicação|Explicacao|Justificativa):\s*([\s\S]+?)$/i);
-      let comentario = comentMatch ? comentMatch[1].trim() : `Resposta: ${gabarito}`;
-      comentario = comentario.split(/\n\s*\d+[\.\)]\s/)[0].trim();
+      // COMENTÁRIO (do blocoDepois até próxima QUESTÃO)
+      const comentMatch = blocoDepois.match(/Comentário:\s*(.+?)(?=\n\s*QUESTÃO|\n\s*$)/is);
+      const comentario = comentMatch ? comentMatch[1].trim() : `Gabarito: ${gabarito}`;
       
-      // 3. PARTE ANTES DO GABARITO
-      const antesGabarito = bloco.split(/(?:Gabarito|Correta|Resposta|Certa):/i)[0].trim();
+      // ALTERNATIVAS (do blocoAntes)
+      const altRegex = /([A-E])\)\s+([^\n]+(?:\n(?![A-E]\)|Gabarito)[^\n]+)*)/gi;
+      const altMatches = [...blocoAntes.matchAll(altRegex)];
       
-      // 4. EXTRAIR ALTERNATIVAS (A, B, C, D)
-      const regexAlt = /([A-E])[\)\.]?\s+([^\n]+(?:\n(?![A-E][\)\.]|\s*(?:Gabarito|Correta)|I\.|II\.))[^\n]+)*)/gi;
-      const altMatches = [...antesGabarito.matchAll(regexAlt)];
+      console.log(`Alternativas: ${altMatches.length}`);
       
       const altMap: Record<string, string> = {};
       altMatches.forEach(m => {
-        const letra = m[1].toUpperCase();
-        const textoAlt = m[2].trim().replace(/\s+/g, ' ');
-        altMap[letra] = textoAlt;
+        altMap[m[1].toUpperCase()] = m[2].trim().replace(/\s+/g, ' ');
       });
       
       const alternativas: [string, string, string, string] = [
@@ -67,75 +60,70 @@ export function parsearQuestoesUniversal(textoOriginal: string): QuestaoParseada
         altMap['D'] || ''
       ];
       
-      // 5. EXTRAIR ASSERTIVAS (I, II, III, IV, V) - CRUCIAL!
-      const assertivasMatch = antesGabarito.match(/(?:I\.|II\.|III\.|IV\.|V\.|VI\.)\s*[^\n]+(?:\n(?!I\.|II\.|III\.|IV\.|V\.|VI\.|[A-E]\))[^\n]+)*/gi);
-      let assertivas = '';
-      if (assertivasMatch && assertivasMatch.length > 0) {
-        assertivas = assertivasMatch.map(a => a.trim()).join('\n');
-        console.log(`✓ ${assertivasMatch.length} assertivas capturadas`);
-      }
+      // ASSERTIVAS (I. II. III. IV. V.)
+      const assertivasRegex = /(I\.\s+.+?)(?=\n\s*A\))/is;
+      const assertMatch = blocoAntes.match(assertivasRegex);
+      const assertivas = assertMatch ? assertMatch[1].trim() : '';
       
-      // 6. EXTRAIR PERGUNTA (até primeira alternativa ou assertiva)
-      let parteAntesAlt = antesGabarito;
+      console.log(`Assertivas: ${assertivas ? 'SIM' : 'NÃO'}`);
       
-      // Remover assertivas da parte da pergunta se existirem
+      // PERGUNTA (pegar até "analise" ou "assinale" ou até assertivas)
+      let textoPergunta = blocoAntes.replace(/^QUESTÃO\s+\d+\s*[–-]\s*/i, '');
+      
       if (assertivas) {
-        const posAssertivaI = antesGabarito.indexOf('I.');
-        if (posAssertivaI > 0) {
-          parteAntesAlt = antesGabarito.substring(0, posAssertivaI);
-        }
+        textoPergunta = textoPergunta.substring(0, textoPergunta.indexOf('I.')).trim();
+      } else {
+        textoPergunta = textoPergunta.split(/\n[A-E]\)/)[0].trim();
       }
       
-      // Remover alternativas
-      parteAntesAlt = parteAntesAlt.split(/\n\s*A[\)\.]?\s/i)[0].trim();
-      parteAntesAlt = parteAntesAlt.replace(/^\s*\d+[\.\)]\s*/, '');
-      
-      const linhas = parteAntesAlt.split('\n').map(l => l.trim()).filter(l => l.length > 5);
-      
+      // Separar enunciado e pergunta
+      const linhas = textoPergunta.split('\n').filter(l => l.trim().length > 5);
       let pergunta = '';
       let enunciado = '';
       
-      // Procurar linha de comando (assinale, analise, etc)
-      let indicePergunta = -1;
       for (let j = linhas.length - 1; j >= 0; j--) {
-        if (linhas[j].match(/[?:]$|EXCETO|incorreta|correta|assinale|marque|indique|julgue|analise/i)) {
-          indicePergunta = j;
+        if (linhas[j].match(/analise|assinale|considere|acerca|[?:]$/i)) {
+          pergunta = linhas[j].trim();
+          enunciado = linhas.slice(0, j).join('\n').trim();
           break;
         }
       }
       
-      if (indicePergunta >= 0) {
-        pergunta = linhas[indicePergunta];
-        enunciado = linhas.slice(0, indicePergunta).join('\n');
-      } else if (linhas.length > 0) {
-        pergunta = linhas[linhas.length - 1];
-        enunciado = linhas.slice(0, -1).join('\n');
+      if (!pergunta) {
+        pergunta = linhas[linhas.length - 1] || 'Questão';
+        enunciado = linhas.slice(0, -1).join('\n').trim();
       }
       
-      // 7. MONTAR TEXTO_CONTEXTO = enunciado + assertivas
+      // Montar contexto
       let texto_contexto = '';
       if (enunciado) texto_contexto += enunciado;
       if (assertivas) texto_contexto += (texto_contexto ? '\n\n' : '') + assertivas;
       
-      // 8. VALIDAR
+      console.log(`Pergunta: ${pergunta.substring(0, 60)}`);
+      console.log(`Contexto: ${texto_contexto.length} chars`);
+      
+      // Validar
       const altValidas = alternativas.filter(a => a.length > 3).length;
-      if (altValidas < 2 || pergunta.length < 10) continue;
+      if (altValidas < 2) {
+        console.warn(`Apenas ${altValidas} alternativas`);
+        continue;
+      }
       
       questoes.push({
         pergunta,
         alternativas,
         correta: correta as 0 | 1 | 2 | 3,
         comentario,
-        texto_contexto: texto_contexto.trim() || undefined
+        texto_contexto: texto_contexto || undefined
       });
       
-      console.log(`✅ Q${questoes.length}: "${pergunta.substring(0, 50)}..." | Contexto: ${!!texto_contexto}`);
+      console.log(`✅ Questão ${questoes.length} adicionada!`);
       
     } catch (e) {
-      console.error(`❌ Erro bloco ${i+1}:`, e);
+      console.error('Erro:', e);
     }
   }
   
-  console.log(`\n🎯 TOTAL: ${questoes.length} questões`);
+  console.log(`\n🎯 TOTAL: ${questoes.length} questões\n`);
   return questoes;
 }
