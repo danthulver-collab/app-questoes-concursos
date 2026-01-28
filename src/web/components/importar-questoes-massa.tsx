@@ -81,21 +81,24 @@ export function ImportarQuestoesMassa({
       const comMatch = blocoDepois.match(/Comentário:\s*(.+?)(?=\n\d+\.|$)/is);
       const comentario = comMatch ? comMatch[1].trim() : `Gabarito: ${gabarito}`;
       
-      // 🔥 EXTRAIR ALTERNATIVAS (para saber onde termina a pergunta)
-      const altMatch = [...blocoAntes.matchAll(/\n\s*([A-E])[\)\.]?\s+([^\n]+)/gi)];
+      // 🔥 EXTRAIR ALTERNATIVAS COMPLETAS (permite multilinha)
+      const altMatch = [...blocoAntes.matchAll(/\n\s*([A-E])[\)\.]?\s+([^\n]+(?:\n(?!\s*[A-E][\)\.])[^\n]+)*)/gi)];
       const altMap: any = {};
-      altMatch.forEach(m => altMap[m[1].toUpperCase()] = m[2].trim());
+      altMatch.forEach(m => {
+        const letra = m[1].toUpperCase();
+        const texto = m[2].trim().replace(/\s+/g, ' '); // Remove quebras mas junta
+        altMap[letra] = texto;
+      });
       
       const alternativas = [altMap.A||'',altMap.B||'',altMap.C||'',altMap.D||''];
       
-      // 🔥 PERGUNTA = TUDO antes da primeira alternativa "A)"
-      // Não processa, não separa, só pega TUDO
-      let perguntaCompleta = blocoAntes.split(/\nA[\)\.]?\s/i)[0];
+      // 🔥 PERGUNTA = TUDO antes da primeira alternativa "A)" - SEM CORTAR NADA
+      let perguntaCompleta = blocoAntes.split(/\n\s*A[\)\.]?\s/i)[0];
       
-      // Remove número da questão no início (1. ou 01.)
+      // Remove APENAS número da questão no início (1. ou 01.)
       perguntaCompleta = perguntaCompleta.replace(/^\s*\d+[\.\)]\s*/,'').trim();
       
-      console.log(`✅ Q${questoes.length + 1} (${perguntaCompleta.length} chars): ${perguntaCompleta.substring(0,100)}...`);
+      console.log(`✅ Q${questoes.length + 1} Pergunta: ${perguntaCompleta.length} chars | Alt A: ${alternativas[0].length} chars`);
       
       if (alternativas.filter(a=>a.length>2).length >= 2 && perguntaCompleta.length > 10) {
         questoes.push({
