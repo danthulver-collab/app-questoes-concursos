@@ -158,7 +158,7 @@ export function ImportarQuestoesMassa({
               id: `${areaId}_${materiaIdFinal}_${Date.now()}_${i}`,
               area_id: areaId,
               materia_id: materiaIdFinal,
-              title: q.pergunta,
+              title: (q.texto_contexto ? q.texto_contexto + "\n\n" : "") + q.pergunta,
               options: q.alternativas,
               correct_answer: q.correta,
               explanation: q.comentario,
