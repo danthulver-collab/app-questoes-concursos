@@ -603,7 +603,8 @@ export default function EscolherSimulado() {
                                 🔓 Libera em {diasRestantes} {diasRestantes === 1 ? 'dia' : 'dias'} ou assine Plus
                               </p>
                             </div>
-                          ) : numQuestoes > 0 ? (
+                          ) : (
+                            // 🔥 SEMPRE DISPONÍVEL - independente de ter questões
                             <div className="flex items-center justify-between">
                               <span className="px-4 py-2 bg-emerald-500/20 text-emerald-400 text-sm rounded-xl font-semibold border border-emerald-500/30">
                                 ✓ Disponível
@@ -614,10 +615,6 @@ export default function EscolherSimulado() {
                                 </svg>
                               </div>
                             </div>
-                          ) : (
-                            <span className="px-4 py-2 bg-gray-500/20 text-gray-500 text-sm rounded-xl font-medium">
-                              Em breve
-                            </span>
                           )}
                         </div>
                       </button>
