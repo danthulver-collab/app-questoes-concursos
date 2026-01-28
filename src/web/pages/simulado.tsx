@@ -254,9 +254,9 @@ Responda de forma clara, didática e objetiva, focando em ajudar o aluno a enten
                   const textoCompleto = contexto ? contexto + '\n\n' + pergunta : pergunta;
                   
                   // Limite para botão VER MAIS
-                  const LIMITE = 1000;
+                  const LIMITE = 300;
                   const precisaBotao = textoCompleto.length > LIMITE;
-                  const expandido = textoExpandido[currentIndex] !== undefined ? textoExpandido[currentIndex] : true;
+                  const expandido = textoExpandido[currentIndex] || false;
                   
                   // Texto a exibir
                   const textoExibido = expandido || !precisaBotao 
