@@ -52,7 +52,7 @@ export function parsearQuestoesUniversal(textoOriginal: string): QuestaoParseada
     ];
     
     // 🔥 PERGUNTA COMPLETA = TUDO ATÉ "A)" (inclui assertivas!)
-    let perguntaCompleta = questaoTexto.split(/\nA\)/)[0].trim();
+    let perguntaCompleta = questaoTexto.split(/\n\s*A\)\s/)[0].trim();
     perguntaCompleta = perguntaCompleta.replace(/^QUESTÃO\s+\d+\s*[–-]\s*/i, '');
     
     console.log(`Q${i+1}: ${perguntaCompleta.length} chars - ${perguntaCompleta.substring(0, 80)}...`);
