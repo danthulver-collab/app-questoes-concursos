@@ -48,9 +48,9 @@ export function parsearQuestoesUniversal(textoOriginal: string): QuestaoParseada
     const comentMatch = bloco.match(/Comentário:\s*([\s\S]+?)$/i);
     let comentario = comentMatch ? comentMatch[1].trim() : '';
     
-    // 🔥 CORTE AGRESSIVO: Parar no primeiro indicador de nova questão
+    // 🔥 CORTE NO PRIMEIRO PONTO FINAL + NOVA LINHA
+    comentario = comentario.split(/\.\s*\n/)[0] + '.';
     comentario = comentario.split(/\n\nQUESTÃO/i)[0];
-    comentario = comentario.split(/\n\n\d+\./)[0];
     comentario = comentario.split(/\n\d+\.\s+[A-Z]/)[0];
     comentario = comentario.trim();
     
