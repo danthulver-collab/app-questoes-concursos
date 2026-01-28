@@ -138,11 +138,15 @@ export function ImportarQuestoesMassa({
           let deleted = 0;
           
           if (areaId) {
-            // 🔥 Deletar TODAS as questões desta matéria nesta área (sem distinção de case)
+            // 🔥 Deletar TODAS as questões desta matéria nesta área
+            console.log(`🗑️ Buscando questões para deletar: area_id=${areaId}, materia=${materia}`);
+            
             const { data: todasQuestoes } = await supabase
               .from('questoes_areas')
               .select('*')
               .eq('area_id', areaId);
+            
+            console.log(`📊 Total na área: ${todasQuestoes?.length || 0}`);
             
             const idsParaDeletar: string[] = [];
             todasQuestoes?.forEach(q => {
@@ -150,12 +154,15 @@ export function ImportarQuestoesMassa({
               const materiaDB = q.materia_id?.toLowerCase().replace(/[àáâãäå]/g,'a').replace(/[èéêë]/g,'e').replace(/[ç]/g,'c').replace(/\s+/g, '-');
               const materiaAtual = materia.toLowerCase().replace(/[àáâãäå]/g,'a').replace(/[èéêë]/g,'e').replace(/[ç]/g,'c').replace(/\s+/g, '-');
               
+              console.log(`   Comparando: DB="${materiaDB}" vs Atual="${materiaAtual}"`);
+              
               if (materiaDB === materiaAtual) {
                 idsParaDeletar.push(q.id);
+                console.log(`   ✓ Match! ID: ${q.id}`);
               }
             });
             
-            console.log(`🗑️ IDs para deletar: ${idsParaDeletar.length}`);
+            console.log(`🗑️ ${idsParaDeletar.length} IDs para deletar`);
             
             if (idsParaDeletar.length > 0) {
               const { data, error } = await supabase
@@ -164,8 +171,13 @@ export function ImportarQuestoesMassa({
                 .in('id', idsParaDeletar)
                 .select();
               
-              deleted = data?.length || 0;
-              console.log(`✅ ${deleted} questões deletadas de questoes_areas`);
+              if (error) {
+                console.error('❌ Erro ao deletar:', error);
+                alert(`Erro ao deletar: ${error.message}`);
+              } else {
+                deleted = data?.length || 0;
+                console.log(`✅ ${deleted} questões DELETADAS de questoes_areas`);
+              }
             }
           } else {
             const { data, error } = await supabase
