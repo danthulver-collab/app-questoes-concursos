@@ -114,10 +114,7 @@ export const syncSupabaseToLocalStorage = async (): Promise<QuizData | null> => 
       areas: areasSupabase.length > 0 ? areasSupabase : quizData.areas,
       // Carreiras: Prioriza Supabase
       carreiras: carreirasSupabase.length > 0 ? carreirasSupabase : quizData.carreiras,
-      // Disciplinas/Matérias: Prioriza Supabase, merge com locais
-      disciplinas: materiasSupabase.length > 0 
-        ? [...materiasSupabase, ...quizData.disciplinas.filter(d => !materiasSupabase.find(m => m.id === d.id))]
-        : quizData.disciplinas,
+      disciplinas: [...quizData.disciplinas, ...materiasSupabase.filter(m => !quizData.disciplinas.find(d => d.id === m.id))],
       // Pacotes: Prioriza Supabase
       pacotes: pacotesSupabase.length > 0 ? pacotesSupabase : quizData.pacotes,
       // Questões: Prioriza Supabase
