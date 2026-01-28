@@ -44,9 +44,15 @@ export function parsearQuestoesUniversal(textoOriginal: string): QuestaoParseada
     const gabarito = gabMatch[1].toUpperCase();
     const correta = {'A':0,'B':1,'C':2,'D':3,'E':4}[gabarito];
     
-    // COMENTÁRIO (COMPLETO, sem limites)
+    // COMENTÁRIO com limpeza anti-vazamento
     const comentMatch = bloco.match(/Comentário:\s*([\s\S]+?)$/i);
-    const comentario = comentMatch ? comentMatch[1] : '';
+    let comentario = comentMatch ? comentMatch[1].trim() : '';
+    
+    // 🔥 CORTE AGRESSIVO: Parar no primeiro indicador de nova questão
+    comentario = comentario.split(/\n\nQUESTÃO/i)[0];
+    comentario = comentario.split(/\n\n\d+\./)[0];
+    comentario = comentario.split(/\n\d+\.\s+[A-Z]/)[0];
+    comentario = comentario.trim();
     
     // ALTERNATIVAS (COMPLETAS, preserva quebras de linha)
     const altMatches = [...questaoTexto.matchAll(/([A-E])\)\s+([\s\S]+?)(?=\n[A-E]\)|$)/gi)];
