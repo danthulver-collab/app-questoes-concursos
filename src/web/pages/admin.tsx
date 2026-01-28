@@ -2031,7 +2031,7 @@ function AdminPage() {
     showSaveMessage("Questão excluída!");
   };
 
-  const handleSaveQuestion = () => {
+  const handleSaveQuestion = async () => {
     if (!quizData || !editingQuestion) return;
     if (!editingQuestion.title.trim()) {
       alert("Por favor, preencha o enunciado da questão.");
@@ -2042,6 +2042,18 @@ function AdminPage() {
       return;
     }
 
+    // 🔥 Salvar no Supabase PRIMEIRO
+    await saveQuestaoSupabase({
+      id: editingQuestion.id,
+      area_id: 'geral', // questões gerais
+      materia_id: editingQuestion.disciplina?.toLowerCase().replace(/\s+/g, '-') || 'geral',
+      title: editingQuestion.title,
+      options: editingQuestion.options,
+      correct_answer: editingQuestion.correctAnswer,
+      explanation: editingQuestion.explanation || '',
+      plano: (editingQuestion as any).plano || 'free'
+    });
+
     let newQuestions: Question[];
     if (isNewQuestion) {
       newQuestions = [...quizData.questions, editingQuestion];
@@ -2051,9 +2063,9 @@ function AdminPage() {
 
     const newData = { ...quizData, questions: newQuestions };
     setQuizData(newData);
-    saveQuizData(newData);
+    await salvarTudoSupabase(newData);
     setEditingQuestion(null);
-    showSaveMessage();
+    showSaveMessage("✅ Salvo no Supabase!");
   };
 
   const updateEditingOption = (index: number, value: string) => {
