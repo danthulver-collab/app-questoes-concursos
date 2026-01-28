@@ -155,13 +155,23 @@ const QUESTOES_PADRAO: Record<string, Record<string, any[]>> = {
 };
 
 // Função para carregar questões (localStorage ou padrão)
-export const getQuestoesPorArea = (): Record<string, Record<string, any[]>> => {
+export const getQuestoesPorArea = async (): Promise<Record<string, Record<string, any[]>>> => {
   try {
+    // 🔥 Buscar do Supabase SEMPRE
+    const questoesSupabase = await getQuestoesFromSupabase();
+    
+    if (Object.keys(questoesSupabase).length > 0) {
+      return questoesSupabase;
+    }
+    
+    // Fallback: localStorage
     const stored = localStorage.getItem(QUESTOES_STORAGE_KEY);
     if (stored) {
       return JSON.parse(stored);
     }
-  } catch {}
+  } catch (e) {
+    console.error('Erro getQuestoesPorArea:', e);
+  }
   return QUESTOES_PADRAO;
 };
 
@@ -230,11 +240,13 @@ export default function EscolherSimulado() {
           setQuestoesSupabase(supabase);
         } else {
           // Fallback para questões locais
-          setQuestoesSupabase(getQuestoesPorArea());
+          const local = await getQuestoesPorArea();
+          setQuestoesSupabase(local);
         }
       } catch (e) {
         console.error('Erro ao carregar questões:', e);
-        setQuestoesSupabase(getQuestoesPorArea());
+        const local = await getQuestoesPorArea();
+        setQuestoesSupabase(local);
       } finally {
         setIsLoading(false);
       }
