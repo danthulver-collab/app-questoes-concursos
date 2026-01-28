@@ -615,10 +615,10 @@ export default function EscolherSimulado() {
                                 🔓 Libera em {diasRestantes} {diasRestantes === 1 ? 'dia' : 'dias'} ou assine Plus
                               </p>
                             </div>
-                          ) : numQuestoes > 0 ? (
+                          ) : numQuestoes > 0 || isAdmin ? (
                             <div className="flex items-center justify-between">
                               <span className="px-4 py-2 bg-emerald-500/20 text-emerald-400 text-sm rounded-xl font-semibold border border-emerald-500/30">
-                                ✓ Disponível
+                                ✓ {isAdmin && numQuestoes === 0 ? 'Admin (0 questões)' : 'Disponível'}
                               </span>
                               <div className="w-12 h-12 rounded-full bg-orange-500/20 flex items-center justify-center group-hover:bg-gradient-to-r group-hover:from-orange-500 group-hover:to-amber-500 transition-all duration-300">
                                 <svg className="w-5 h-5 text-orange-400 group-hover:text-white group-hover:translate-x-1 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
