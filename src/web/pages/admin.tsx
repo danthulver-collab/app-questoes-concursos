@@ -13,6 +13,8 @@ import {
   type CustomOption,
   type Area,
   type Carreira,
+} from "../lib/quiz-store";
+import { salvarTudoSupabase } from "../lib/sync-tudo-supabase";
   getAllBancas,
   getAllOrgaos,
   getCustomBancas,
@@ -336,7 +338,7 @@ function GerenciarAreasHierarquico({ showSaveMessage, onGoToQuestoes }: { showSa
                     await saveAreaSupabase(area);
                   }
                   
-                  saveQuizData(data);
+                  await salvarTudoSupabase(data);
                   showSaveMessage("Matéria criada e salva no Supabase!");
                   refresh();
                 }}
@@ -360,7 +362,7 @@ function GerenciarAreasHierarquico({ showSaveMessage, onGoToQuestoes }: { showSa
                           const data = getQuizData();
                           const idx = data.disciplinas.findIndex(d => d.id === mat.id);
                           if (idx >= 0) data.disciplinas[idx].nome = nome.trim();
-                          saveQuizData(data);
+                          await salvarTudoSupabase(data);
                           showSaveMessage("Matéria atualizada!");
                           refresh();
                         }
@@ -379,7 +381,7 @@ function GerenciarAreasHierarquico({ showSaveMessage, onGoToQuestoes }: { showSa
                           if (area) {
                             area.materias = area.materias.filter(m => m !== mat.id);
                           }
-                          saveQuizData(data);
+                          await salvarTudoSupabase(data);
                           showSaveMessage("Matéria deletada!");
                           refresh();
                         }
@@ -602,7 +604,7 @@ function QuestoesAreasEditor({ showSaveMessage }: { showSaveMessage: (msg?: stri
                     area.materias.push(newMateria.id);
                   }
                   
-                  saveQuizData(data);
+                  await salvarTudoSupabase(data);
                   showSaveMessage("Matéria adicionada!");
                   refresh();
                 }}
@@ -4035,7 +4037,7 @@ function AdminPage() {
                     if (!nome) return;
                     const data = getQuizData();
                     data.disciplinas.push({ id: nome.toLowerCase().replace(/\s+/g, '-'), nome: nome.trim() });
-                    saveQuizData(data);
+                    await salvarTudoSupabase(data);
                     showSaveMessage("Matéria criada!");
                   }}
                   className="p-4 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl font-bold hover:scale-105 transition-transform flex items-center justify-center gap-2"
@@ -4163,7 +4165,7 @@ function AdminPage() {
                                 const data = getQuizData();
                                 const idx = data.disciplinas.findIndex(d => d.id === mat.id);
                                 if (idx >= 0) data.disciplinas[idx].nome = nome.trim();
-                                saveQuizData(data);
+                                await salvarTudoSupabase(data);
                                 showSaveMessage("Matéria atualizada!");
                               }
                             }}
@@ -4176,7 +4178,7 @@ function AdminPage() {
                               if (confirm(`Deletar "${mat.nome}"?`)) {
                                 const data = getQuizData();
                                 data.disciplinas = data.disciplinas.filter(d => d.id !== mat.id);
-                                saveQuizData(data);
+                                await salvarTudoSupabase(data);
                                 showSaveMessage("Matéria deletada!");
                               }
                             }}
