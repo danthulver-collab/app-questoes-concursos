@@ -233,10 +233,6 @@ export default function EscolherSimulado() {
   // Carregar questões do Supabase ao montar
   useEffect(() => {
     const loadQuestoes = async () => {
-      // 🔥 FORÇAR SINCRONIZAÇÃO COMPLETA SEMPRE
-      const { syncSupabaseToLocalStorage } = await import("../lib/supabase-sync");
-      await syncSupabaseToLocalStorage();
-      console.log("✅ Sincronização forçada completa");
       setIsLoading(true);
       try {
         const supabase = await getQuestoesFromSupabase();
