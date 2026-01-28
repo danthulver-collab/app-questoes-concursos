@@ -138,19 +138,34 @@ export function ImportarQuestoesMassa({
           let deleted = 0;
           
           if (areaId) {
-            const materiaIdFinal = materiaId || materia.toLowerCase().replace(/\s+/g, '-').replace(/ê/g, 'e').replace(/ã/g, 'a').replace(/ç/g, 'c');
-            
-            const { data, error } = await supabase
+            // 🔥 Deletar TODAS as questões desta matéria nesta área (sem distinção de case)
+            const { data: todasQuestoes } = await supabase
               .from('questoes_areas')
-              .delete()
-              .eq('area_id', areaId)
-              .eq('materia_id', materiaIdFinal)
-              .select();
+              .select('*')
+              .eq('area_id', areaId);
             
-            if (error) {
-              console.error('❌ Erro ao deletar:', error);
-            } else {
+            const idsParaDeletar: string[] = [];
+            todasQuestoes?.forEach(q => {
+              // Compara materia_id ignorando case, acentos e espaços
+              const materiaDB = q.materia_id?.toLowerCase().replace(/[àáâãäå]/g,'a').replace(/[èéêë]/g,'e').replace(/[ç]/g,'c').replace(/\s+/g, '-');
+              const materiaAtual = materia.toLowerCase().replace(/[àáâãäå]/g,'a').replace(/[èéêë]/g,'e').replace(/[ç]/g,'c').replace(/\s+/g, '-');
+              
+              if (materiaDB === materiaAtual) {
+                idsParaDeletar.push(q.id);
+              }
+            });
+            
+            console.log(`🗑️ IDs para deletar: ${idsParaDeletar.length}`);
+            
+            if (idsParaDeletar.length > 0) {
+              const { data, error } = await supabase
+                .from('questoes_areas')
+                .delete()
+                .in('id', idsParaDeletar)
+                .select();
+              
               deleted = data?.length || 0;
+              console.log(`✅ ${deleted} questões deletadas de questoes_areas`);
             }
           } else {
             const { data, error } = await supabase
