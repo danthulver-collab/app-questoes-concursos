@@ -326,7 +326,7 @@ function GerenciarAreasHierarquico({ showSaveMessage, onGoToQuestoes }: { showSa
                   try {
                     const data = getQuizData();
                     const newMateria = {
-                      id: nome.toLowerCase().replace(/\s+/g, '-'),
+                      id: nome.toLowerCase().replace(/\s+/g, '-').replace(/ê/g,'e').replace(/ã/g,'a').replace(/ç/g,'c'),
                       nome: nome.trim()
                     };
                     data.disciplinas.push(newMateria);
@@ -334,21 +334,41 @@ function GerenciarAreasHierarquico({ showSaveMessage, onGoToQuestoes }: { showSa
                     const area = data.areas.find(a => a.id === selectedAreaId);
                     if (area && !area.materias.includes(newMateria.id)) {
                       area.materias.push(newMateria.id);
+                      area.updatedAt = new Date().toISOString();
                       
-                      console.log('🔥 Salvando área no Supabase:', area);
-                      const resultArea = await saveAreaSupabase(area);
-                      console.log('✅ Área salva:', resultArea);
+                      console.log('🔥 Salvando área DIRETAMENTE:', area);
+                      
+                      // 🔥 SALVAR DIRETO NO SUPABASE (não usar salvarTudoSupabase)
+                      const { error } = await supabase
+                        .from('areas')
+                        .upsert({
+                          id: area.id,
+                          nome: area.nome,
+                          descricao: area.descricao,
+                          icone: area.icone,
+                          carreiras: area.carreiras,
+                          materias: area.materias,
+                          updated_at: area.updatedAt
+                        }, { onConflict: 'id' });
+                      
+                      if (error) {
+                        console.error('❌ ERRO Supabase:', error);
+                        alert(`ERRO: ${error.message}`);
+                        return;
+                      }
+                      
+                      console.log('✅ Área salva no Supabase!');
                     }
                     
-                    console.log('🔥 Salvando tudo no Supabase...');
-                    await salvarTudoSupabase(data);
-                    console.log('✅ Tudo salvo!');
+                    saveQuizData(data);
+                    alert("✅ Matéria criada e salva no Supabase!");
                     
-                    showSaveMessage("Matéria criada e salva no Supabase!");
+                    // Forçar reload
+                    await syncSupabaseToLocalStorage();
                     refresh();
                   } catch (error) {
-                    console.error('❌ ERRO ao salvar matéria:', error);
-                    alert(`Erro ao salvar: ${error}`);
+                    console.error('❌ ERRO:', error);
+                    alert(`ERRO: ${error}`);
                   }
                 }}
                 className="px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl font-bold hover:scale-105 transition-transform"
