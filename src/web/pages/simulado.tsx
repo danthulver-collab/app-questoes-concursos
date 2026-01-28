@@ -128,6 +128,7 @@ Responda de forma clara, didática e objetiva, focando em ajudar o aluno a enten
   }
 
   const questao = simulado.questoes[currentIndex];
+  console.log("🔍 DEBUG QUESTÃO:", { title: questao?.title?.substring(0, 100), texto_contexto: (questao as any)?.texto_contexto?.substring(0, 100), tem_contexto: !!(questao as any)?.texto_contexto });
   const totalQuestoes = simulado.questoes.length;
 
   const responder = (opcao: string) => {
