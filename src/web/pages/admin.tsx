@@ -314,14 +314,26 @@ function GerenciarAreasHierarquico({ showSaveMessage, onGoToQuestoes }: { showSa
             <div className="flex gap-2">
               <button
                 onClick={async () => {
+                  const btn = event?.target as HTMLButtonElement;
+                  const originalText = btn?.innerHTML;
+                  
                   try {
+                    if (btn) btn.innerHTML = '⏳ Sincronizando...';
+                    
                     const syncedData = await syncSupabaseToLocalStorage();
                     if (syncedData) {
                       setQuizData(syncedData);
-                      showSaveMessage("✅ Sincronizado!");
+                      if (btn) btn.innerHTML = '✅ Sincronizado!';
+                      setTimeout(() => {
+                        if (btn && originalText) btn.innerHTML = originalText;
+                      }, 2000);
+                    } else {
+                      throw new Error('Sync retornou null');
                     }
                   } catch (e) {
-                    alert('Erro ao sincronizar');
+                    console.error('Erro ao sincronizar:', e);
+                    alert(`Erro ao sincronizar: ${e}`);
+                    if (btn && originalText) btn.innerHTML = originalText;
                   }
                 }}
                 className="px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl font-bold hover:scale-105 transition-transform flex items-center gap-2"
