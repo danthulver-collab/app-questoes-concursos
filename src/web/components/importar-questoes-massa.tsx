@@ -72,8 +72,18 @@ export function ImportarQuestoesMassa({
       const blocoDepois = blocosBrutos[i] || '';
       let blocoAntes = blocosBrutos[i-2] || '';
       
-      // 🔥 Limpar "Comentário:" grudado da questão anterior
-      blocoAntes = blocoAntes.replace(/^[\s\S]*?Comentário:[\s\S]*?\n\s*(\d+[\.\)])/i, '$1');
+      // 🔥 LIMPAR MELHOR - remove TUDO antes do número da questão
+      // Se tem "Comentário:" seguido de texto, e depois número da questão (2., 3., etc)
+      // Remove TUDO até o número
+      if (blocoAntes.match(/Comentário:/i)) {
+        const match = blocoAntes.match(/\n(\d+[\.\)])\s/);
+        if (match) {
+          const pos = blocoAntes.lastIndexOf(match[0]);
+          if (pos > 0) {
+            blocoAntes = match[1] + ' ' + blocoAntes.substring(pos + match[0].length);
+          }
+        }
+      }
       
       const correta = {'A':0,'B':1,'C':2,'D':3,'E':4}[gabarito] || 0;
       

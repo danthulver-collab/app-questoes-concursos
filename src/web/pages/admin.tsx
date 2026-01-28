@@ -2020,16 +2020,6 @@ function AdminPage() {
     // Iniciar auto-sync a cada 3 segundos
     startAutoSync();
     
-    // 🔥 LISTENER - detecta quando outro navegador cria algo
-    window.addEventListener('storage', (e) => {
-      if (e.key === 'force_reload_timestamp') {
-        console.log('🔄 Detectou mudança - recarregando...');
-        syncSupabaseToLocalStorage().then(() => {
-          window.location.reload();
-        });
-      }
-    });
-    
     // Load config
     const storedConfig = localStorage.getItem(CONFIG_STORAGE_KEY);
     if (storedConfig) {
