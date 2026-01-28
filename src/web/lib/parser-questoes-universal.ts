@@ -1,5 +1,5 @@
 /**
- * PARSER DEFINITIVO - Pega TUDO até alternativa A)
+ * PARSER SEM LIMITAÇÕES - Preserva TUDO
  */
 
 export interface QuestaoParseada {
@@ -23,42 +23,57 @@ export function parsearQuestoesUniversal(textoOriginal: string): QuestaoParseada
     
     let questaoTexto = '';
     if (i === 0) {
-      const posGab = texto.indexOf('Gabarito:');
-      questaoTexto = texto.substring(0, posGab);
+      questaoTexto = texto.substring(0, texto.indexOf('Gabarito:'));
     } else {
       const blocoAnt = blocos[i-1];
-      const posComentAnt = texto.indexOf(blocoAnt) + blocoAnt.lastIndexOf('Comentário:');
-      const posGabAtual = texto.indexOf(bloco);
-      questaoTexto = texto.substring(posComentAnt, posGabAtual);
-      questaoTexto = questaoTexto.replace(/Comentário:[\s\S]*?(?=QUESTÃO|\n\n)/i, '').trim();
+      const inicioComentAnt = texto.indexOf(blocoAnt) + blocoAnt.indexOf('Comentário:');
+      const fimComentAnt = texto.indexOf('\n\nQUESTÃO', inicioComentAnt);
+      const inicioGabAtual = texto.indexOf(bloco);
+      
+      if (fimComentAnt > 0 && fimComentAnt < inicioGabAtual) {
+        questaoTexto = texto.substring(fimComentAnt + 2, inicioGabAtual);
+      } else {
+        questaoTexto = texto.substring(inicioComentAnt + 100, inicioGabAtual);
+      }
     }
+    
+    questaoTexto = questaoTexto.trim();
     
     // GABARITO
     const gabMatch = bloco.match(/Gabarito:\s*([A-E])/i);
     const gabarito = gabMatch[1].toUpperCase();
-    const correta = {'A':0,'B':1,'C':2,'D':3,'E':4}[gabarito] || 0;
+    const correta = {'A':0,'B':1,'C':2,'D':3,'E':4}[gabarito];
     
-    // COMENTÁRIO
+    // COMENTÁRIO (COMPLETO, sem limites)
     const comentMatch = bloco.match(/Comentário:\s*([\s\S]+?)$/i);
-    const comentario = comentMatch ? comentMatch[1].trim() : '';
+    const comentario = comentMatch ? comentMatch[1] : '';
     
-    // ALTERNATIVAS
-    const altMatches = [...questaoTexto.matchAll(/([A-E])\)\s+([^\n]+(?:\n(?![A-E]\)|Gabarito)[^\n]+)*)/gi)];
+    // ALTERNATIVAS (COMPLETAS, preserva quebras de linha)
+    const altMatches = [...questaoTexto.matchAll(/([A-E])\)\s+([\s\S]+?)(?=\n[A-E]\)|$)/gi)];
     const altMap: any = {};
-    altMatches.forEach(m => altMap[m[1].toUpperCase()] = m[2].trim().replace(/\s+/g, ' '));
+    
+    altMatches.forEach(m => {
+      const letra = m[1].toUpperCase();
+      const textoAlt = m[2].trim(); // SEM replace - preserva tudo
+      altMap[letra] = textoAlt;
+    });
     
     const alternativas: [string, string, string, string] = [
       altMap.A || '', altMap.B || '', altMap.C || '', altMap.D || ''
     ];
     
-    // 🔥 PERGUNTA COMPLETA = TUDO ATÉ "A)" (inclui assertivas!)
-    let perguntaCompleta = questaoTexto.split(/\n\s*A\)\s/)[0].trim();
+    // PERGUNTA COMPLETA (até primeira alternativa, SEM cortes)
+    const posAlternativaA = questaoTexto.search(/\n[A-E]\)\s/);
+    let perguntaCompleta = posAlternativaA > 0 
+      ? questaoTexto.substring(0, posAlternativaA)
+      : questaoTexto;
+    
     perguntaCompleta = perguntaCompleta.replace(/^QUESTÃO\s+\d+\s*[–-]\s*/i, '');
     
-    console.log(`Q${i+1}: ${perguntaCompleta.length} chars - ${perguntaCompleta.substring(0, 80)}...`);
+    console.log(`Q${i+1}: ${perguntaCompleta.length} chars capturados`);
     
-    const altValidas = alternativas.filter(a => a.length > 3).length;
-    if (altValidas >= 2 && perguntaCompleta.length > 10) {
+    const altValidas = alternativas.filter(a => a.length > 2).length;
+    if (altValidas >= 2) {
       questoes.push({
         pergunta: perguntaCompleta,
         alternativas,
@@ -69,6 +84,6 @@ export function parsearQuestoesUniversal(textoOriginal: string): QuestaoParseada
     }
   }
   
-  console.log(`\n🎯 TOTAL: ${questoes.length} questões parseadas`);
+  console.log(`🎯 TOTAL: ${questoes.length} questões completas`);
   return questoes;
 }
