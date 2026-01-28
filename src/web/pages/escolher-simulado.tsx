@@ -267,9 +267,17 @@ export default function EscolherSimulado() {
   };
 
   const handleMateriaSelect = (materiaId: string) => {
-    const areaQuestoes = QUESTOES_POR_AREA[selectedAreaId] || {};
+    // 🔥 Buscar do Supabase (questoesSupabase) não do localStorage
+    const areaQuestoes = questoesSupabase[selectedAreaId] || {};
     const questoes = areaQuestoes[materiaId] || [];
     const materia = materias.find(m => m.id === materiaId);
+    
+    console.log(`📊 Matéria ${materiaId}: ${questoes.length} questões encontradas`);
+    
+    if (questoes.length === 0 && !isAdmin) {
+      alert('Nenhuma questão encontrada para esta matéria.');
+      return;
+    }
     
     localStorage.setItem('simulado_atual', JSON.stringify({
       area: selectedArea?.nome,
