@@ -244,16 +244,6 @@ Responda de forma clara, didática e objetiva, focando em ajudar o aluno a enten
           <div className="lg:col-span-2">
             <div className="bg-white/5 rounded-2xl p-8">
               
-              
-              {/* 🔥 TEXTO DE CONTEXTO - Enunciado/Assertivas */}
-              {(questao as any).texto_contexto && (
-                <div className="mb-6 p-4 bg-blue-500/10 border border-blue-500/30 rounded-xl">
-                  <p className="text-sm text-gray-400 mb-2 font-semibold">📋 Leia o texto:</p>
-                  <div className="text-gray-300 text-base leading-relaxed whitespace-pre-wrap">
-                    {(questao as any).texto_contexto}
-                  </div>
-                </div>
-              )}
               {/* 🔥 PERGUNTA - SEMPRE com botão VER MAIS */}
               <div className="mb-6">
                 {/* Versão curta ou completa */}
