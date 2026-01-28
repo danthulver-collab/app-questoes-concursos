@@ -557,13 +557,13 @@ export default function EscolherSimulado() {
                             setLocation('/planos');
                             return;
                           }
-                          if (numQuestoes > 0) handleMateriaSelect(materia.id);
+                          if (numQuestoes > 0 || isAdmin) handleMateriaSelect(materia.id);
                         }}
-                        disabled={numQuestoes === 0 && !isLocked}
+                        disabled={numQuestoes === 0 && !isLocked && !isAdmin}
                         className={`group relative rounded-3xl p-8 border-2 transition-all duration-500 text-left overflow-hidden ${
                           isLocked
                             ? "border-amber-500/30 bg-gradient-to-br from-amber-500/10 to-yellow-500/5 cursor-pointer hover:scale-[1.03]"
-                            : numQuestoes > 0 
+                            : (numQuestoes > 0 || isAdmin)
                             ? "border-white/10 hover:border-orange-500 hover:scale-[1.03] bg-gradient-to-br from-white/5 to-white/0 cursor-pointer" 
                             : "border-white/5 opacity-40 cursor-not-allowed bg-white/5"
                         }`}
