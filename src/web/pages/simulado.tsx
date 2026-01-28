@@ -244,33 +244,43 @@ Responda de forma clara, didática e objetiva, focando em ajudar o aluno a enten
           <div className="lg:col-span-2">
             <div className="bg-white/5 rounded-2xl p-8">
               
-              
-              {/* 🔥 TEXTO DE CONTEXTO - Enunciado/Assertivas */}
-              {(questao as any).texto_contexto && (
-                <div className="mb-6 p-4 bg-blue-500/10 border border-blue-500/30 rounded-xl">
-                  <p className="text-sm text-gray-400 mb-2 font-semibold">📋 Leia o texto:</p>
-                  <div className="text-gray-300 text-base leading-relaxed whitespace-pre-wrap">
-                    {(questao as any).texto_contexto}
-                  </div>
-                </div>
-              )}
-              {/* 🔥 PERGUNTA - SEMPRE com botão VER MAIS */}
+              {/* 🔥 PERGUNTA COMPLETA - Junta texto_contexto + title */}
               <div className="mb-6">
-                {/* Versão curta ou completa */}
-                <div className="text-xl text-white font-semibold leading-relaxed whitespace-pre-wrap">
-                  {textoExpandido[currentIndex] ? questao.title : (questao.title.length > 5000 ? questao.title.substring(0, 100) + '...' : questao.title)}
-                </div>
-                
-                {/* Botão VER MAIS - aparece se pergunta > 100 chars */}
-                {questao.title && questao.title.length > 5000 && (
-                  <button
-                    onClick={() => setTextoExpandido({...textoExpandido, [currentIndex]: !textoExpandido[currentIndex]})}
-                    className="mt-4 px-5 py-2.5 bg-gradient-to-r from-emerald-500/20 to-blue-500/20 hover:from-emerald-500/30 hover:to-blue-500/30 text-emerald-400 rounded-xl text-sm font-bold flex items-center gap-2 transition-all border border-emerald-500/30 hover:border-emerald-400/50"
-                  >
-                    <span>{textoExpandido[currentIndex] ? '▲' : '▼'}</span>
-                    <span>{textoExpandido[currentIndex] ? 'VER MENOS' : '👁️ VER MAIS'}</span>
-                  </button>
-                )}
+                {(() => {
+                  // Montar texto completo (contexto + pergunta)
+                  const contexto = (questao as any).texto_contexto || '';
+                  const pergunta = questao.title;
+                  const textoCompleto = contexto ? contexto + '\n\n' + pergunta : pergunta;
+                  
+                  // Limite para botão VER MAIS
+                  const LIMITE = 200;
+                  const precisaBotao = textoCompleto.length > LIMITE;
+                  const expandido = textoExpandido[currentIndex] || false;
+                  
+                  // Texto a exibir
+                  const textoExibido = expandido || !precisaBotao 
+                    ? textoCompleto 
+                    : textoCompleto.substring(0, LIMITE) + '...';
+                  
+                  return (
+                    <>
+                      <div className="text-xl text-white font-semibold leading-relaxed whitespace-pre-wrap">
+                        {textoExibido}
+                      </div>
+                      
+                      {/* Botão VER MAIS */}
+                      {precisaBotao && (
+                        <button
+                          onClick={() => setTextoExpandido({...textoExpandido, [currentIndex]: !expandido})}
+                          className="mt-4 px-5 py-2.5 bg-gradient-to-r from-emerald-500/20 to-blue-500/20 hover:from-emerald-500/30 hover:to-blue-500/30 text-emerald-400 rounded-xl text-sm font-bold flex items-center gap-2 transition-all border border-emerald-500/30 hover:border-emerald-400/50"
+                        >
+                          <span>{expandido ? '▲' : '▼'}</span>
+                          <span>{expandido ? 'VER MENOS' : '👁️ VER MAIS'}</span>
+                        </button>
+                      )}
+                    </>
+                  );
+                })()}
               </div>
 
               <div className="space-y-3">
