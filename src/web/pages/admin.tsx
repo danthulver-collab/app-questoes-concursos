@@ -315,8 +315,11 @@ function GerenciarAreasHierarquico({ showSaveMessage, onGoToQuestoes }: { showSa
               <button
                 onClick={async () => {
                   try {
-                    await syncSupabaseToLocalStorage();
-                    window.location.reload();
+                    const syncedData = await syncSupabaseToLocalStorage();
+                    if (syncedData) {
+                      setQuizData(syncedData);
+                      showSaveMessage("✅ Sincronizado!");
+                    }
                   } catch (e) {
                     alert('Erro ao sincronizar');
                   }
@@ -383,12 +386,11 @@ function GerenciarAreasHierarquico({ showSaveMessage, onGoToQuestoes }: { showSa
                     saveQuizData(data);
                     alert("✅ Matéria criada e salva no Supabase!");
                     
-                    // 🔥 BROADCAST - força TODOS navegadores atualizarem
-                    localStorage.setItem('force_reload_timestamp', Date.now().toString());
-                    
-                    // Forçar reload IMEDIATO
-                    await syncSupabaseToLocalStorage();
-                    window.location.reload();
+                    // 🔥 Atualizar estado sem recarregar página
+                    const syncedData = await syncSupabaseToLocalStorage();
+                    if (syncedData) {
+                      setQuizData(syncedData);
+                    }
                   } catch (error) {
                     console.error('❌ ERRO:', error);
                     alert(`ERRO: ${error}`);
