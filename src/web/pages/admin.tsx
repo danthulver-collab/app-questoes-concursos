@@ -13,8 +13,6 @@ import {
   type CustomOption,
   type Area,
   type Carreira,
-} from "../lib/quiz-store";
-import { salvarTudoSupabase } from "../lib/sync-tudo-supabase";
   getAllBancas,
   getAllOrgaos,
   getCustomBancas,
@@ -38,6 +36,7 @@ import { salvarTudoSupabase } from "../lib/sync-tudo-supabase";
   updateCarreira,
   deleteCarreira
 } from "../lib/quiz-store";
+import { salvarTudoSupabase } from "../lib/sync-tudo-supabase";
 import { AppHeader } from "../components/app-header";
 import { NotificationBell } from "../components/notification-bell";
 import { loadAIConfig, saveAIConfig } from "../components/ai-chat-panel";
