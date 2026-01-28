@@ -7,6 +7,7 @@ import { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { saveQuestaoToSupabase } from '../lib/supabase-pacotes';
 import { saveQuestaoSupabase } from '../lib/supabase-questoes';
+import { parsearQuestoesDefinitivo } from '../lib/parser-definitivo';
 
 const MATERIAS = [
   'Portugues', 'Matematica', 'Informatica', 
@@ -60,68 +61,8 @@ export function ImportarQuestoesMassa({
   const [sobrescrever, setSobrescrever] = useState(false);
 
   const parsearQuestoes = (texto: string): QuestaoImportada[] => {
-    const questoes: QuestaoImportada[] = [];
-    
-    const norm = texto.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-    const blocosBrutos = norm.split(/Gabarito:\s*([A-E])/i);
-    
-    console.log(`📊 ${blocosBrutos.length} blocos`);
-    
-    for (let i = 2; i < blocosBrutos.length; i += 2) {
-      const gabarito = blocosBrutos[i-1].toUpperCase();
-      const blocoDepois = blocosBrutos[i] || '';
-      let blocoAntes = blocosBrutos[i-2] || '';
-      
-      // 🔥 LIMPAR MELHOR - remove TUDO antes do número da questão
-      // Se tem "Comentário:" seguido de texto, e depois número da questão (2., 3., etc)
-      // Remove TUDO até o número
-      if (blocoAntes.match(/Comentário:/i)) {
-        const match = blocoAntes.match(/\n(\d+[\.\)])\s/);
-        if (match) {
-          const pos = blocoAntes.lastIndexOf(match[0]);
-          if (pos > 0) {
-            blocoAntes = match[1] + ' ' + blocoAntes.substring(pos + match[0].length);
-          }
-        }
-      }
-      
-      const correta = {'A':0,'B':1,'C':2,'D':3,'E':4}[gabarito] || 0;
-      
-      // COMENTÁRIO
-      const comMatch = blocoDepois.match(/Comentário:\s*(.+?)(?=\n\d+\.|$)/is);
-      const comentario = comMatch ? comMatch[1].trim() : `Gabarito: ${gabarito}`;
-      
-      // 🔥 EXTRAIR ALTERNATIVAS COMPLETAS (permite multilinha)
-      const altMatch = [...blocoAntes.matchAll(/\n\s*([A-E])[\)\.]?\s+([^\n]+(?:\n(?!\s*[A-E][\)\.])[^\n]+)*)/gi)];
-      const altMap: any = {};
-      altMatch.forEach(m => {
-        const letra = m[1].toUpperCase();
-        const texto = m[2].trim().replace(/\s+/g, ' '); // Remove quebras mas junta
-        altMap[letra] = texto;
-      });
-      
-      const alternativas = [altMap.A||'',altMap.B||'',altMap.C||'',altMap.D||''];
-      
-      // 🔥 PERGUNTA = TUDO antes da primeira alternativa "A)" - SEM CORTAR NADA
-      let perguntaCompleta = blocoAntes.split(/\n\s*A[\)\.]?\s/i)[0];
-      
-      // Remove APENAS número da questão no início (1. ou 01.)
-      perguntaCompleta = perguntaCompleta.replace(/^\s*\d+[\.\)]\s*/,'').trim();
-      
-      console.log(`✅ Q${questoes.length + 1} Pergunta: ${perguntaCompleta.length} chars | Alt A: ${alternativas[0].length} chars`);
-      
-      if (alternativas.filter(a=>a.length>2).length >= 2 && perguntaCompleta.length > 10) {
-        questoes.push({
-          pergunta: perguntaCompleta,
-          alternativas: alternativas as any,
-          correta: correta as any,
-          comentario
-        });
-      }
-    }
-    
-    console.log(`✅ TOTAL: ${questoes.length} questões parseadas`);
-    return questoes;
+    // 🔥 USA PARSER DEFINITIVO
+    return parsearQuestoesDefinitivo(texto);
   };
 
   const handleImportar = async () => {
